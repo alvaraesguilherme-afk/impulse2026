@@ -1,0 +1,14 @@
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+  background: #0D0D0D;
+  font-family: 'Inter', sans-serif;
+  color: white;
+  max-width: 390px;
+  margin: 0 auto;
+  min-height: 100vh;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+
+body::-webkit-scrollbar { display: none; }
