@@ -47,7 +47,7 @@ export default function App() {
   function verificarSenha() {
     if (overlay === 'supervisor') {
       const nome = SENHAS.supervisor[senhaInput]
-      if (nome) { setSupervisorNome(nome); setOverlay(null); setTela('supervisor') }
+      if (nome) { setSupervisorNome(nome); setOverlay(null); setTela('supervisor'); setNavAtiva('supervisor') }
       else setSenhaErro('Senha incorreta.')
     } else if (overlay === 'checkin') {
       if (SENHAS.checkin.includes(senhaInput)) { setOverlay(null); setTela('checkin') }
@@ -60,38 +60,49 @@ export default function App() {
 
   const NAV = [
     { id: 'home', icon: '⊞', label: 'Início' },
-    { id: 'apoio', icon: '📅', label: 'Escala' },
-    { id: 'checkin', icon: '✅', label: 'Check-in' },
+    { id: 'programacao', icon: '📅', label: 'Programação' },
     { id: 'supervisor', icon: '🔐', label: 'Supervisor' },
+    { id: 'config', icon: '⚙️', label: 'Config' },
   ]
 
   return (
     <div style={{ background: '#0D0D0D', minHeight: '100vh', paddingBottom: 80 }}>
 
-      {/* TELAS */}
       {tela === 'home' && <Home onNavegar={navegarPara} />}
       {tela === 'apoio' && <Apoio onVoltar={() => { setTela('home'); setNavAtiva('home') }} />}
       {tela === 'staff' && <Staff onVoltar={() => { setTela('home'); setNavAtiva('home') }} />}
       {tela === 'checkin' && <Checkin onVoltar={() => { setTela('home'); setNavAtiva('home') }} />}
       {tela === 'alunos' && <Alunos onVoltar={() => { setTela('home'); setNavAtiva('home') }} />}
       {tela === 'supervisor' && <Supervisor onVoltar={() => { setTela('home'); setNavAtiva('home') }} nome={supervisorNome} abas={ABAS_SUPERVISOR[supervisorNome] || []} />}
-
-      {/* NAV BAR */}
-      {tela !== 'supervisor' && (
-        <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 390, display: 'flex', background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.08)', padding: '12px 10px 28px', zIndex: 50 }}>
-          {NAV.map(n => (
-            <div key={n.id} onClick={() => navegarPara(n.id)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, fontSize: 10, color: navAtiva === n.id ? 'white' : 'rgba(255,255,255,0.3)', cursor: 'pointer', fontWeight: 600 }}>
-              <div style={{ fontSize: 22 }}>{n.icon}</div>
-              <span>{n.label}</span>
-              {navAtiva === n.id && <div style={{ width: 20, height: 3, background: 'white', borderRadius: 2, marginTop: 2 }}></div>}
-            </div>
-          ))}
+      {tela === 'programacao' && (
+        <div style={{ background: '#080C14', minHeight: '100vh', padding: '60px 22px', textAlign: 'center' }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>📅</div>
+          <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Programação</div>
+          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>Em breve</div>
+        </div>
+      )}
+      {tela === 'config' && (
+        <div style={{ background: '#080C14', minHeight: '100vh', padding: '60px 22px', textAlign: 'center' }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>⚙️</div>
+          <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Configurações</div>
+          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>Em breve</div>
         </div>
       )}
 
+      {/* NAV BAR */}
+      <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 390, display: 'flex', background: 'rgba(13,13,13,0.95)', backdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.08)', padding: '12px 10px 28px', zIndex: 50 }}>
+        {NAV.map(n => (
+          <div key={n.id} onClick={() => navegarPara(n.id)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, fontSize: 10, color: navAtiva === n.id ? 'white' : 'rgba(255,255,255,0.3)', cursor: 'pointer', fontWeight: 600 }}>
+            <div style={{ fontSize: 22 }}>{n.icon}</div>
+            <span>{n.label}</span>
+            {navAtiva === n.id && <div style={{ width: 20, height: 3, background: 'white', borderRadius: 2, marginTop: 2 }}></div>}
+          </div>
+        ))}
+      </div>
+
       {/* OVERLAY SENHA */}
       {overlay && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.8)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.85)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: '28px 24px', width: '90%', maxWidth: 340, textAlign: 'center' }}>
             <div style={{ fontSize: 32, marginBottom: 12 }}>
               {overlay === 'supervisor' ? '🔐' : overlay === 'checkin' ? '✅' : '🎒'}
@@ -107,6 +118,7 @@ export default function App() {
               onKeyDown={e => e.key === 'Enter' && verificarSenha()}
               placeholder="••••"
               maxLength={10}
+              autoFocus
               style={{ width: '100%', padding: '14px 16px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, fontSize: 20, textAlign: 'center', letterSpacing: '.3em', outline: 'none', color: 'white', marginBottom: 12, fontFamily: 'Inter, sans-serif' }}
             />
             {senhaErro && <p style={{ fontSize: 12, color: '#F87171', marginBottom: 10 }}>{senhaErro}</p>}
