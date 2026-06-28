@@ -12,26 +12,50 @@ const ACOMODACOES = [
   { id: 'bm', nome: 'Barraca Masculina', tipo: 'barraca', genero: 'M', cor: '#1e293b', label: 'Preto' },
 ]
 
-const EQUIPES = [
-  { nome: 'Equipe Verde', lideres: 'Jhony e Linda', membros: ['Emanuel','Hellen Borges','Isabely Matos','Joel Marcos','Jeronimo','Livia Andrea'] },
-  { nome: 'Equipe Amarelo', lideres: 'Gustavo e Taiwa', membros: ['Hugo Lacroix','Lorena','Maria Clara','Matheus Almeida','Stephany'] },
-  { nome: 'Equipe Azul', lideres: 'Walterley e Maria Julia', membros: ['Ludymila','Mariana Gabrielle','Mauricio','Rafael','Ryan Guedes'] },
-  { nome: 'Equipe Vermelho', lideres: 'Francisco e Clara Cunha', membros: ['Gabriel Mendes','Leticia Nascimento','Nicoly','Rennan','Vic'] },
+const LISTA_STAFF = [
+  { nome: 'Alyson', area: 'Mídia' },
+  { nome: 'Alvarães', area: 'Liderança' },
+  { nome: 'Caetano', area: 'Mídia' },
+  { nome: 'Clara Cunha', area: 'Apoio — Equipe Vermelho (líder)' },
+  { nome: 'Daniel', area: 'Mídia' },
+  { nome: 'Danilo', area: 'Liderança' },
+  { nome: 'Edson Jr.', area: 'Logística' },
+  { nome: 'Eliel', area: 'Liderança' },
+  { nome: 'Emanuel', area: 'Apoio — Equipe Verde' },
+  { nome: 'Francisco', area: 'Apoio — Equipe Vermelho (líder)' },
+  { nome: 'Gabriel Mendes', area: 'Apoio — Equipe Vermelho' },
+  { nome: 'Gustavo Borges', area: 'Iluminação' },
+  { nome: 'Gustavo Massay', area: 'Apoio — Equipe Amarelo (líder)' },
+  { nome: 'Hadstton Capell', area: 'Cantina' },
+  { nome: 'Hellen Borges', area: 'Apoio — Equipe Verde' },
+  { nome: 'Hugo Lacroix', area: 'Apoio — Equipe Amarelo' },
+  { nome: 'Isabely Matos', area: 'Apoio — Equipe Verde' },
+  { nome: 'Jerônimo', area: 'Apoio — Equipe Verde' },
+  { nome: 'Jhony', area: 'Apoio — Equipe Verde (líder)' },
+  { nome: 'Joel Marcos', area: 'Apoio — Equipe Verde' },
+  { nome: 'Joyce', area: 'Mídia' },
+  { nome: 'Juliana', area: 'Mídia' },
+  { nome: 'Letícia', area: 'Apoio — Equipe Vermelho' },
+  { nome: 'Linda', area: 'Apoio — Equipe Verde (líder)' },
+  { nome: 'Lívia Andréa', area: 'Apoio — Equipe Verde' },
+  { nome: 'Lorena', area: 'Apoio — Equipe Amarelo' },
+  { nome: 'Ludmyla', area: 'Apoio — Equipe Azul' },
+  { nome: 'Maria Clara', area: 'Apoio — Equipe Amarelo' },
+  { nome: 'Maria Júlia', area: 'Apoio — Equipe Azul (líder)' },
+  { nome: 'Mariana Gabrielle', area: 'Apoio — Equipe Azul' },
+  { nome: 'Matheus Almeida', area: 'Apoio — Equipe Amarelo' },
+  { nome: 'Maurício', area: 'Apoio — Equipe Azul' },
+  { nome: 'Nicoly', area: 'Apoio — Equipe Vermelho' },
+  { nome: 'Paula', area: 'Preletores' },
+  { nome: 'Rafael Chaves', area: 'Apoio — Equipe Azul' },
+  { nome: 'Rennan', area: 'Apoio — Equipe Vermelho' },
+  { nome: 'Ryan Guedes', area: 'Apoio — Equipe Azul' },
+  { nome: 'Samuel Lopes', area: 'Cozinha' },
+  { nome: 'Stephany', area: 'Apoio — Equipe Amarelo' },
+  { nome: 'Taiwa', area: 'Apoio — Equipe Amarelo (líder)' },
+  { nome: 'Victória', area: 'Apoio — Equipe Vermelho' },
+  { nome: 'Walterley', area: 'Apoio — Equipe Azul (líder)' },
 ]
-const MIDIA = ['Alyson','Joyce','Caetano','Daniel','Juliana']
-
-function todoStaff() {
-  const lista = []
-  EQUIPES.forEach(eq => {
-    eq.lideres.split(' e ').forEach(l => lista.push({ nome: l.trim(), area: eq.nome + ' (líder)' }))
-    eq.membros.forEach(m => lista.push({ nome: m, area: eq.nome }))
-  })
-  MIDIA.forEach(m => lista.push({ nome: m, area: 'Mídia' }))
-  lista.push({ nome: 'Samuel Lopes', area: 'Cozinha' })
-  lista.push({ nome: 'Hadstton', area: 'Cantina' })
-  lista.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
-  return lista
-}
 
 function BackBtn({ onVoltar, titulo }) {
   return (
@@ -110,13 +134,12 @@ export default function Checkin({ onVoltar }) {
     await supabase.from('checkin_alunos').upsert({ nome, status, acomodacao: val }, { onConflict: 'nome' })
   }
 
-  const staff = todoStaff()
-  const staffFiltrado = busca ? staff.filter(p => p.nome.toLowerCase().includes(busca.toLowerCase())) : staff
-  const staffChegou = staff.filter(p => staffCache['staff_' + p.nome]?.status === 'sim').length
+  const staffFiltrado = busca ? LISTA_STAFF.filter(p => p.nome.toLowerCase().includes(busca.toLowerCase())) : LISTA_STAFF
+  const staffChegou = LISTA_STAFF.filter(p => staffCache['staff_' + p.nome]?.status === 'sim').length
   const alunosFiltrados = busca ? alunosLista.filter(a => a.nome_completo.toLowerCase().includes(busca.toLowerCase())) : alunosLista
   const alunosChegou = alunosLista.filter(a => alunosCache[a.nome_completo]?.status === 'sim').length
 
-  const total = aba === 'staff' ? staff.length : alunosLista.length
+  const total = aba === 'staff' ? LISTA_STAFF.length : alunosLista.length
   const chegou = aba === 'staff' ? staffChegou : alunosChegou
   const pct = total > 0 ? Math.round((chegou / total) * 100) : 0
 
@@ -125,15 +148,9 @@ export default function Checkin({ onVoltar }) {
   return (
     <div style={{ background: '#0A0A14', minHeight: '100vh' }}>
       <BackBtn onVoltar={onVoltar} titulo="Check-in" />
-
-      {/* HERO */}
       <div style={{ padding: '24px 22px 0' }}>
-        <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 52, fontWeight: 800, background: 'linear-gradient(90deg,#A78BFA,#60A5FA)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1 }}>
-          {chegou}
-        </div>
-        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: -4, marginBottom: 16 }}>
-          de {total} {aba === 'staff' ? 'colaboradores' : 'alunos'} chegaram
-        </div>
+        <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 52, fontWeight: 800, background: 'linear-gradient(90deg,#A78BFA,#60A5FA)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1 }}>{chegou}</div>
+        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: -4, marginBottom: 16 }}>de {total} {aba === 'staff' ? 'colaboradores' : 'alunos'} chegaram</div>
         <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 16, height: 10, overflow: 'hidden', marginBottom: 8 }}>
           <div style={{ height: '100%', background: 'linear-gradient(90deg,#7C3AED,#60A5FA)', borderRadius: 16, width: pct + '%', transition: 'width 0.5s' }} />
         </div>
@@ -142,21 +159,15 @@ export default function Checkin({ onVoltar }) {
           <span>{total - chegou} pendentes</span>
         </div>
       </div>
-
-      {/* ABAS */}
       <div style={{ display: 'flex', gap: 8, padding: '16px 22px' }}>
         {[['staff','👥 Staff'],['alunos','🎒 Alunos']].map(([id, label]) => (
           <button key={id} onClick={() => { setAba(id); setBusca('') }} style={{ flex: 1, padding: '10px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.1)', background: aba === id ? 'rgba(124,58,237,0.3)' : 'rgba(255,255,255,0.05)', color: aba === id ? '#C4B5FD' : 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{label}</button>
         ))}
       </div>
-
-      {/* BUSCA */}
       <div style={{ margin: '0 22px 16px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
         <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>🔍</span>
         <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar nome..." style={{ background: 'none', border: 'none', outline: 'none', color: 'white', fontSize: 14, fontFamily: 'Inter, sans-serif', flex: 1 }} />
       </div>
-
-      {/* LISTA STAFF */}
       {aba === 'staff' && (
         <div style={{ padding: '0 22px 100px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {staffFiltrado.map((p, i) => {
@@ -165,14 +176,14 @@ export default function Checkin({ onVoltar }) {
             const acom = ACOMODACOES.find(a => a.id === c.acom)
             const iniciais = p.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
             return (
-              <div key={p.nome} style={{ background: c.status === 'sim' ? 'rgba(124,58,237,0.15)' : 'rgba(255,255,255,0.05)', border: c.status === 'sim' ? '1px solid rgba(124,58,237,0.4)' : '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '14px 16px', cursor: 'pointer' }}>
+              <div key={p.nome} style={{ background: c.status === 'sim' ? 'rgba(124,58,237,0.15)' : 'rgba(255,255,255,0.05)', border: c.status === 'sim' ? '1px solid rgba(124,58,237,0.4)' : '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '14px 16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ width: 40, height: 40, borderRadius: 14, background: avatarColors[i % avatarColors.length], display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, flexShrink: 0 }}>{iniciais}</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 600 }}>{p.nome}</div>
                     <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>{p.area}{acom ? ' · ' + acom.nome : ''}</div>
                   </div>
-                  <div onClick={() => marcarStaff(p.nome)} style={{ fontSize: 22 }}>{c.status === 'sim' ? '✅' : '⭕'}</div>
+                  <div onClick={() => marcarStaff(p.nome)} style={{ fontSize: 22, cursor: 'pointer' }}>{c.status === 'sim' ? '✅' : '⭕'}</div>
                 </div>
                 <AcomSelect valor={c.acom} onSave={val => salvarAcomStaff(p.nome, val)} />
               </div>
@@ -180,8 +191,6 @@ export default function Checkin({ onVoltar }) {
           })}
         </div>
       )}
-
-      {/* LISTA ALUNOS */}
       {aba === 'alunos' && (
         <div style={{ padding: '0 22px 100px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {alunosLista.length === 0 && <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 13, padding: 30 }}>⏳ Nenhum aluno cadastrado ainda</div>}
@@ -197,7 +206,7 @@ export default function Checkin({ onVoltar }) {
                     <div style={{ fontSize: 14, fontWeight: 600 }}>{a.nome_completo}</div>
                     <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>{a.genero === 'M' ? '👦 Masculino' : '👧 Feminino'}{acom ? ' · ' + acom.nome : ''}</div>
                   </div>
-                  <div onClick={() => marcarAluno(a.nome_completo)} style={{ fontSize: 22 }}>{c.status === 'sim' ? '✅' : '⭕'}</div>
+                  <div onClick={() => marcarAluno(a.nome_completo)} style={{ fontSize: 22, cursor: 'pointer' }}>{c.status === 'sim' ? '✅' : '⭕'}</div>
                 </div>
                 <AcomSelect valor={c.acom} onSave={val => salvarAcomAluno(a.nome_completo, val)} />
               </div>

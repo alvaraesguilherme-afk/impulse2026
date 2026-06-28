@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 const EQUIPES = [
-  { id: 'verde', nome: 'Equipe Verde', lideres: 'Jhony e Linda', membros: ['Emanuel','Hellen Borges','Isabely Matos','Joel Marcos','Jeronimo','Livia Andrea'], offset: 0, cor: '#A78BFA', grad: 'linear-gradient(135deg,#4C1D95,#7C3AED)', emoji: '🟢' },
-  { id: 'amarelo', nome: 'Equipe Amarelo', lideres: 'Gustavo e Taiwa', membros: ['Hugo Lacroix','Lorena','Maria Clara','Matheus Almeida','Stephany'], offset: 1, cor: '#FCD34D', grad: 'linear-gradient(135deg,#78350F,#F59E0B)', emoji: '🟡' },
-  { id: 'azul', nome: 'Equipe Azul', lideres: 'Walterley e Maria Julia', membros: ['Ludymila','Mariana Gabrielle','Mauricio','Rafael','Ryan Guedes'], offset: 2, cor: '#60A5FA', grad: 'linear-gradient(135deg,#0C4A6E,#0EA5E9)', emoji: '🔵' },
-  { id: 'vermelho', nome: 'Equipe Vermelho', lideres: 'Francisco e Clara Cunha', membros: ['Gabriel Mendes','Leticia Nascimento','Nicoly','Rennan','Vic'], offset: 3, cor: '#F87171', grad: 'linear-gradient(135deg,#7F1D1D,#EF4444)', emoji: '🔴' },
+  { id: 'verde', nome: 'Equipe Verde', lideres: 'Jhony e Linda', membros: ['Emanuel','Hellen Borges','Isabely Matos','Joel Marcos','Jerônimo','Lívia Andréa'], offset: 0, cor: '#A78BFA', grad: 'linear-gradient(135deg,#4C1D95,#7C3AED)', emoji: '🟢' },
+  { id: 'amarelo', nome: 'Equipe Amarelo', lideres: 'Gustavo Massay e Taiwa', membros: ['Hugo Lacroix','Lorena','Maria Clara','Matheus Almeida','Stephany'], offset: 1, cor: '#FCD34D', grad: 'linear-gradient(135deg,#78350F,#F59E0B)', emoji: '🟡' },
+  { id: 'azul', nome: 'Equipe Azul', lideres: 'Walterley e Maria Júlia', membros: ['Ludmyla','Mariana Gabrielle','Maurício','Rafael Chaves','Ryan Guedes'], offset: 2, cor: '#60A5FA', grad: 'linear-gradient(135deg,#0C4A6E,#0EA5E9)', emoji: '🔵' },
+  { id: 'vermelho', nome: 'Equipe Vermelho', lideres: 'Francisco e Clara Cunha', membros: ['Gabriel Mendes','Letícia','Nicoly','Rennan','Victória'], offset: 3, cor: '#F87171', grad: 'linear-gradient(135deg,#7F1D1D,#EF4444)', emoji: '🔴' },
 ]
 
 const CICLO = ['M','T','N','F']
@@ -19,7 +19,7 @@ const FIM = new Date(2026,6,25)
 const LIDERES_CHAMADA = [
   { nome: 'Alvarães', senha: '1932', equipeId: '' },
   { nome: 'Jhony', senha: '7780', equipeId: 'verde' },
-  { nome: 'Gustavo', senha: '1121', equipeId: 'amarelo' },
+  { nome: 'Gustavo Massay', senha: '1121', equipeId: 'amarelo' },
   { nome: 'Walterley', senha: '3123', equipeId: 'azul' },
   { nome: 'Francisco', senha: '6689', equipeId: 'vermelho' },
 ]
@@ -90,28 +90,17 @@ export default function Apoio({ onVoltar }) {
 
   const equipesFiltradas = lider?.equipeId === '' ? EQUIPES : EQUIPES.filter(e => e.id === lider?.equipeId)
 
-  const abas = [
-    { id: 'times', label: '👥 Times' },
-    { id: 'escalas', label: '📅 Escalas' },
-    { id: 'chamada', label: '📋 Chamada' },
-  ]
-
   return (
     <div style={{ background: '#080C14', minHeight: '100vh' }}>
       <BackBtn onVoltar={onVoltar} titulo="Escala de Serviço" />
-
-      {/* ABAS */}
       <div style={{ display: 'flex', gap: 8, padding: '16px 22px', overflowX: 'auto', scrollbarWidth: 'none' }}>
-        {abas.map(a => (
+        {[{id:'times',label:'👥 Times'},{id:'escalas',label:'📅 Escalas'},{id:'chamada',label:'📋 Chamada 🔒'}].map(a => (
           <button key={a.id} onClick={() => a.id === 'chamada' ? abrirChamada() : setAba(a.id)} style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.1)', background: aba === a.id ? 'rgba(124,58,237,0.3)' : 'rgba(255,255,255,0.05)', color: aba === a.id ? '#C4B5FD' : 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-            {a.label}{a.id === 'chamada' ? ' 🔒' : ''}
+            {a.label}
           </button>
         ))}
       </div>
-
       <div style={{ padding: '0 22px 100px' }}>
-
-        {/* TIMES */}
         {aba === 'times' && EQUIPES.map(eq => (
           <div key={eq.id} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 18, marginBottom: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
@@ -123,14 +112,10 @@ export default function Apoio({ onVoltar }) {
             </div>
             <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8 }}>Membros</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {eq.membros.map(m => (
-                <span key={m} style={{ fontSize: 11, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '4px 10px', color: 'rgba(255,255,255,0.7)' }}>{m}</span>
-              ))}
+              {eq.membros.map(m => <span key={m} style={{ fontSize: 11, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '4px 10px', color: 'rgba(255,255,255,0.7)' }}>{m}</span>)}
             </div>
           </div>
         ))}
-
-        {/* ESCALAS */}
         {aba === 'escalas' && (
           hj < INICIO_VISIVEL ? (
             <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 20, padding: 24, textAlign: 'center' }}>
@@ -144,44 +129,28 @@ export default function Apoio({ onVoltar }) {
           ) : (
             <>
               <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 18, marginBottom: 16 }}>
-                <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 24, fontWeight: 800, marginBottom: 2 }}>
-                  {hj.getDate()} de {MESES[hj.getMonth()]}
-                </div>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 14 }}>
-                  {hj >= INICIO && hj <= FIM ? ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'][hj.getDay()] : 'Fora do período'}
-                </div>
-                {EQUIPES.map(eq => {
-                  const t = getTurno(eq, hj)
-                  if (!t) return null
-                  return (
-                    <div key={eq.id} style={{ borderRadius: 14, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      <div>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: eq.cor }}>{eq.nome}</div>
-                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>{eq.lideres}</div>
-                      </div>
-                      <div style={{ fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 20, background: 'rgba(124,58,237,0.3)', color: '#C4B5FD' }}>{TURNO_LABEL[t]}</div>
-                    </div>
-                  )
-                })}
+                <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 24, fontWeight: 800, marginBottom: 2 }}>{hj.getDate()} de {MESES[hj.getMonth()]}</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 14 }}>{hj >= INICIO && hj <= FIM ? ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'][hj.getDay()] : 'Fora do período'}</div>
+                {EQUIPES.map(eq => { const t = getTurno(eq, hj); if (!t) return null; return (
+                  <div key={eq.id} style={{ borderRadius: 14, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div><div style={{ fontSize: 14, fontWeight: 600, color: eq.cor }}>{eq.nome}</div><div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>{eq.lideres}</div></div>
+                    <div style={{ fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 20, background: 'rgba(124,58,237,0.3)', color: '#C4B5FD' }}>{TURNO_LABEL[t]}</div>
+                  </div>
+                )})}
               </div>
               <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Calendário</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
-                {dias.map(dia => {
-                  const isHoje = dia.getTime() === hj.getTime()
-                  return (
-                    <div key={dia.getTime()} style={{ background: isHoje ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.04)', border: isHoje ? '1px solid rgba(124,58,237,0.5)' : '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '10px 4px', textAlign: 'center', cursor: 'pointer' }}>
-                      <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: 2 }}>{DIAS_C[dia.getDay()]}</div>
-                      <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 800, color: isHoje ? '#A78BFA' : 'white' }}>{dia.getDate()}</div>
-                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 1 }}>Jul</div>
-                    </div>
-                  )
-                })}
+                {dias.map(dia => { const isHoje = dia.getTime() === hj.getTime(); return (
+                  <div key={dia.getTime()} style={{ background: isHoje ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.04)', border: isHoje ? '1px solid rgba(124,58,237,0.5)' : '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '10px 4px', textAlign: 'center', cursor: 'pointer' }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: 2 }}>{DIAS_C[dia.getDay()]}</div>
+                    <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 800, color: isHoje ? '#A78BFA' : 'white' }}>{dia.getDate()}</div>
+                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 1 }}>Jul</div>
+                  </div>
+                )})}
               </div>
             </>
           )
         )}
-
-        {/* CHAMADA */}
         {aba === 'chamada' && lider && (
           <>
             <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -231,8 +200,6 @@ export default function Apoio({ onVoltar }) {
           </>
         )}
       </div>
-
-      {/* LOGIN CHAMADA */}
       {showLogin && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.85)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: '28px 24px', width: '90%', maxWidth: 340, textAlign: 'center' }}>

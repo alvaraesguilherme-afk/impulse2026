@@ -1,12 +1,12 @@
 const STAFF_AREAS = [
-  { area: '👑 Liderança Geral', nomes: ['Alvarães — Apoio', 'Danilo — Financeiro e Secretaria', 'Eliel — Louvor'] },
-  { area: '🙌 Apoio', nomes: ['Clara Cunha','Emanuel','Francisco','Gustavo','Hellen Borges','Hugo Lacroix','Isabely Matos','Jeronimo','Jhony','Joel Marcos','Leticia Nascimento','Linda','Livia Andrea','Lorena','Ludymila','Maria Clara','Maria Julia','Mariana Gabrielle','Matheus Almeida','Mauricio','Nicoly','Rafael','Rennan','Ryan Guedes','Stephany','Taiwa','Vic','Walterley'] },
-  { area: '🎥 Mídia', nomes: ['Alyson — Líder', 'Caetano', 'Daniel', 'Joyce', 'Juliana'] },
+  { area: '👑 Liderança Geral', nomes: ['Alvarães', 'Danilo', 'Eliel'] },
+  { area: '🙌 Apoio', nomes: ['Clara Cunha','Emanuel','Francisco','Gustavo Massay','Hellen Borges','Hugo Lacroix','Isabely Matos','Jerônimo','Jhony','Joel Marcos','Letícia','Linda','Lívia Andréa','Lorena','Ludmyla','Maria Clara','Maria Júlia','Mariana Gabrielle','Matheus Almeida','Maurício','Nicoly','Rafael Chaves','Rennan','Ryan Guedes','Stephany','Taiwa','Victória','Walterley'] },
+  { area: '🎥 Mídia', nomes: ['Alyson','Caetano','Daniel','Joyce','Juliana'] },
   { area: '🍳 Cozinha', nomes: ['Samuel Lopes'] },
-  { area: '🛒 Cantina', nomes: ['Hadstton'] },
+  { area: '🛒 Cantina', nomes: ['Hadstton Capell'] },
   { area: '🎤 Preletores', nomes: ['Paula'] },
   { area: '💡 Iluminação', nomes: ['Gustavo Borges'] },
-  { area: '📦 Logística', nomes: ['Edson'] },
+  { area: '📦 Logística', nomes: ['Edson Jr.'] },
 ]
 
 function BackBtn({ onVoltar, titulo }) {
@@ -25,14 +25,10 @@ export default function Staff({ onVoltar }) {
       <div style={{ padding: '24px 22px 100px' }}>
         {STAFF_AREAS.filter(s => s.nomes.length > 0).map(s => (
           <div key={s.area} style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>
-              {s.area}
-            </div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>{s.area}</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {s.nomes.map(n => (
-                <span key={n} style={{ fontSize: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '6px 14px', color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>
-                  {n}
-                </span>
+                <span key={n} style={{ fontSize: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '6px 14px', color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>{n}</span>
               ))}
             </div>
           </div>
