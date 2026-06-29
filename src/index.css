@@ -1,14 +1,182 @@
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
+:root {
+  --bg-app: #0D0D0D;
+  --bg-tela: #080C14;
+  --bg-card: rgba(255,255,255,0.04);
+  --bg-card-hover: rgba(255,255,255,0.07);
+  --border: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.12);
+  --text: #ffffff;
+  --text-secondary: rgba(255,255,255,0.7);
+  --text-muted: rgba(255,255,255,0.4);
+  --text-faint: rgba(255,255,255,0.25);
+  --nav-bg: rgba(8,8,14,0.92);
+  --overlay-bg: rgba(26,26,46,0.95);
+  --input-bg: rgba(255,255,255,0.07);
+}
+
+[data-theme="light"] {
+  --bg-app: #F2F2F7;
+  --bg-tela: #FFFFFF;
+  --bg-card: rgba(0,0,0,0.04);
+  --bg-card-hover: rgba(0,0,0,0.07);
+  --border: rgba(0,0,0,0.1);
+  --border-strong: rgba(0,0,0,0.15);
+  --text: #1a1a2e;
+  --text-secondary: rgba(0,0,0,0.7);
+  --text-muted: rgba(0,0,0,0.5);
+  --text-faint: rgba(0,0,0,0.3);
+  --nav-bg: rgba(255,255,255,0.94);
+  --overlay-bg: rgba(255,255,255,0.97);
+  --input-bg: rgba(0,0,0,0.06);
+}
+
 body {
-  background: #0D0D0D;
+  background: var(--bg-app);
   font-family: 'Inter', sans-serif;
-  color: white;
+  color: var(--text);
   max-width: 390px;
   margin: 0 auto;
   min-height: 100vh;
   overflow-x: hidden;
   scrollbar-width: none;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 body::-webkit-scrollbar { display: none; }
+
+.toggle-track {
+  width: 50px; height: 28px; border-radius: 14px;
+  background: rgba(255,255,255,0.15);
+  position: relative; cursor: pointer;
+  transition: background 0.25s ease;
+}
+.toggle-track.active {
+  background: linear-gradient(135deg, #7C3AED, #60A5FA);
+}
+.toggle-thumb {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: white;
+  position: absolute; top: 3px; left: 3px;
+  transition: transform 0.25s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+.toggle-track.active .toggle-thumb {
+  transform: translateX(22px);
+}
+
+.tela-enter {
+  animation: fadeSlideIn 0.3s ease-out;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card-modulo {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  will-change: transform;
+}
+.card-modulo:active {
+  transform: scale(0.95) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.nav-item {
+  transition: color 0.2s ease, transform 0.15s ease;
+  will-change: transform;
+  position: relative;
+}
+.nav-item:active {
+  transform: scale(0.9);
+}
+.nav-icon {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.nav-item-active .nav-icon {
+  transform: translateY(-2px);
+}
+.nav-indicator {
+  transition: width 0.25s ease, opacity 0.25s ease;
+}
+
+.overlay-enter {
+  animation: overlayIn 0.25s ease-out;
+}
+@keyframes overlayIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.overlay-bg {
+  animation: bgFadeIn 0.2s ease-out;
+}
+@keyframes bgFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+@keyframes spin { to { transform: rotate(360deg) } }
+
+.splash {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg-app);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.splash-exit {
+  opacity: 0;
+  transform: scale(1.05);
+}
+.splash-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  animation: splashGlow 2s ease-in-out infinite alternate;
+}
+@keyframes splashGlow {
+  from { opacity: 0.2; transform: scale(0.9); }
+  to { opacity: 0.5; transform: scale(1.1); }
+}
+.splash-logo {
+  animation: splashLogoIn 0.8s ease-out both;
+}
+@keyframes splashLogoIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.splash-sub {
+  animation: splashSubIn 0.8s ease-out 0.4s both;
+}
+@keyframes splashSubIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.splash-bar {
+  animation: splashBarIn 0.6s ease-out 0.8s both;
+}
+@keyframes splashBarIn {
+  from { opacity: 0; width: 0; }
+  to { opacity: 1; width: 60px; }
+}
+.splash-loader {
+  width: 60px; height: 3px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 32px;
+}
+.splash-loader-bar {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #A78BFA, #60A5FA);
+  animation: splashLoad 2s ease-in-out forwards;
+}
+@keyframes splashLoad {
+  from { width: 0%; }
+  to { width: 100%; }
+}

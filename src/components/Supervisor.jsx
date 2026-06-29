@@ -101,17 +101,17 @@ export default function Supervisor({ onVoltar, nome, abas }) {
 
       {/* HEADER */}
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
-        <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.08)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: 'none', color: 'white' }}>‹</button>
+        <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'var(--input-bg)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: 'none', color: 'var(--text)' }}>‹</button>
         <div>
           <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700 }}>Supervisor</h2>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 1 }}>Logado como {nome}</div>
+          <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 1 }}>Logado como {nome}</div>
         </div>
       </div>
 
       {/* ABAS */}
       <div style={{ display: 'flex', gap: 8, padding: '16px 22px', overflowX: 'auto', scrollbarWidth: 'none' }}>
         {abas.map(a => (
-          <button key={a} onClick={() => setAba(a)} style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.1)', background: aba === a ? 'rgba(124,58,237,0.3)' : 'rgba(255,255,255,0.05)', color: aba === a ? '#C4B5FD' : 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+          <button key={a} onClick={() => setAba(a)} style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 20, border: '1px solid var(--border-strong)', background: aba === a ? 'rgba(124,58,237,0.3)' : 'var(--bg-card)', color: aba === a ? '#C4B5FD' : 'var(--text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
             {ABA_LABELS[a]}
           </button>
         ))}
@@ -122,19 +122,19 @@ export default function Supervisor({ onVoltar, nome, abas }) {
         {/* AVISOS */}
         {aba === 'avisos' && (
           <>
-            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 18, marginBottom: 16 }}>
-              <textarea value={avisoTexto} onChange={e => setAvisoTexto(e.target.value)} placeholder="Digite o aviso para todos verem..." style={{ width: '100%', padding: 12, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, fontSize: 14, resize: 'none', outline: 'none', color: 'white', fontFamily: 'Inter, sans-serif', minHeight: 100 }} />
-              <button onClick={publicarAviso} style={{ width: '100%', marginTop: 12, padding: 14, background: 'linear-gradient(135deg,#7C3AED,#60A5FA)', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'white', fontFamily: 'Syne, sans-serif' }}>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: 18, marginBottom: 16 }}>
+              <textarea value={avisoTexto} onChange={e => setAvisoTexto(e.target.value)} placeholder="Digite o aviso para todos verem..." style={{ width: '100%', padding: 12, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, fontSize: 14, resize: 'none', outline: 'none', color: 'var(--text)', fontFamily: 'Inter, sans-serif', minHeight: 100 }} />
+              <button onClick={publicarAviso} style={{ width: '100%', marginTop: 12, padding: 14, background: 'linear-gradient(135deg,#7C3AED,#60A5FA)', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text)', fontFamily: 'Syne, sans-serif' }}>
                 📢 Publicar aviso
               </button>
             </div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Publicados</div>
-            {avisos.length === 0 && <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 13, padding: 30 }}>Nenhum aviso ainda</div>}
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Publicados</div>
+            {avisos.length === 0 && <div style={{ textAlign: 'center', color: 'var(--text-faint)', fontSize: 13, padding: 30 }}>Nenhum aviso ainda</div>}
             {avisos.map(a => (
-              <div key={a.id} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 18, marginBottom: 10 }}>
-                <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', marginBottom: 10, lineHeight: 1.5 }}>{a.texto}</div>
+              <div key={a.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: 18, marginBottom: 10 }}>
+                <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 10, lineHeight: 1.5 }}>{a.texto}</div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{a.data} às {a.hora}</span>
+                  <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>{a.data} às {a.hora}</span>
                   <button onClick={() => deletarAviso(a.id)} style={{ padding: '6px 14px', background: 'rgba(239,68,68,0.2)', color: '#F87171', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>🗑 Remover</button>
                 </div>
               </div>
@@ -146,18 +146,18 @@ export default function Supervisor({ onVoltar, nome, abas }) {
         {aba === 'chamada' && (
           <>
             <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-              <select value={diaSel} onChange={e => { setDiaSel(e.target.value); carregarChamada(e.target.value, turnoSel) }} style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, fontSize: 13, color: 'white', outline: 'none' }}>
+              <select value={diaSel} onChange={e => { setDiaSel(e.target.value); carregarChamada(e.target.value, turnoSel) }} style={{ flex: 1, padding: '12px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 13, color: 'var(--text)', outline: 'none' }}>
                 <option value="">Selecione o dia</option>
                 {dias.map(d => <option key={d.getTime()} value={String(d.getTime())}>{d.getDate()} de julho ({DIAS_C[d.getDay()]})</option>)}
               </select>
-              <select value={turnoSel} onChange={e => { setTurnoSel(e.target.value); carregarChamada(diaSel, e.target.value) }} style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, fontSize: 13, color: 'white', outline: 'none' }}>
+              <select value={turnoSel} onChange={e => { setTurnoSel(e.target.value); carregarChamada(diaSel, e.target.value) }} style={{ flex: 1, padding: '12px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 13, color: 'var(--text)', outline: 'none' }}>
                 <option value="">Turno</option>
                 <option value="M">Manhã</option>
                 <option value="T">Tarde</option>
                 <option value="N">Noite</option>
               </select>
             </div>
-            {(!diaSel || !turnoSel) && <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: 20 }}>Selecione o dia e turno</p>}
+            {(!diaSel || !turnoSel) && <p style={{ fontSize: 13, color: 'var(--text-faint)', textAlign: 'center', padding: 20 }}>Selecione o dia e turno</p>}
             {diaSel && turnoSel && EQUIPES.map(eq => {
               const t = getTurno(eq, new Date(parseInt(diaSel)))
               if (t !== turnoSel) return null
@@ -170,15 +170,15 @@ export default function Supervisor({ onVoltar, nome, abas }) {
                     const st = chamadaData[chKey]?.status || ''
                     const obs = chamadaData[chKey]?.obs || ''
                     return (
-                      <div key={n} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '12px 14px', marginBottom: 8 }}>
+                      <div key={n} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: '12px 14px', marginBottom: 8 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                           <div style={{ fontSize: 14, fontWeight: 600 }}>{n}{isLider ? ' 👑' : ''}</div>
                           <div style={{ display: 'flex', gap: 6 }}>
-                            <button onClick={() => marcar(chKey, 'presente')} style={{ padding: '6px 14px', borderRadius: 20, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: st === 'presente' ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.07)', color: st === 'presente' ? '#6EE7B7' : 'rgba(255,255,255,0.4)' }}>✓</button>
-                            <button onClick={() => marcar(chKey, 'ausente')} style={{ padding: '6px 14px', borderRadius: 20, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: st === 'ausente' ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.07)', color: st === 'ausente' ? '#F87171' : 'rgba(255,255,255,0.4)' }}>✗</button>
+                            <button onClick={() => marcar(chKey, 'presente')} style={{ padding: '6px 14px', borderRadius: 20, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: st === 'presente' ? 'rgba(16,185,129,0.3)' : 'var(--input-bg)', color: st === 'presente' ? '#6EE7B7' : 'var(--text-muted)' }}>✓</button>
+                            <button onClick={() => marcar(chKey, 'ausente')} style={{ padding: '6px 14px', borderRadius: 20, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: st === 'ausente' ? 'rgba(239,68,68,0.3)' : 'var(--input-bg)', color: st === 'ausente' ? '#F87171' : 'var(--text-muted)' }}>✗</button>
                           </div>
                         </div>
-                        <textarea defaultValue={obs} onBlur={e => salvarObs(chKey, e.target.value)} placeholder="Observação..." rows={1} style={{ width: '100%', padding: '8px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, fontSize: 12, resize: 'none', outline: 'none', color: 'rgba(255,255,255,0.7)', fontFamily: 'Inter, sans-serif' }} />
+                        <textarea defaultValue={obs} onBlur={e => salvarObs(chKey, e.target.value)} placeholder="Observação..." rows={1} style={{ width: '100%', padding: '8px 12px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, fontSize: 12, resize: 'none', outline: 'none', color: 'var(--text-secondary)', fontFamily: 'Inter, sans-serif' }} />
                       </div>
                     )
                   })}
@@ -192,7 +192,7 @@ export default function Supervisor({ onVoltar, nome, abas }) {
         {aba === 'faltas' && (
           <>
             {EQUIPES.every(eq => !faltas[eq.id]?.length) && (
-              <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 13, padding: 40 }}>
+              <div style={{ textAlign: 'center', color: 'var(--text-faint)', fontSize: 13, padding: 40 }}>
                 <div style={{ fontSize: 36, marginBottom: 12 }}>🎉</div>
                 Nenhuma falta registrada ainda
               </div>
@@ -201,20 +201,20 @@ export default function Supervisor({ onVoltar, nome, abas }) {
               const lista = faltas[eq.id] || []
               if (!lista.length) return null
               return (
-                <div key={eq.id} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, marginBottom: 14, overflow: 'hidden' }}>
-                  <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <div key={eq.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, marginBottom: 14, overflow: 'hidden' }}>
+                  <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }}>
                     <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 15, fontWeight: 700, color: eq.cor }}>{eq.emoji} {eq.nome}</div>
                     <div style={{ fontSize: 12, fontWeight: 700, padding: '4px 12px', borderRadius: 20, background: 'rgba(239,68,68,0.2)', color: '#F87171' }}>{lista.length} {lista.length === 1 ? 'falta' : 'faltas'}</div>
                   </div>
                   <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {lista.map((f, i) => (
-                      <div key={i} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 12, padding: '10px 12px' }}>
+                      <div key={i} style={{ background: 'var(--bg-card)', borderRadius: 12, padding: '10px 12px' }}>
                         <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{f.nome}</div>
                         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{f.data.getDate()} de julho ({DIAS_C[f.data.getDay()]})</span>
+                          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{f.data.getDate()} de julho ({DIAS_C[f.data.getDay()]})</span>
                           <span style={{ background: 'rgba(239,68,68,0.2)', color: '#F87171', padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 700 }}>{TURNO_LABEL[f.turno]}</span>
                         </div>
-                        {f.obs && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 4, fontStyle: 'italic' }}>"{f.obs}"</div>}
+                        {f.obs && <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 4, fontStyle: 'italic' }}>"{f.obs}"</div>}
                       </div>
                     ))}
                   </div>

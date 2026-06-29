@@ -14,7 +14,7 @@ export default function Escola({ onVoltar, onAbrirArea }) {
       </div>
       <div style={{ background: 'linear-gradient(135deg,#1e3a8a,#2563eb)', padding: '20px 18px 20px' }}>
         <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', marginBottom: 2 }}>Escola Impulse 2026</div>
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,.7)' }}>15 a 25 de julho</div>
+        <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>15 a 25 de julho</div>
       </div>
       <div style={{ padding: 16 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>Áreas</div>

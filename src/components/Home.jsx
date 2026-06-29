@@ -97,23 +97,23 @@ export default function Home({ onNavegar }) {
     { id: 'apoio', icon: '🙌', nome: 'Apoio', desc: 'Escalas e times', grad: 'linear-gradient(145deg,#4C1D95,#7C3AED)' },
     { id: 'staff', icon: '👤', nome: 'Staff', desc: 'Colaboradores', grad: 'linear-gradient(145deg,#0C4A6E,#0EA5E9)' },
     { id: 'midia', icon: '🎥', nome: 'Mídia', desc: 'Escalas e equipe', grad: 'linear-gradient(145deg,#78350F,#F59E0B)' },
-    { id: 'mural', icon: '📸', nome: 'Mural', desc: 'Fotos do staff', grad: 'linear-gradient(145deg,#831843,#EC4899)' },
+    { id: 'mural', icon: '📸', nome: 'Feed Impulse', desc: 'Fotos do staff', grad: 'linear-gradient(145deg,#831843,#EC4899)' },
   ]
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0D0D0D', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-app)', position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
         <div style={{ position: 'absolute', width: 300, height: 300, background: '#5B21B6', borderRadius: '50%', filter: 'blur(80px)', opacity: 0.35, top: -80, right: -80 }} />
         <div style={{ position: 'absolute', width: 200, height: 200, background: '#0EA5E9', borderRadius: '50%', filter: 'blur(80px)', opacity: 0.35, bottom: 200, left: -60 }} />
         <div style={{ position: 'absolute', width: 150, height: 150, background: '#F59E0B', borderRadius: '50%', filter: 'blur(80px)', opacity: 0.35, bottom: 300, right: -40 }} />
       </div>
       <div style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 22px 0', fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 22px 0', fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>
           <span>{new Date().toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
           <span>Escola Impulse</span>
         </div>
         <div style={{ padding: '24px 22px 0' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 30, padding: '6px 14px', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.7)', marginBottom: 20 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--input-bg)', backdropFilter: 'blur(20px)', border: '1px solid var(--border-strong)', borderRadius: 30, padding: '6px 14px', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 20 }}>
             <div style={{ width: 7, height: 7, background: '#EF4444', borderRadius: '50%', boxShadow: '0 0 8px #EF4444', animation: 'blink 1.5s infinite' }} />
             {diasRestantes > 0 ? `${diasRestantes} dias para o evento` : 'Evento em andamento'}
           </div>
@@ -122,7 +122,7 @@ export default function Home({ onNavegar }) {
             <span style={{ background: 'linear-gradient(90deg,#A78BFA,#60A5FA)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Impulse</span><br />
             2026
           </div>
-          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', fontWeight: 500 }}>15 a 25 de julho · Rancho Império</div>
+          <div style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 500 }}>15 a 25 de julho · Rancho Império</div>
         </div>
 
         {diaEvento && (
@@ -136,13 +136,13 @@ export default function Home({ onNavegar }) {
             </div>
             {frase?.frase ? (
               <>
-                <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 600, lineHeight: 1.5, color: 'rgba(255,255,255,0.85)' }}>
+                <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 600, lineHeight: 1.5, color: 'var(--text)' }}>
                   "{frase.frase}"
                 </div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 8 }}>— {frase.autor}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 8 }}>— {frase.autor}</div>
               </>
             ) : (
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)', fontStyle: 'italic' }}>Toque para definir</div>
+              <div style={{ fontSize: 13, color: 'var(--text-faint)', fontStyle: 'italic' }}>Toque para definir</div>
             )}
           </div>
         )}
@@ -155,7 +155,7 @@ export default function Home({ onNavegar }) {
             <div style={{ borderRadius: 20, overflow: 'hidden', border: '2px solid rgba(245,158,11,0.3)' }}>
               <img src={fotoDestaque.foto_url} alt="" style={{ width: '100%', display: 'block' }} />
             </div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 6, textAlign: 'center' }}>
+            <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 6, textAlign: 'center' }}>
               {fotoDestaque.votos} voto{fotoDestaque.votos !== 1 ? 's' : ''}
             </div>
           </div>
@@ -166,7 +166,7 @@ export default function Home({ onNavegar }) {
             <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(236,72,153,0.6)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
               📸 Vote na Foto do Dia {diaEvento}
             </div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginBottom: 12 }}>
+            <div style={{ fontSize: 11, color: 'var(--text-faint)', marginBottom: 12 }}>
               {jaVotou ? `Você já votou! ${totalVotos} voto${totalVotos !== 1 ? 's' : ''} no total` : 'Toque na sua favorita'}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
@@ -175,7 +175,7 @@ export default function Home({ onNavegar }) {
                 return (
                   <div key={foto.id} onClick={() => votar(foto.id)} style={{
                     borderRadius: 16, overflow: 'hidden', cursor: jaVotou ? 'default' : 'pointer',
-                    border: isVotada ? '2px solid #EC4899' : '1px solid rgba(255,255,255,0.08)',
+                    border: isVotada ? '2px solid #EC4899' : '1px solid var(--border)',
                     position: 'relative', gridColumn: i === 4 ? 'span 2' : undefined
                   }}>
                     <img src={foto.foto_url} alt="" style={{ width: '100%', display: 'block', aspectRatio: i === 4 ? '2/1' : '1/1', objectFit: 'cover' }} />
@@ -185,8 +185,8 @@ export default function Home({ onNavegar }) {
                         background: 'linear-gradient(transparent, rgba(0,0,0,0.8))',
                         padding: '20px 10px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
                       }}>
-                        <span style={{ fontSize: 11, color: 'white', fontWeight: 700 }}>{foto.votos || 0} voto{(foto.votos || 0) !== 1 ? 's' : ''}</span>
-                        {isVotada && <span style={{ fontSize: 10, background: '#EC4899', color: 'white', padding: '2px 8px', borderRadius: 10, fontWeight: 700 }}>Seu voto</span>}
+                        <span style={{ fontSize: 11, color: 'var(--text)', fontWeight: 700 }}>{foto.votos || 0} voto{(foto.votos || 0) !== 1 ? 's' : ''}</span>
+                        {isVotada && <span style={{ fontSize: 10, background: '#EC4899', color: 'var(--text)', padding: '2px 8px', borderRadius: 10, fontWeight: 700 }}>Seu voto</span>}
                       </div>
                     )}
                   </div>
@@ -201,25 +201,28 @@ export default function Home({ onNavegar }) {
             <div style={{ fontSize: 20 }}>📢</div>
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.4 }}>{avisos[0].texto}</p>
-              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>{avisos[0].data} às {avisos[0].hora}</span>
+              <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{avisos[0].data} às {avisos[0].hora}</span>
             </div>
-            <div style={{ fontSize: 18, color: 'rgba(255,255,255,0.3)' }}>›</div>
+            <div style={{ fontSize: 18, color: 'var(--text-faint)' }}>›</div>
           </div>
         )}
-        <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: 2, textTransform: 'uppercase', padding: '24px 22px 14px' }}>Módulos</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: 2, textTransform: 'uppercase', padding: '24px 22px 14px' }}>Módulos</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, padding: '0 22px 100px' }}>
           {modulos.map(m => (
-            <div key={m.id} onClick={() => onNavegar(m.id)}
-              style={{ height: 140, borderRadius: 24, padding: 18, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', cursor: 'pointer', background: m.grad }}
-              onMouseDown={e => e.currentTarget.style.transform = 'scale(0.96)'}
-              onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
-              onTouchStart={e => e.currentTarget.style.transform = 'scale(0.96)'}
-              onTouchEnd={e => e.currentTarget.style.transform = 'scale(1)'}
+            <div key={m.id} onClick={() => onNavegar(m.id)} className="card-modulo"
+              style={{
+                height: 140, borderRadius: 24, padding: 18,
+                display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                cursor: 'pointer', background: m.grad,
+                border: '1px solid var(--border)',
+                boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
+                backdropFilter: 'blur(10px)'
+              }}
             >
               <div style={{ fontSize: 28 }}>{m.icon}</div>
               <div>
                 <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{m.nome}</div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)' }}>{m.desc}</div>
+                <div style={{ fontSize: 10, color: 'var(--text-secondary)' }}>{m.desc}</div>
               </div>
             </div>
           ))}
@@ -228,34 +231,33 @@ export default function Home({ onNavegar }) {
 
       {showFraseModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.85)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: '28px 24px', width: '90%', maxWidth: 340, textAlign: 'center' }}>
+          <div style={{ background: '#1a1a2e', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '28px 24px', width: '90%', maxWidth: 340, textAlign: 'center' }}>
             <div style={{ fontSize: 32, marginBottom: 12 }}>✦</div>
             <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>
               {frase?.frase ? 'Editar frase do dia' : 'Frase do dia'}
             </h2>
-            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 16 }}>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
               {frase?.frase ? 'Apenas o coordenador geral pode alterar' : 'Defina a frase para o Dia ' + diaEvento}
             </p>
             <textarea
               value={fraseInput} onChange={e => setFraseInput(e.target.value)}
               placeholder="Digite a frase..." rows={3}
-              style={{ width: '100%', padding: '12px 14px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, fontSize: 14, color: 'white', outline: 'none', marginBottom: 12, fontFamily: 'Inter, sans-serif', resize: 'none' }}
+              style={{ width: '100%', padding: '12px 14px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 14, color: 'var(--text)', outline: 'none', marginBottom: 12, fontFamily: 'Inter, sans-serif', resize: 'none' }}
             />
             <input
               type="password" value={fraseSenha}
               onChange={e => { setFraseSenha(e.target.value); setFraseErro('') }}
               onKeyDown={e => e.key === 'Enter' && salvarFrase()}
               placeholder="Sua senha" maxLength={10}
-              style={{ width: '100%', padding: '14px 16px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, fontSize: 16, textAlign: 'center', letterSpacing: '.2em', outline: 'none', color: 'white', marginBottom: 12, fontFamily: 'Inter, sans-serif' }}
+              style={{ width: '100%', padding: '14px 16px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 16, textAlign: 'center', letterSpacing: '.2em', outline: 'none', color: 'var(--text)', marginBottom: 12, fontFamily: 'Inter, sans-serif' }}
             />
             {fraseErro && <p style={{ fontSize: 12, color: '#F87171', marginBottom: 10 }}>{fraseErro}</p>}
-            <button onClick={salvarFrase} style={{ width: '100%', padding: 14, background: 'linear-gradient(135deg,#7C3AED,#60A5FA)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'white', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>Salvar</button>
-            <button onClick={() => setShowFraseModal(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
+            <button onClick={salvarFrase} style={{ width: '100%', padding: 14, background: 'linear-gradient(135deg,#7C3AED,#60A5FA)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'var(--text)', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>Salvar</button>
+            <button onClick={() => setShowFraseModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
           </div>
         </div>
       )}
 
-      <style>{`@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }`}</style>
     </div>
   )
 }

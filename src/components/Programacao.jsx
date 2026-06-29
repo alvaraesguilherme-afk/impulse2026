@@ -93,15 +93,15 @@ export default function Programacao({ onVoltar }) {
   }
 
   return (
-    <div style={{ background: '#080C14', minHeight: '100vh' }}>
+    <div style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
-        <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.08)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: 'none', color: 'white' }}>‹</button>
+        <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'var(--input-bg)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: 'none', color: 'var(--text)' }}>‹</button>
         <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700 }}>Programação</h2>
         <div style={{ marginLeft: 'auto' }}>
           {!coordenador ? (
             <button onClick={() => { setShowLogin(true); setSenhaInput(''); setSenhaErro('') }} style={{
-              padding: '6px 14px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.1)',
-              background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)',
+              padding: '6px 14px', borderRadius: 20, border: '1px solid var(--border-strong)',
+              background: 'var(--bg-card)', color: 'var(--text-muted)',
               fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
             }}>🔒 Coordenador</button>
           ) : (
@@ -118,9 +118,9 @@ export default function Programacao({ onVoltar }) {
         {[{ id: 'louvor', label: '🎵 Equipes de Louvor' }, { id: 'ministro', label: '🎤 Ministros' }].map(a => (
           <button key={a.id} onClick={() => { setAba(a.id); setEditando(null) }} style={{
             flexShrink: 0, padding: '8px 16px', borderRadius: 20,
-            border: '1px solid rgba(255,255,255,0.1)',
-            background: aba === a.id ? 'rgba(124,58,237,0.3)' : 'rgba(255,255,255,0.05)',
-            color: aba === a.id ? '#C4B5FD' : 'rgba(255,255,255,0.5)',
+            border: '1px solid var(--border-strong)',
+            background: aba === a.id ? 'rgba(124,58,237,0.3)' : 'var(--bg-card)',
+            color: aba === a.id ? '#C4B5FD' : 'var(--text-muted)',
             fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
             fontFamily: 'Inter, sans-serif'
           }}>{a.label}</button>
@@ -131,9 +131,9 @@ export default function Programacao({ onVoltar }) {
         {DIAS.map((d, i) => (
           <button key={i} onClick={() => { setDiaSel(i); setEditando(null) }} style={{
             flexShrink: 0, padding: '8px 14px', borderRadius: 16,
-            border: diaSel === i ? '1px solid rgba(124,58,237,0.5)' : '1px solid rgba(255,255,255,0.1)',
-            background: diaSel === i ? 'rgba(124,58,237,0.25)' : 'rgba(255,255,255,0.05)',
-            color: diaSel === i ? '#C4B5FD' : 'rgba(255,255,255,0.5)',
+            border: diaSel === i ? '1px solid rgba(124,58,237,0.5)' : '1px solid var(--border-strong)',
+            background: diaSel === i ? 'rgba(124,58,237,0.25)' : 'var(--bg-card)',
+            color: diaSel === i ? '#C4B5FD' : 'var(--text-muted)',
             fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2
           }}>
@@ -145,13 +145,13 @@ export default function Programacao({ onVoltar }) {
 
       <div style={{ padding: '0 22px', marginBottom: 16 }}>
         <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 20, fontWeight: 800 }}>
-          Dia {DIAS[diaSel].num} <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 500, fontSize: 14 }}>· {DIAS[diaSel].label}</span>
+          Dia {DIAS[diaSel].num} <span style={{ color: 'var(--text-faint)', fontWeight: 500, fontSize: 14 }}>· {DIAS[diaSel].label}</span>
         </div>
       </div>
 
       <div style={{ padding: '0 22px 100px' }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>Carregando...</div>
+          <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-faint)', fontSize: 13 }}>Carregando...</div>
         ) : (
           TURNOS.map(turno => {
             const dado = getDado(turno.id, aba)
@@ -173,9 +173,9 @@ export default function Programacao({ onVoltar }) {
                     onChange={e => setFormTitulo(e.target.value)}
                     placeholder={aba === 'louvor' ? 'Nome da equipe...' : 'Nome do ministro...'}
                     style={{
-                      width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.07)',
-                      border: '1px solid rgba(255,255,255,0.15)', borderRadius: 12,
-                      fontSize: 13, color: 'white', outline: 'none', marginBottom: 8,
+                      width: '100%', padding: '10px 14px', background: 'var(--input-bg)',
+                      border: '1px solid var(--border-strong)', borderRadius: 12,
+                      fontSize: 13, color: 'var(--text)', outline: 'none', marginBottom: 8,
                       fontFamily: 'Inter, sans-serif'
                     }}
                   />
@@ -185,9 +185,9 @@ export default function Programacao({ onVoltar }) {
                       onChange={e => setFormMembros(e.target.value)}
                       placeholder="Membros (separados por vírgula)..."
                       style={{
-                        width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.07)',
-                        border: '1px solid rgba(255,255,255,0.15)', borderRadius: 12,
-                        fontSize: 13, color: 'white', outline: 'none', marginBottom: 8,
+                        width: '100%', padding: '10px 14px', background: 'var(--input-bg)',
+                        border: '1px solid var(--border-strong)', borderRadius: 12,
+                        fontSize: 13, color: 'var(--text)', outline: 'none', marginBottom: 8,
                         fontFamily: 'Inter, sans-serif'
                       }}
                     />
@@ -198,9 +198,9 @@ export default function Programacao({ onVoltar }) {
                       onChange={e => setFormTema(e.target.value)}
                       placeholder="Tema da ministração (opcional)..."
                       style={{
-                        width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.07)',
-                        border: '1px solid rgba(255,255,255,0.15)', borderRadius: 12,
-                        fontSize: 13, color: 'white', outline: 'none', marginBottom: 8,
+                        width: '100%', padding: '10px 14px', background: 'var(--input-bg)',
+                        border: '1px solid var(--border-strong)', borderRadius: 12,
+                        fontSize: 13, color: 'var(--text)', outline: 'none', marginBottom: 8,
                         fontFamily: 'Inter, sans-serif'
                       }}
                     />
@@ -208,7 +208,7 @@ export default function Programacao({ onVoltar }) {
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button onClick={salvar} style={{
                       flex: 1, padding: 12, borderRadius: 12, border: 'none',
-                      background: 'linear-gradient(135deg,#7C3AED,#60A5FA)', color: 'white',
+                      background: 'linear-gradient(135deg,#7C3AED,#60A5FA)', color: 'var(--text)',
                       fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
                     }}>Salvar</button>
                     {dado && (
@@ -219,8 +219,8 @@ export default function Programacao({ onVoltar }) {
                       }}>Limpar</button>
                     )}
                     <button onClick={() => setEditando(null)} style={{
-                      padding: '12px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)',
-                      background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)',
+                      padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border-strong)',
+                      background: 'var(--bg-card)', color: 'var(--text-muted)',
                       fontSize: 13, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
                     }}>✕</button>
                   </div>
@@ -231,7 +231,7 @@ export default function Programacao({ onVoltar }) {
             if (!dado || !dado.titulo) {
               return (
                 <div key={turno.id} onClick={() => coordenador && abrirEdicao(turno.id, aba)} style={{
-                  background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)',
+                  background: 'var(--bg-card)', border: '1px dashed var(--border-strong)',
                   borderRadius: 16, padding: '16px 14px', marginBottom: 8,
                   cursor: coordenador ? 'pointer' : 'default'
                 }}>
@@ -239,7 +239,7 @@ export default function Programacao({ onVoltar }) {
                     <span style={{ fontSize: 16 }}>{turno.icon}</span>
                     <span style={{ fontFamily: 'Syne, sans-serif', fontSize: 14, fontWeight: 700 }}>{turno.label}</span>
                   </div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', fontStyle: 'italic', paddingLeft: 24 }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-faint)', fontStyle: 'italic', paddingLeft: 24 }}>
                     {coordenador ? 'Toque para definir' : 'A definir'}
                   </div>
                 </div>
@@ -252,14 +252,14 @@ export default function Programacao({ onVoltar }) {
 
             return (
               <div key={turno.id} onClick={() => coordenador && abrirEdicao(turno.id, aba)} style={{
-                background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                background: 'var(--bg-card)', border: '1px solid var(--border)',
                 borderRadius: 16, padding: '16px 14px', marginBottom: 8,
                 cursor: coordenador ? 'pointer' : 'default'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                   <span style={{ fontSize: 16 }}>{turno.icon}</span>
                   <span style={{ fontFamily: 'Syne, sans-serif', fontSize: 14, fontWeight: 700 }}>{turno.label}</span>
-                  {coordenador && <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginLeft: 'auto' }}>toque para editar</span>}
+                  {coordenador && <span style={{ fontSize: 10, color: 'var(--text-faint)', marginLeft: 'auto' }}>toque para editar</span>}
                 </div>
                 <div style={{ paddingLeft: 24 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: membrosArr.length > 0 ? 8 : 0 }}>
@@ -269,7 +269,7 @@ export default function Programacao({ onVoltar }) {
                     }}>{aba === 'louvor' ? '🎵' : '🎤'}</div>
                     <div>
                       <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 14, fontWeight: 700 }}>{dado.titulo}</div>
-                      {aba === 'ministro' && dado.tema && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{dado.tema}</div>}
+                      {aba === 'ministro' && dado.tema && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{dado.tema}</div>}
                     </div>
                   </div>
                   {membrosArr.length > 0 && (
@@ -288,20 +288,20 @@ export default function Programacao({ onVoltar }) {
 
       {showLogin && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.85)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: '28px 24px', width: '90%', maxWidth: 340, textAlign: 'center' }}>
+          <div style={{ background: '#1a1a2e', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '28px 24px', width: '90%', maxWidth: 340, textAlign: 'center' }}>
             <div style={{ fontSize: 32, marginBottom: 12 }}>📅</div>
             <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Coordenador</h2>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>Digite sua senha para editar a programação</p>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>Digite sua senha para editar a programação</p>
             <input
               type="password" value={senhaInput}
               onChange={e => { setSenhaInput(e.target.value); setSenhaErro('') }}
               onKeyDown={e => e.key === 'Enter' && verificarSenha()}
               placeholder="••••" maxLength={10} autoFocus
-              style={{ width: '100%', padding: '14px 16px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, fontSize: 20, textAlign: 'center', letterSpacing: '.3em', outline: 'none', color: 'white', marginBottom: 12, fontFamily: 'Inter, sans-serif' }}
+              style={{ width: '100%', padding: '14px 16px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 20, textAlign: 'center', letterSpacing: '.3em', outline: 'none', color: 'var(--text)', marginBottom: 12, fontFamily: 'Inter, sans-serif' }}
             />
             {senhaErro && <p style={{ fontSize: 12, color: '#F87171', marginBottom: 10 }}>{senhaErro}</p>}
-            <button onClick={verificarSenha} style={{ width: '100%', padding: 14, background: 'linear-gradient(135deg,#7C3AED,#60A5FA)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'white', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>Entrar</button>
-            <button onClick={() => setShowLogin(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
+            <button onClick={verificarSenha} style={{ width: '100%', padding: 14, background: 'linear-gradient(135deg,#7C3AED,#60A5FA)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'var(--text)', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>Entrar</button>
+            <button onClick={() => setShowLogin(false)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
           </div>
         </div>
       )}

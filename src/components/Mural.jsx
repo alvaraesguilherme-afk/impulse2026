@@ -152,19 +152,19 @@ export default function Mural({ onVoltar }) {
   }
 
   return (
-    <div style={{ background: '#080C14', minHeight: '100vh' }}>
+    <div style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
-        <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.08)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: 'none', color: 'white' }}>‹</button>
-        <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700 }}>Mural de Fotos</h2>
+        <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'var(--input-bg)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: 'none', color: 'var(--text)' }}>‹</button>
+        <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700 }}>Feed Impulse</h2>
       </div>
 
       <div ref={diasRef} style={{ display: 'flex', gap: 6, padding: '16px 22px', overflowX: 'auto', scrollbarWidth: 'none' }}>
         {DIAS.map((d, i) => (
           <button key={i} onClick={() => setDiaSel(i)} style={{
             flexShrink: 0, padding: '8px 14px', borderRadius: 16,
-            border: diaSel === i ? '1px solid rgba(124,58,237,0.5)' : '1px solid rgba(255,255,255,0.1)',
-            background: diaSel === i ? 'rgba(124,58,237,0.25)' : 'rgba(255,255,255,0.05)',
-            color: diaSel === i ? '#C4B5FD' : 'rgba(255,255,255,0.5)',
+            border: diaSel === i ? '1px solid rgba(124,58,237,0.5)' : '1px solid var(--border-strong)',
+            background: diaSel === i ? 'rgba(124,58,237,0.25)' : 'var(--bg-card)',
+            color: diaSel === i ? '#C4B5FD' : 'var(--text-muted)',
             fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2
           }}>
@@ -177,8 +177,8 @@ export default function Mural({ onVoltar }) {
       {podeMuralPostar() ? (
         <div style={{ display: 'flex', gap: 10, padding: '0 22px 16px' }}>
           <button onClick={() => inputGaleria.current?.click()} disabled={uploading} style={{
-            flex: 1, padding: '14px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.1)',
-            background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.7)',
+            flex: 1, padding: '14px', borderRadius: 16, border: '1px solid var(--border-strong)',
+            background: 'var(--bg-card)', color: 'var(--text-secondary)',
             fontSize: 13, fontWeight: 600, cursor: uploading ? 'not-allowed' : 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             opacity: uploading ? 0.5 : 1, fontFamily: 'Inter, sans-serif'
@@ -200,8 +200,8 @@ export default function Mural({ onVoltar }) {
       ) : (
         <div style={{ padding: '0 22px 16px' }}>
           <div style={{
-            padding: '12px 14px', borderRadius: 14, background: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.06)', fontSize: 12, color: 'rgba(255,255,255,0.3)',
+            padding: '12px 14px', borderRadius: 14, background: 'var(--bg-card)',
+            border: '1px solid var(--border)', fontSize: 12, color: 'var(--text-faint)',
             textAlign: 'center'
           }}>
             📷 Upload disponível de 14 a 27 de julho
@@ -224,8 +224,8 @@ export default function Mural({ onVoltar }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 11, color: 'rgba(16,185,129,0.7)', fontWeight: 600 }}>✓ Votação do Dia {DIAS[diaSel].num} definida</span>
               <button onClick={iniciarSelecao} style={{
-                marginLeft: 'auto', padding: '4px 10px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)',
-                background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)',
+                marginLeft: 'auto', padding: '4px 10px', borderRadius: 10, border: '1px solid var(--border-strong)',
+                background: 'var(--bg-card)', color: 'var(--text-muted)',
                 fontSize: 10, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
               }}>Refazer</button>
             </div>
@@ -252,13 +252,13 @@ export default function Mural({ onVoltar }) {
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={enviarVotacao} disabled={selecionadas.length === 0} style={{
                 padding: '6px 14px', borderRadius: 10, border: 'none',
-                background: selecionadas.length > 0 ? 'linear-gradient(135deg,#F59E0B,#EF4444)' : 'rgba(255,255,255,0.1)',
-                color: 'white', fontSize: 11, fontWeight: 700, cursor: selecionadas.length > 0 ? 'pointer' : 'not-allowed',
+                background: selecionadas.length > 0 ? 'linear-gradient(135deg,#F59E0B,#EF4444)' : 'var(--border-strong)',
+                color: 'var(--text)', fontSize: 11, fontWeight: 700, cursor: selecionadas.length > 0 ? 'pointer' : 'not-allowed',
                 fontFamily: 'Inter, sans-serif'
               }}>Confirmar</button>
               <button onClick={() => { setModoSelecao(false); setSelecionadas([]) }} style={{
-                padding: '6px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)',
-                background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)',
+                padding: '6px 14px', borderRadius: 10, border: '1px solid var(--border-strong)',
+                background: 'var(--bg-card)', color: 'var(--text-muted)',
                 fontSize: 11, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
               }}>Cancelar</button>
             </div>
@@ -266,7 +266,7 @@ export default function Mural({ onVoltar }) {
         </div>
       )}
 
-      <div style={{ padding: '0 22px 12px', fontSize: 11, color: 'rgba(255,255,255,0.3)', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase' }}>
+      <div style={{ padding: '0 22px 12px', fontSize: 11, color: 'var(--text-faint)', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase' }}>
         {loading ? 'Carregando...' : `${fotos.length} foto${fotos.length !== 1 ? 's' : ''} · Dia ${DIAS[diaSel].num}`}
       </div>
 
@@ -274,7 +274,7 @@ export default function Mural({ onVoltar }) {
         <div style={{ textAlign: 'center', padding: '60px 22px' }}>
           <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.6 }}>📷</div>
           <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 700, marginBottom: 6 }}>Nenhuma foto ainda</div>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>Seja o primeiro a postar no Dia {DIAS[diaSel].num}!</div>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Seja o primeiro a postar no Dia {DIAS[diaSel].num}!</div>
         </div>
       )}
 
@@ -285,8 +285,8 @@ export default function Mural({ onVoltar }) {
             <div key={foto.id} onClick={() => modoSelecao ? toggleSelecao(foto) : (setFotoAberta(foto), setConfirmDelete(false))} style={{
               breakInside: 'avoid', marginBottom: 8, borderRadius: 14, overflow: 'hidden',
               cursor: 'pointer', position: 'relative',
-              border: estaSelecionada ? '2px solid #F59E0B' : '1px solid rgba(255,255,255,0.08)',
-              background: 'rgba(255,255,255,0.04)'
+              border: estaSelecionada ? '2px solid #F59E0B' : '1px solid var(--border)',
+              background: 'var(--bg-card)'
             }}>
               <img src={foto.url} alt="" loading="lazy" style={{ width: '100%', display: 'block', opacity: modoSelecao && !estaSelecionada && selecionadas.length >= 5 ? 0.3 : 1 }} />
               {modoSelecao && estaSelecionada && (
@@ -296,7 +296,7 @@ export default function Mural({ onVoltar }) {
                   alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#000'
                 }}>{selecionadas.findIndex(f => f.id === foto.id) + 1}</div>
               )}
-              <div style={{ padding: '8px 10px', fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>
+              <div style={{ padding: '8px 10px', fontSize: 10, color: 'var(--text-faint)' }}>
                 {new Date(foto.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
               </div>
             </div>
@@ -312,8 +312,8 @@ export default function Mural({ onVoltar }) {
         }}>
           <button onClick={e => { e.stopPropagation(); setFotoAberta(null); setConfirmDelete(false) }} style={{
             position: 'absolute', top: 20, right: 20, width: 36, height: 36,
-            background: 'rgba(255,255,255,0.1)', borderRadius: 12, border: 'none',
-            color: 'white', fontSize: 18, cursor: 'pointer', display: 'flex',
+            background: 'var(--input-bg)', borderRadius: 12, border: 'none',
+            color: 'var(--text)', fontSize: 18, cursor: 'pointer', display: 'flex',
             alignItems: 'center', justifyContent: 'center'
           }}>✕</button>
 
@@ -332,19 +332,19 @@ export default function Mural({ onVoltar }) {
               <>
                 <button onClick={() => deletarFoto(fotoAberta)} style={{
                   padding: '10px 20px', borderRadius: 14, border: 'none',
-                  background: '#EF4444', color: 'white',
+                  background: '#EF4444', color: 'var(--text)',
                   fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
                 }}>Confirmar exclusão</button>
                 <button onClick={() => setConfirmDelete(false)} style={{
-                  padding: '10px 20px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.15)',
-                  background: 'rgba(255,255,255,0.08)', color: 'white',
+                  padding: '10px 20px', borderRadius: 14, border: '1px solid var(--border-strong)',
+                  background: 'var(--input-bg)', color: 'var(--text)',
                   fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
                 }}>Cancelar</button>
               </>
             )}
           </div>
 
-          <div style={{ marginTop: 12, fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
+          <div style={{ marginTop: 12, fontSize: 11, color: 'var(--text-faint)' }}>
             Dia {DIAS[diaSel].num} · {new Date(fotoAberta.created_at).toLocaleString('pt-BR')}
           </div>
         </div>
@@ -352,20 +352,20 @@ export default function Mural({ onVoltar }) {
 
       {showSenhaSelecao && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.85)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: '28px 24px', width: '90%', maxWidth: 340, textAlign: 'center' }}>
+          <div style={{ background: '#1a1a2e', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '28px 24px', width: '90%', maxWidth: 340, textAlign: 'center' }}>
             <div style={{ fontSize: 32, marginBottom: 12 }}>⭐</div>
             <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Foto do Dia</h2>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>Senha do coordenador geral</p>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>Senha do coordenador geral</p>
             <input
               type="password" value={senhaSelecao}
               onChange={e => { setSenhaSelecao(e.target.value); setSenhaSelecaoErro('') }}
               onKeyDown={e => e.key === 'Enter' && confirmarSenhaSelecao()}
               placeholder="••••" maxLength={10} autoFocus
-              style={{ width: '100%', padding: '14px 16px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, fontSize: 20, textAlign: 'center', letterSpacing: '.3em', outline: 'none', color: 'white', marginBottom: 12, fontFamily: 'Inter, sans-serif' }}
+              style={{ width: '100%', padding: '14px 16px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 20, textAlign: 'center', letterSpacing: '.3em', outline: 'none', color: 'var(--text)', marginBottom: 12, fontFamily: 'Inter, sans-serif' }}
             />
             {senhaSelecaoErro && <p style={{ fontSize: 12, color: '#F87171', marginBottom: 10 }}>{senhaSelecaoErro}</p>}
-            <button onClick={confirmarSenhaSelecao} style={{ width: '100%', padding: 14, background: 'linear-gradient(135deg,#F59E0B,#EF4444)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'white', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>Entrar</button>
-            <button onClick={() => setShowSenhaSelecao(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
+            <button onClick={confirmarSenhaSelecao} style={{ width: '100%', padding: 14, background: 'linear-gradient(135deg,#F59E0B,#EF4444)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'var(--text)', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>Entrar</button>
+            <button onClick={() => setShowSenhaSelecao(false)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
           </div>
         </div>
       )}

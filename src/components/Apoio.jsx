@@ -42,7 +42,7 @@ const dias = Array.from({ length: 11 }, (_, i) => new Date(INICIO.getTime() + i 
 function BackBtn({ onVoltar, titulo }) {
   return (
     <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
-      <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.08)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: 'none', color: 'white' }}>‹</button>
+      <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'var(--input-bg)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: 'none', color: 'var(--text)' }}>‹</button>
       <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700 }}>{titulo}</h2>
     </div>
   )
@@ -101,28 +101,28 @@ export default function Apoio({ onVoltar }) {
   const equipesFiltradas = lider?.equipeId === '' ? EQUIPES : EQUIPES.filter(e => e.id === lider?.equipeId)
 
   return (
-    <div style={{ background: '#080C14', minHeight: '100vh' }}>
+    <div style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
       <BackBtn onVoltar={onVoltar} titulo="Escala de Serviço" />
       <div style={{ display: 'flex', gap: 8, padding: '16px 22px', overflowX: 'auto', scrollbarWidth: 'none' }}>
         {[{id:'times',label:'👥 Times'},{id:'escalas',label:'📅 Escalas'},{id:'chamada',label:'📋 Chamada 🔒'}].map(a => (
-          <button key={a.id} onClick={() => a.id === 'chamada' ? abrirChamada() : setAba(a.id)} style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.1)', background: aba === a.id ? 'rgba(124,58,237,0.3)' : 'rgba(255,255,255,0.05)', color: aba === a.id ? '#C4B5FD' : 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+          <button key={a.id} onClick={() => a.id === 'chamada' ? abrirChamada() : setAba(a.id)} style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 20, border: '1px solid var(--border-strong)', background: aba === a.id ? 'rgba(124,58,237,0.3)' : 'var(--bg-card)', color: aba === a.id ? '#C4B5FD' : 'var(--text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
             {a.label}
           </button>
         ))}
       </div>
       <div style={{ padding: '0 22px 100px' }}>
         {aba === 'times' && EQUIPES.map(eq => (
-          <div key={eq.id} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 18, marginBottom: 12 }}>
+          <div key={eq.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: 18, marginBottom: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
               <div style={{ width: 44, height: 44, borderRadius: 14, background: eq.grad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{eq.emoji}</div>
               <div>
                 <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 15, fontWeight: 700, color: eq.cor }}>{eq.nome}</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>👑 {eq.lideres}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>👑 {eq.lideres}</div>
               </div>
             </div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8 }}>Membros</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8 }}>Membros</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {eq.membros.map(m => <span key={m} style={{ fontSize: 11, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '4px 10px', color: 'rgba(255,255,255,0.7)' }}>{m}</span>)}
+              {eq.membros.map(m => <span key={m} style={{ fontSize: 11, background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 20, padding: '4px 10px', color: 'var(--text-secondary)' }}>{m}</span>)}
             </div>
           </div>
         ))}
@@ -138,30 +138,30 @@ export default function Apoio({ onVoltar }) {
                   <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 20, fontWeight: 800, color: '#60A5FA' }}>
                     {hj.getDate()} de {MESES[hj.getMonth()]}
                   </div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
                     {['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'][hj.getDay()]}
                   </div>
                 </div>
                 <div style={{ fontSize: 11, color: 'rgba(96,165,250,0.6)', fontWeight: 600 }}>Ver escala →</div>
               </div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Calendário</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Calendário</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, marginBottom: 16 }}>
                 {dias.map(dia => { const isSel = dia.getTime() === diaEscala.getTime(); const isHoje = dia.getTime() === hj.getTime(); return (
-                  <div key={dia.getTime()} onClick={() => setDiaEscala(dia)} style={{ background: isSel ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.04)', border: isSel ? '1px solid rgba(124,58,237,0.5)' : isHoje ? '1px solid rgba(96,165,250,0.4)' : '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '10px 4px', textAlign: 'center', cursor: 'pointer' }}>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: 2 }}>{DIAS_C[dia.getDay()]}</div>
+                  <div key={dia.getTime()} onClick={() => setDiaEscala(dia)} style={{ background: isSel ? 'rgba(124,58,237,0.2)' : 'var(--bg-card)', border: isSel ? '1px solid rgba(124,58,237,0.5)' : isHoje ? '1px solid rgba(96,165,250,0.4)' : '1px solid var(--border)', borderRadius: 14, padding: '10px 4px', textAlign: 'center', cursor: 'pointer' }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', marginBottom: 2 }}>{DIAS_C[dia.getDay()]}</div>
                     <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 800, color: isSel ? '#A78BFA' : isHoje ? '#60A5FA' : 'white' }}>{dia.getDate()}</div>
-                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 1 }}>Jul</div>
+                    <div style={{ fontSize: 9, color: 'var(--text-faint)', marginTop: 1 }}>Jul</div>
                   </div>
                 )})}
               </div>
               <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 22, fontWeight: 800, marginBottom: 2 }}>{diaEscala.getDate()} de {MESES[diaEscala.getMonth()]}</div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 16 }}>{['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'][diaEscala.getDay()]}</div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>{['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'][diaEscala.getDay()]}</div>
 
               {['M', 'T', 'N'].map(turnoId => {
                 const equipe = EQUIPES.find(eq => getTurno(eq, diaEscala) === turnoId)
                 if (!equipe) return null
                 return (
-                  <div key={turnoId} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 18, marginBottom: 12 }}>
+                  <div key={turnoId} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: 18, marginBottom: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ fontSize: 18 }}>{TURNO_ICON[turnoId]}</span>
@@ -172,9 +172,9 @@ export default function Apoio({ onVoltar }) {
                       </div>
                     </div>
                     {TAREFAS_TURNO[turnoId].map((tarefa, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, marginBottom: 6 }}>
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, marginBottom: 6 }}>
                         <div style={{ width: 6, height: 6, borderRadius: '50%', background: equipe.cor, flexShrink: 0 }} />
-                        <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>{tarefa}</span>
+                        <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{tarefa}</span>
                       </div>
                     ))}
                   </div>
@@ -182,30 +182,30 @@ export default function Apoio({ onVoltar }) {
               })}
 
               {EQUIPES.filter(eq => getTurno(eq, diaEscala) === 'F').map(eq => (
-                <div key={eq.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, marginBottom: 8 }}>
+                <div key={eq.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, marginBottom: 8 }}>
                   <span style={{ fontSize: 14 }}>{eq.emoji}</span>
-                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>{eq.nome}</span>
-                  <span style={{ marginLeft: 'auto', fontSize: 11, color: 'rgba(255,255,255,0.25)', fontWeight: 600 }}>😴 Folga</span>
+                  <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{eq.nome}</span>
+                  <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-faint)', fontWeight: 600 }}>😴 Folga</span>
                 </div>
               ))}
 
               {EQUIPES.every(eq => !getTurno(eq, diaEscala)) && (
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: 12 }}>Nenhuma escala neste dia</div>
+                <div style={{ fontSize: 13, color: 'var(--text-faint)', textAlign: 'center', padding: 12 }}>Nenhuma escala neste dia</div>
               )}
             </>
         )}
         {aba === 'chamada' && lider && (
           <>
-            <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>Logado: <strong style={{ color: 'white' }}>{lider.nome}</strong></span>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Logado: <strong style={{ color: 'var(--text)' }}>{lider.nome}</strong></span>
               <button onClick={() => { setLider(null); setAba('times') }} style={{ background: 'none', border: 'none', color: '#F87171', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Sair</button>
             </div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-              <select value={diaSel} onChange={e => { setDiaSel(e.target.value); carregarChamada(e.target.value, turnoSel) }} style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, fontSize: 13, color: 'white', outline: 'none' }}>
+              <select value={diaSel} onChange={e => { setDiaSel(e.target.value); carregarChamada(e.target.value, turnoSel) }} style={{ flex: 1, padding: '12px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 13, color: 'var(--text)', outline: 'none' }}>
                 <option value="">Selecione o dia</option>
                 {dias.map(d => <option key={d.getTime()} value={String(d.getTime())}>{d.getDate()} de julho ({DIAS_C[d.getDay()]})</option>)}
               </select>
-              <select value={turnoSel} onChange={e => { setTurnoSel(e.target.value); carregarChamada(diaSel, e.target.value) }} style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, fontSize: 13, color: 'white', outline: 'none' }}>
+              <select value={turnoSel} onChange={e => { setTurnoSel(e.target.value); carregarChamada(diaSel, e.target.value) }} style={{ flex: 1, padding: '12px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 13, color: 'var(--text)', outline: 'none' }}>
                 <option value="">Turno</option>
                 <option value="M">Manhã</option>
                 <option value="T">Tarde</option>
@@ -224,35 +224,35 @@ export default function Apoio({ onVoltar }) {
                     const st = chamadaData[chKey]?.status || ''
                     const obs = chamadaData[chKey]?.obs || ''
                     return (
-                      <div key={nome} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '12px 14px', marginBottom: 8 }}>
+                      <div key={nome} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: '12px 14px', marginBottom: 8 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                           <div style={{ fontSize: 14, fontWeight: 600 }}>{nome}{isLider ? ' 👑' : ''}</div>
                           <div style={{ display: 'flex', gap: 6 }}>
-                            <button onClick={() => marcar(chKey, 'presente')} style={{ padding: '6px 14px', borderRadius: 20, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: st === 'presente' ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.07)', color: st === 'presente' ? '#6EE7B7' : 'rgba(255,255,255,0.4)' }}>✓</button>
-                            <button onClick={() => marcar(chKey, 'ausente')} style={{ padding: '6px 14px', borderRadius: 20, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: st === 'ausente' ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.07)', color: st === 'ausente' ? '#F87171' : 'rgba(255,255,255,0.4)' }}>✗</button>
+                            <button onClick={() => marcar(chKey, 'presente')} style={{ padding: '6px 14px', borderRadius: 20, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: st === 'presente' ? 'rgba(16,185,129,0.3)' : 'var(--input-bg)', color: st === 'presente' ? '#6EE7B7' : 'var(--text-muted)' }}>✓</button>
+                            <button onClick={() => marcar(chKey, 'ausente')} style={{ padding: '6px 14px', borderRadius: 20, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: st === 'ausente' ? 'rgba(239,68,68,0.3)' : 'var(--input-bg)', color: st === 'ausente' ? '#F87171' : 'var(--text-muted)' }}>✗</button>
                           </div>
                         </div>
-                        <textarea defaultValue={obs} onBlur={e => salvarObs(chKey, e.target.value)} placeholder="Observação..." rows={1} style={{ width: '100%', padding: '8px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, fontSize: 12, resize: 'none', outline: 'none', color: 'rgba(255,255,255,0.7)', fontFamily: 'Inter, sans-serif' }} />
+                        <textarea defaultValue={obs} onBlur={e => salvarObs(chKey, e.target.value)} placeholder="Observação..." rows={1} style={{ width: '100%', padding: '8px 12px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, fontSize: 12, resize: 'none', outline: 'none', color: 'var(--text-secondary)', fontFamily: 'Inter, sans-serif' }} />
                       </div>
                     )
                   })}
                 </div>
               )
             })}
-            {(!diaSel || !turnoSel) && <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: 20 }}>Selecione o dia e turno</p>}
+            {(!diaSel || !turnoSel) && <p style={{ fontSize: 13, color: 'var(--text-faint)', textAlign: 'center', padding: 20 }}>Selecione o dia e turno</p>}
           </>
         )}
       </div>
       {showLogin && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.85)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: '28px 24px', width: '90%', maxWidth: 340, textAlign: 'center' }}>
+          <div style={{ background: '#1a1a2e', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '28px 24px', width: '90%', maxWidth: 340, textAlign: 'center' }}>
             <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
             <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Chamada — Apoio</h2>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>Digite sua senha de líder</p>
-            <input type="password" value={senhaInput} onChange={e => { setSenhaInput(e.target.value); setSenhaErro('') }} onKeyDown={e => e.key === 'Enter' && verificarSenha()} placeholder="••••" maxLength={10} style={{ width: '100%', padding: '14px 16px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, fontSize: 20, textAlign: 'center', letterSpacing: '.3em', outline: 'none', color: 'white', marginBottom: 12, fontFamily: 'Inter, sans-serif' }} />
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>Digite sua senha de líder</p>
+            <input type="password" value={senhaInput} onChange={e => { setSenhaInput(e.target.value); setSenhaErro('') }} onKeyDown={e => e.key === 'Enter' && verificarSenha()} placeholder="••••" maxLength={10} style={{ width: '100%', padding: '14px 16px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 20, textAlign: 'center', letterSpacing: '.3em', outline: 'none', color: 'var(--text)', marginBottom: 12, fontFamily: 'Inter, sans-serif' }} />
             {senhaErro && <p style={{ fontSize: 12, color: '#F87171', marginBottom: 10 }}>{senhaErro}</p>}
-            <button onClick={verificarSenha} style={{ width: '100%', padding: 14, background: 'linear-gradient(135deg,#7C3AED,#60A5FA)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'white', marginBottom: 10 }}>Entrar</button>
-            <button onClick={() => setShowLogin(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
+            <button onClick={verificarSenha} style={{ width: '100%', padding: 14, background: 'linear-gradient(135deg,#7C3AED,#60A5FA)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'var(--text)', marginBottom: 10 }}>Entrar</button>
+            <button onClick={() => setShowLogin(false)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
           </div>
         </div>
       )}

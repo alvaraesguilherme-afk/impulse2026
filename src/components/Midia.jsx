@@ -138,15 +138,15 @@ export default function Midia({ onVoltar }) {
   }
 
   return (
-    <div style={{ background: '#080C14', minHeight: '100vh' }}>
+    <div style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
-        <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.08)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: 'none', color: 'white' }}>‹</button>
+        <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'var(--input-bg)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: 'none', color: 'var(--text)' }}>‹</button>
         <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700 }}>Mídia</h2>
         <div style={{ marginLeft: 'auto' }}>
           {!coordenador ? (
             <button onClick={() => { setShowLogin(true); setSenhaInput(''); setSenhaErro('') }} style={{
-              padding: '6px 14px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.1)',
-              background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)',
+              padding: '6px 14px', borderRadius: 20, border: '1px solid var(--border-strong)',
+              background: 'var(--bg-card)', color: 'var(--text-muted)',
               fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
             }}>🔒 Coordenador</button>
           ) : (
@@ -163,9 +163,9 @@ export default function Midia({ onVoltar }) {
         {DIAS.map((d, i) => (
           <button key={i} onClick={() => setDiaSel(i)} style={{
             flexShrink: 0, padding: '8px 14px', borderRadius: 16,
-            border: diaSel === i ? '1px solid rgba(124,58,237,0.5)' : '1px solid rgba(255,255,255,0.1)',
-            background: diaSel === i ? 'rgba(124,58,237,0.25)' : 'rgba(255,255,255,0.05)',
-            color: diaSel === i ? '#C4B5FD' : 'rgba(255,255,255,0.5)',
+            border: diaSel === i ? '1px solid rgba(124,58,237,0.5)' : '1px solid var(--border-strong)',
+            background: diaSel === i ? 'rgba(124,58,237,0.25)' : 'var(--bg-card)',
+            color: diaSel === i ? '#C4B5FD' : 'var(--text-muted)',
             fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2
           }}>
@@ -177,7 +177,7 @@ export default function Midia({ onVoltar }) {
 
       <div style={{ padding: '0 22px 100px' }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>Carregando...</div>
+          <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-faint)', fontSize: 13 }}>Carregando...</div>
         ) : (
           TURNOS.map(turno => {
             const itens = getEscalasTurno(turno.id)
@@ -187,7 +187,7 @@ export default function Midia({ onVoltar }) {
                   <span style={{ fontSize: 18 }}>{turno.icon}</span>
                   <span style={{ fontFamily: 'Syne, sans-serif', fontSize: 15, fontWeight: 700 }}>{turno.label}</span>
                   {!turno.temFixas && itens.length === 0 && (
-                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', fontStyle: 'italic', marginLeft: 4 }}>sem escala definida</span>
+                    <span style={{ fontSize: 11, color: 'var(--text-faint)', fontStyle: 'italic', marginLeft: 4 }}>sem escala definida</span>
                   )}
                 </div>
 
@@ -198,7 +198,7 @@ export default function Midia({ onVoltar }) {
 
                   return (
                     <div key={item.id || `fixed-${idx}`} style={{
-                      background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                      background: 'var(--bg-card)', border: '1px solid var(--border)',
                       borderRadius: 16, padding: '12px 14px', marginBottom: 8,
                       display: 'flex', alignItems: 'center', gap: 12
                     }}>
@@ -213,9 +213,9 @@ export default function Midia({ onVoltar }) {
                               value={item.pessoa}
                               onChange={e => atribuirPessoa(turno.id, item.funcao, e.target.value)}
                               style={{
-                                width: '100%', padding: '8px 10px', background: 'rgba(255,255,255,0.07)',
-                                border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10,
-                                fontSize: 12, color: 'white', outline: 'none', fontFamily: 'Inter, sans-serif'
+                                width: '100%', padding: '8px 10px', background: 'var(--input-bg)',
+                                border: '1px solid var(--border-strong)', borderRadius: 10,
+                                fontSize: 12, color: 'var(--text)', outline: 'none', fontFamily: 'Inter, sans-serif'
                               }}
                             >
                               <option value="">Selecionar pessoa...</option>
@@ -247,7 +247,7 @@ export default function Midia({ onVoltar }) {
                           </>
                         ) : (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span style={{ fontSize: 12, color: item.pessoa ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.25)', fontStyle: item.pessoa ? 'normal' : 'italic' }}>
+                            <span style={{ fontSize: 12, color: item.pessoa ? 'var(--text-secondary)' : 'var(--text-faint)', fontStyle: item.pessoa ? 'normal' : 'italic' }}>
                               {item.pessoa || 'Não atribuído'}
                             </span>
                             {item.pessoa && MEMBROS_EXTRAS.includes(item.pessoa) && pessoaIndisponivel && !pessoaIndisponivel.livre && (
@@ -278,27 +278,27 @@ export default function Midia({ onVoltar }) {
                         placeholder="Nome da função..."
                         autoFocus
                         style={{
-                          flex: 1, padding: '10px 14px', background: 'rgba(255,255,255,0.07)',
-                          border: '1px solid rgba(255,255,255,0.15)', borderRadius: 12,
-                          fontSize: 13, color: 'white', outline: 'none', fontFamily: 'Inter, sans-serif'
+                          flex: 1, padding: '10px 14px', background: 'var(--input-bg)',
+                          border: '1px solid var(--border-strong)', borderRadius: 12,
+                          fontSize: 13, color: 'var(--text)', outline: 'none', fontFamily: 'Inter, sans-serif'
                         }}
                       />
                       <button onClick={() => adicionarFuncao(turno.id)} style={{
                         padding: '10px 16px', borderRadius: 12, border: 'none',
-                        background: 'linear-gradient(135deg,#7C3AED,#60A5FA)', color: 'white',
+                        background: 'linear-gradient(135deg,#7C3AED,#60A5FA)', color: 'var(--text)',
                         fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
                       }}>+</button>
                       <button onClick={() => { setAddingTo(null); setNovaFuncao('') }} style={{
-                        padding: '10px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)',
-                        background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)',
+                        padding: '10px 14px', borderRadius: 12, border: '1px solid var(--border-strong)',
+                        background: 'var(--bg-card)', color: 'var(--text-muted)',
                         fontSize: 13, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
                       }}>✕</button>
                     </div>
                   ) : (
                     <button onClick={() => { setAddingTo(turno.id); setNovaFuncao('') }} style={{
                       width: '100%', padding: '10px', borderRadius: 12,
-                      border: '1px dashed rgba(255,255,255,0.15)', background: 'transparent',
-                      color: 'rgba(255,255,255,0.35)', fontSize: 12, fontWeight: 600,
+                      border: '1px dashed var(--border-strong)', background: 'transparent',
+                      color: 'var(--text-muted)', fontSize: 12, fontWeight: 600,
                       cursor: 'pointer', marginTop: 4, fontFamily: 'Inter, sans-serif'
                     }}>+ Adicionar função</button>
                   )
@@ -309,10 +309,10 @@ export default function Midia({ onVoltar }) {
         )}
 
         <div style={{
-          marginTop: 16, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+          marginTop: 16, background: 'var(--bg-card)', border: '1px solid var(--border)',
           borderRadius: 16, padding: 16
         }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.25)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>Equipe Mídia</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>Equipe Mídia</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {MEMBROS_FIXOS.map(m => (
               <span key={m} style={{ fontSize: 11, background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: 20, padding: '4px 10px', color: '#C4B5FD', fontWeight: 500 }}>{m}</span>
@@ -337,20 +337,20 @@ export default function Midia({ onVoltar }) {
 
       {showLogin && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.85)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: '28px 24px', width: '90%', maxWidth: 340, textAlign: 'center' }}>
+          <div style={{ background: '#1a1a2e', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '28px 24px', width: '90%', maxWidth: 340, textAlign: 'center' }}>
             <div style={{ fontSize: 32, marginBottom: 12 }}>🎥</div>
             <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Coordenador de Mídia</h2>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>Digite sua senha para editar escalas</p>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>Digite sua senha para editar escalas</p>
             <input
               type="password" value={senhaInput}
               onChange={e => { setSenhaInput(e.target.value); setSenhaErro('') }}
               onKeyDown={e => e.key === 'Enter' && verificarSenha()}
               placeholder="••••" maxLength={10} autoFocus
-              style={{ width: '100%', padding: '14px 16px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, fontSize: 20, textAlign: 'center', letterSpacing: '.3em', outline: 'none', color: 'white', marginBottom: 12, fontFamily: 'Inter, sans-serif' }}
+              style={{ width: '100%', padding: '14px 16px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 20, textAlign: 'center', letterSpacing: '.3em', outline: 'none', color: 'var(--text)', marginBottom: 12, fontFamily: 'Inter, sans-serif' }}
             />
             {senhaErro && <p style={{ fontSize: 12, color: '#F87171', marginBottom: 10 }}>{senhaErro}</p>}
-            <button onClick={verificarSenha} style={{ width: '100%', padding: 14, background: 'linear-gradient(135deg,#7C3AED,#60A5FA)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'white', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>Entrar</button>
-            <button onClick={() => setShowLogin(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
+            <button onClick={verificarSenha} style={{ width: '100%', padding: 14, background: 'linear-gradient(135deg,#7C3AED,#60A5FA)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'var(--text)', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>Entrar</button>
+            <button onClick={() => setShowLogin(false)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
           </div>
         </div>
       )}
