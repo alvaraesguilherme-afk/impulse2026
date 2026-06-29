@@ -1,19 +1,21 @@
 import { useState } from 'react'
+import { useTexto } from '../lib/i18n'
 import { supabase } from '../lib/supabase'
+import { syncOp } from '../lib/offlineSync'
 
 const EQUIPES = [
-  { id: 'verde', nome: 'Equipe Verde', lideres: 'Jhony e Linda', membros: ['Emanuel','Hellen Borges','Isabely Matos','Joel Marcos','Jerônimo','Lívia Andréa'], offset: 0, cor: '#A78BFA', grad: 'linear-gradient(135deg,#4C1D95,#7C3AED)', emoji: '🟢' },
+  { id: 'verde', nome: 'Equipe Verde', lideres: 'Jhony e Linda', membros: ['Emanuel','Hellen Borges','Isabely Matos','Joel Marcos','Jerônimo','Lívia Andréa'], offset: 0, cor: 'var(--accent-light)', grad: 'linear-gradient(135deg,#4C1D95,#7C3AED)', emoji: '🟢' },
   { id: 'amarelo', nome: 'Equipe Amarelo', lideres: 'Gustavo Massay e Taiwa', membros: ['Hugo Lacroix','Lorena','Maria Clara','Matheus Almeida','Stephany'], offset: 1, cor: '#FCD34D', grad: 'linear-gradient(135deg,#78350F,#F59E0B)', emoji: '🟡' },
   { id: 'azul', nome: 'Equipe Azul', lideres: 'Walterley e Maria Júlia', membros: ['Ludmyla','Mariana Gabrielle','Maurício','Rafael Chaves','Ryan Guedes'], offset: 2, cor: '#60A5FA', grad: 'linear-gradient(135deg,#0C4A6E,#0EA5E9)', emoji: '🔵' },
   { id: 'vermelho', nome: 'Equipe Vermelho', lideres: 'Francisco e Clara Cunha', membros: ['Gabriel Gomes','Gabriel Mendes','Letícia','Nicoly','Rennan','Victória'], offset: 3, cor: '#F87171', grad: 'linear-gradient(135deg,#7F1D1D,#EF4444)', emoji: '🔴' },
 ]
 
 const CICLO = ['M','T','N','F']
-const TURNO_LABEL = { M:'Manhã', T:'Tarde', N:'Noite', F:'Folga' }
+const TURNO_KEY = { M:'manha', T:'tarde', N:'noite', F:'folga' }
 const TAREFAS_TURNO = {
-  M: ['Servir café da manhã', 'Lavar louças', 'Limpeza e organização do refeitório', 'Retirada do lixo'],
-  T: ['Servir almoço', 'Lavar louças', 'Limpeza e organização do refeitório', 'Limpeza e organização do templo'],
-  N: ['Servir jantar', 'Lavar louças', 'Limpeza e organização do refeitório', 'Limpeza e organização do templo'],
+  M: ['servirCafe', 'lavarLoucas', 'limpezaRefeitorio', 'retiradaLixo'],
+  T: ['servirAlmoco', 'lavarLoucas', 'limpezaRefeitorio', 'limpezaTemplo'],
+  N: ['servirJantar', 'lavarLoucas', 'limpezaRefeitorio', 'limpezaTemplo'],
 }
 const TURNO_ICON = { M: '🌅', T: '☀️', N: '🌙', F: '😴' }
 const DIAS_C = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
@@ -49,6 +51,7 @@ function BackBtn({ onVoltar, titulo }) {
 }
 
 export default function Apoio({ onVoltar }) {
+  const tx = useTexto()
   const [aba, setAba] = useState('times')
   const [lider, setLider] = useState(null)
   const [showLogin, setShowLogin] = useState(false)
@@ -72,7 +75,7 @@ export default function Apoio({ onVoltar }) {
   function verificarSenha() {
     const encontrado = LIDERES_CHAMADA.find(l => l.senha === senhaInput)
     if (encontrado) { setLider(encontrado); setShowLogin(false); setAba('chamada') }
-    else setSenhaErro('Senha incorreta.')
+    else setSenhaErro(tx.senhaIncorreta)
   }
 
   async function carregarChamada(ts, turno) {
@@ -89,23 +92,23 @@ export default function Apoio({ onVoltar }) {
     const novo = atual === status ? '' : status
     const obs = chamadaData[chave]?.obs || ''
     setChamadaData(prev => ({ ...prev, [chave]: { status: novo, obs } }))
-    await supabase.from('chamada').upsert({ chave, status: novo, obs }, { onConflict: 'chave' })
+    await syncOp('upsert', 'chamada', { chave, status: novo, obs }, { onConflict: 'chave' })
   }
 
   async function salvarObs(chave, obs) {
     const status = chamadaData[chave]?.status || ''
     setChamadaData(prev => ({ ...prev, [chave]: { status, obs } }))
-    await supabase.from('chamada').upsert({ chave, status, obs }, { onConflict: 'chave' })
+    await syncOp('upsert', 'chamada', { chave, status, obs }, { onConflict: 'chave' })
   }
 
   const equipesFiltradas = lider?.equipeId === '' ? EQUIPES : EQUIPES.filter(e => e.id === lider?.equipeId)
 
   return (
     <div style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
-      <BackBtn onVoltar={onVoltar} titulo="Escala de Serviço" />
+      <BackBtn onVoltar={onVoltar} titulo={tx.escalasDeServico} />
       <div style={{ display: 'flex', gap: 8, padding: '16px 22px', overflowX: 'auto', scrollbarWidth: 'none' }}>
-        {[{id:'times',label:'👥 Times'},{id:'escalas',label:'📅 Escalas'},{id:'chamada',label:'📋 Chamada 🔒'}].map(a => (
-          <button key={a.id} onClick={() => a.id === 'chamada' ? abrirChamada() : setAba(a.id)} style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 20, border: '1px solid var(--border-strong)', background: aba === a.id ? 'rgba(124,58,237,0.3)' : 'var(--bg-card)', color: aba === a.id ? '#C4B5FD' : 'var(--text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+        {[{id:'times',label:`👥 ${tx.times}`},{id:'escalas',label:`📅 ${tx.escalas}`},{id:'chamada',label:`📋 ${tx.chamada} 🔒`}].map(a => (
+          <button key={a.id} onClick={() => a.id === 'chamada' ? abrirChamada() : setAba(a.id)} style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 20, border: '1px solid var(--border-strong)', background: aba === a.id ? 'var(--accent-glow)' : 'var(--bg-card)', color: aba === a.id ? 'var(--accent-light)' : 'var(--text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
             {a.label}
           </button>
         ))}
@@ -120,7 +123,7 @@ export default function Apoio({ onVoltar }) {
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>👑 {eq.lideres}</div>
               </div>
             </div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8 }}>Membros</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8 }}>{tx.membros}</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {eq.membros.map(m => <span key={m} style={{ fontSize: 11, background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 20, padding: '4px 10px', color: 'var(--text-secondary)' }}>{m}</span>)}
             </div>
@@ -134,7 +137,7 @@ export default function Apoio({ onVoltar }) {
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between'
               }}>
                 <div>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(96,165,250,0.7)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>Hoje</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(96,165,250,0.7)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>{tx.hoje}</div>
                   <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 20, fontWeight: 800, color: '#60A5FA' }}>
                     {hj.getDate()} de {MESES[hj.getMonth()]}
                   </div>
@@ -142,14 +145,14 @@ export default function Apoio({ onVoltar }) {
                     {['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'][hj.getDay()]}
                   </div>
                 </div>
-                <div style={{ fontSize: 11, color: 'rgba(96,165,250,0.6)', fontWeight: 600 }}>Ver escala →</div>
+                <div style={{ fontSize: 11, color: 'rgba(96,165,250,0.6)', fontWeight: 600 }}>{tx.verEscala}</div>
               </div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Calendário</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>{tx.calendario}</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, marginBottom: 16 }}>
                 {dias.map(dia => { const isSel = dia.getTime() === diaEscala.getTime(); const isHoje = dia.getTime() === hj.getTime(); return (
-                  <div key={dia.getTime()} onClick={() => setDiaEscala(dia)} style={{ background: isSel ? 'rgba(124,58,237,0.2)' : 'var(--bg-card)', border: isSel ? '1px solid rgba(124,58,237,0.5)' : isHoje ? '1px solid rgba(96,165,250,0.4)' : '1px solid var(--border)', borderRadius: 14, padding: '10px 4px', textAlign: 'center', cursor: 'pointer' }}>
+                  <div key={dia.getTime()} onClick={() => setDiaEscala(dia)} style={{ background: isSel ? 'var(--accent-bg)' : 'var(--bg-card)', border: isSel ? '1px solid var(--accent-border)' : isHoje ? '1px solid rgba(96,165,250,0.4)' : '1px solid var(--border)', borderRadius: 14, padding: '10px 4px', textAlign: 'center', cursor: 'pointer' }}>
                     <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', marginBottom: 2 }}>{DIAS_C[dia.getDay()]}</div>
-                    <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 800, color: isSel ? '#A78BFA' : isHoje ? '#60A5FA' : 'white' }}>{dia.getDate()}</div>
+                    <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 800, color: isSel ? 'var(--accent-light)' : isHoje ? '#60A5FA' : 'white' }}>{dia.getDate()}</div>
                     <div style={{ fontSize: 9, color: 'var(--text-faint)', marginTop: 1 }}>Jul</div>
                   </div>
                 )})}
@@ -165,7 +168,7 @@ export default function Apoio({ onVoltar }) {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ fontSize: 18 }}>{TURNO_ICON[turnoId]}</span>
-                        <span style={{ fontFamily: 'Syne, sans-serif', fontSize: 15, fontWeight: 700 }}>{TURNO_LABEL[turnoId]}</span>
+                        <span style={{ fontFamily: 'Syne, sans-serif', fontSize: 15, fontWeight: 700 }}>{tx[TURNO_KEY[turnoId]]}</span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span style={{ fontSize: 12, color: equipe.cor, fontWeight: 600 }}>{equipe.emoji} {equipe.nome}</span>
@@ -174,7 +177,7 @@ export default function Apoio({ onVoltar }) {
                     {TAREFAS_TURNO[turnoId].map((tarefa, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, marginBottom: 6 }}>
                         <div style={{ width: 6, height: 6, borderRadius: '50%', background: equipe.cor, flexShrink: 0 }} />
-                        <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{tarefa}</span>
+                        <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{tx[tarefa]}</span>
                       </div>
                     ))}
                   </div>
@@ -190,7 +193,7 @@ export default function Apoio({ onVoltar }) {
               ))}
 
               {EQUIPES.every(eq => !getTurno(eq, diaEscala)) && (
-                <div style={{ fontSize: 13, color: 'var(--text-faint)', textAlign: 'center', padding: 12 }}>Nenhuma escala neste dia</div>
+                <div style={{ fontSize: 13, color: 'var(--text-faint)', textAlign: 'center', padding: 12 }}>{tx.nenhumaEscala}</div>
               )}
             </>
         )}
@@ -198,7 +201,7 @@ export default function Apoio({ onVoltar }) {
           <>
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Logado: <strong style={{ color: 'var(--text)' }}>{lider.nome}</strong></span>
-              <button onClick={() => { setLider(null); setAba('times') }} style={{ background: 'none', border: 'none', color: '#F87171', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Sair</button>
+              <button onClick={() => { setLider(null); setAba('times') }} style={{ background: 'none', border: 'none', color: '#F87171', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>{tx.sair}</button>
             </div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
               <select value={diaSel} onChange={e => { setDiaSel(e.target.value); carregarChamada(e.target.value, turnoSel) }} style={{ flex: 1, padding: '12px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 13, color: 'var(--text)', outline: 'none' }}>
@@ -232,14 +235,14 @@ export default function Apoio({ onVoltar }) {
                             <button onClick={() => marcar(chKey, 'ausente')} style={{ padding: '6px 14px', borderRadius: 20, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: st === 'ausente' ? 'rgba(239,68,68,0.3)' : 'var(--input-bg)', color: st === 'ausente' ? '#F87171' : 'var(--text-muted)' }}>✗</button>
                           </div>
                         </div>
-                        <textarea defaultValue={obs} onBlur={e => salvarObs(chKey, e.target.value)} placeholder="Observação..." rows={1} style={{ width: '100%', padding: '8px 12px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, fontSize: 12, resize: 'none', outline: 'none', color: 'var(--text-secondary)', fontFamily: 'Inter, sans-serif' }} />
+                        <textarea defaultValue={obs} onBlur={e => salvarObs(chKey, e.target.value)} placeholder={tx.observacao} rows={1} style={{ width: '100%', padding: '8px 12px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, fontSize: 12, resize: 'none', outline: 'none', color: 'var(--text-secondary)', fontFamily: 'Inter, sans-serif' }} />
                       </div>
                     )
                   })}
                 </div>
               )
             })}
-            {(!diaSel || !turnoSel) && <p style={{ fontSize: 13, color: 'var(--text-faint)', textAlign: 'center', padding: 20 }}>Selecione o dia e turno</p>}
+            {(!diaSel || !turnoSel) && <p style={{ fontSize: 13, color: 'var(--text-faint)', textAlign: 'center', padding: 20 }}>{tx.selecioneDiaTurno}</p>}
           </>
         )}
       </div>
@@ -251,8 +254,8 @@ export default function Apoio({ onVoltar }) {
             <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>Digite sua senha de líder</p>
             <input type="password" value={senhaInput} onChange={e => { setSenhaInput(e.target.value); setSenhaErro('') }} onKeyDown={e => e.key === 'Enter' && verificarSenha()} placeholder="••••" maxLength={10} style={{ width: '100%', padding: '14px 16px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 20, textAlign: 'center', letterSpacing: '.3em', outline: 'none', color: 'var(--text)', marginBottom: 12, fontFamily: 'Inter, sans-serif' }} />
             {senhaErro && <p style={{ fontSize: 12, color: '#F87171', marginBottom: 10 }}>{senhaErro}</p>}
-            <button onClick={verificarSenha} style={{ width: '100%', padding: 14, background: 'linear-gradient(135deg,#7C3AED,#60A5FA)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'var(--text)', marginBottom: 10 }}>Entrar</button>
-            <button onClick={() => setShowLogin(false)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
+            <button onClick={verificarSenha} style={{ width: '100%', padding: 14, background: 'var(--gradient)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'var(--text)', marginBottom: 10 }}>{tx.entrar}</button>
+            <button onClick={() => setShowLogin(false)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer' }}>{tx.cancelar}</button>
           </div>
         </div>
       )}

@@ -7,9 +7,11 @@ import Mural from './components/Mural'
 import Midia from './components/Midia'
 import Programacao from './components/Programacao'
 import Config from './components/Config'
+import { initSync } from './lib/offlineSync'
+import { IdiomaContext, useTexto } from './lib/i18n'
 
 const SENHAS = {
-  supervisor: { '1932': 'Alvarães', '6090': 'Danilo', '0404': 'Caetano', '2121': 'Alyson', '9089': 'Paula', '1778': 'Eliel', '3321': 'Edson' },
+  supervisor: { '1932': 'Alvarães', '6090': 'Danilo', '0404': 'Caetano', '2121': 'Alyson', '9089': 'Paula', '1778': 'Eliel', '3321': 'Edson', '5050': 'Pr. Júnior', '4780': 'Pra. Stephanie' },
 }
 
 const ABAS_SUPERVISOR = {
@@ -20,6 +22,8 @@ const ABAS_SUPERVISOR = {
   'Paula': ['avisos'],
   'Eliel': ['avisos'],
   'Edson': ['avisos'],
+  'Pr. Júnior': ['avisos', 'chamada', 'faltas'],
+  'Pra. Stephanie': ['avisos', 'chamada', 'faltas'],
 }
 
 function NavIcon({ id, active }) {
@@ -43,7 +47,13 @@ export default function App() {
     return () => { clearTimeout(t1); clearTimeout(t2) }
   }, [])
 
+  const [idioma, setIdiomaState] = useState(() => localStorage.getItem('impulse_idioma') || 'pt-BR')
   const [tema, setTemaState] = useState(() => localStorage.getItem('tema') || 'dark')
+
+  function setIdioma(i) {
+    setIdiomaState(i)
+    localStorage.setItem('impulse_idioma', i)
+  }
 
   function setTema(t) {
     setTemaState(t)
@@ -53,6 +63,11 @@ export default function App() {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', tema)
+    const ac = localStorage.getItem('impulse_accent')
+    if (ac) document.documentElement.setAttribute('data-accent', ac)
+    const fs = localStorage.getItem('impulse_fontsize')
+    if (fs) document.body.style.zoom = parseInt(fs) / 100
+    initSync()
   }, [])
 
   const [tela, setTela] = useState('home')
@@ -63,8 +78,18 @@ export default function App() {
   const [supervisorNome, setSupervisorNome] = useState(null)
   const [navAtiva, setNavAtiva] = useState('home')
 
+  useEffect(() => {
+    function handleBack(e) {
+      if (overlay) { e.preventDefault(); setOverlay(null); return }
+      if (tela !== 'home') { e.preventDefault(); voltar() }
+    }
+    window.addEventListener('popstate', handleBack)
+    return () => window.removeEventListener('popstate', handleBack)
+  }, [tela, overlay])
+
   function navegarPara(id) {
     if (id === 'supervisor') { abrirOverlay('supervisor'); return }
+    if (id !== tela) window.history.pushState(null, '')
     setTela(id)
     setNavAtiva(id)
     setTelaKey(k => k + 1)
@@ -90,14 +115,17 @@ export default function App() {
     setTelaKey(k => k + 1)
   }
 
+  const t = { 'pt-BR': { home: 'Início', prog: 'Programação', sup: 'Supervisor', cfg: 'Config', senha: 'Digite sua senha para acessar', area: 'Área do Supervisor', entrar: 'Entrar', cancelar: 'Cancelar', senhaErro: 'Senha incorreta.' }, en: { home: 'Home', prog: 'Schedule', sup: 'Supervisor', cfg: 'Settings', senha: 'Enter your password', area: 'Supervisor Area', entrar: 'Enter', cancelar: 'Cancel', senhaErro: 'Wrong password.' } }[idioma]
+
   const NAV = [
-    { id: 'home', label: 'Início' },
-    { id: 'programacao', label: 'Programação' },
-    { id: 'supervisor', label: 'Supervisor' },
-    { id: 'config', label: 'Config' },
+    { id: 'home', label: t.home },
+    { id: 'programacao', label: t.prog },
+    { id: 'supervisor', label: t.sup },
+    { id: 'config', label: t.cfg },
   ]
 
   return (
+    <IdiomaContext.Provider value={idioma}>
     <div style={{ background: 'var(--bg-app)', minHeight: '100vh', paddingBottom: 80 }}>
 
       {splash && (
@@ -107,7 +135,7 @@ export default function App() {
           <div className="splash-glow" style={{ width: 120, height: 120, background: '#F59E0B', top: '50%', left: '60%', animationDelay: '1s' }} />
           <div className="splash-logo" style={{ fontFamily: 'Syne, sans-serif', fontSize: 48, fontWeight: 800, lineHeight: 1.0, letterSpacing: -1, textAlign: 'center' }}>
             Escola<br />
-            <span style={{ background: 'linear-gradient(90deg,#A78BFA,#60A5FA)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Impulse</span><br />
+            <span style={{ background: 'var(--gradient-text)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Impulse</span><br />
             2026
           </div>
           <div className="splash-sub" style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500, marginTop: 16, letterSpacing: 2, textTransform: 'uppercase' }}>
@@ -127,7 +155,7 @@ export default function App() {
         {tela === 'mural' && <Mural onVoltar={voltar} />}
         {tela === 'midia' && <Midia onVoltar={voltar} />}
         {tela === 'programacao' && <Programacao onVoltar={voltar} />}
-        {tela === 'config' && <Config onVoltar={voltar} tema={tema} setTema={setTema} />}
+        {tela === 'config' && <Config onVoltar={voltar} tema={tema} setTema={setTema} idioma={idioma} setIdioma={setIdioma} />}
       </div>
 
       {/* NAV BAR */}
@@ -156,7 +184,7 @@ export default function App() {
               <span style={{ fontSize: 9, letterSpacing: 0.3 }}>{n.label}</span>
               <div className="nav-indicator" style={{
                 width: active ? 20 : 0, height: 3, opacity: active ? 1 : 0,
-                background: 'linear-gradient(90deg,#A78BFA,#60A5FA)',
+                background: 'var(--gradient-text)',
                 borderRadius: 2, marginTop: 1
               }} />
             </div>
@@ -177,9 +205,9 @@ export default function App() {
               <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
             <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>
-              {overlay === 'supervisor' ? 'Área do Supervisor' : 'Acesso Restrito'}
+              {overlay === 'supervisor' ? t.area : t.area}
             </h2>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>Digite sua senha para acessar</p>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>{t.senha}</p>
             <input
               type="password"
               value={senhaInput}
@@ -191,11 +219,12 @@ export default function App() {
               style={{ width: '100%', padding: '14px 16px', background: 'var(--input-bg)', border: '1px solid var(--border)', borderRadius: 14, fontSize: 20, textAlign: 'center', letterSpacing: '.3em', outline: 'none', color: 'var(--text)', marginBottom: 12, fontFamily: 'Inter, sans-serif', transition: 'border-color 0.2s' }}
             />
             {senhaErro && <p style={{ fontSize: 12, color: '#F87171', marginBottom: 10 }}>{senhaErro}</p>}
-            <button onClick={verificarSenha} style={{ width: '100%', padding: 14, background: 'linear-gradient(135deg,#7C3AED,#60A5FA)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'white', marginBottom: 10, fontFamily: 'Syne, sans-serif', transition: 'transform 0.1s', boxShadow: '0 4px 20px rgba(124,58,237,0.3)' }}>Entrar</button>
-            <button onClick={() => setOverlay(null)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
+            <button onClick={verificarSenha} style={{ width: '100%', padding: 14, background: 'var(--gradient)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'white', marginBottom: 10, fontFamily: 'Syne, sans-serif', transition: 'transform 0.1s', boxShadow: '0 4px 20px var(--accent-glow)' }}>{t.entrar}</button>
+            <button onClick={() => setOverlay(null)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer' }}>{t.cancelar}</button>
           </div>
         </div>
       )}
     </div>
+    </IdiomaContext.Provider>
   )
 }

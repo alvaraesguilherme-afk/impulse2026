@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
+import { useTexto } from '../lib/i18n'
 import { supabase } from '../lib/supabase'
+import { syncOp } from '../lib/offlineSync'
 
 const EQUIPES = [
-  { id: 'verde', nome: 'Equipe Verde', lideres: 'Jhony e Linda', membros: ['Emanuel','Hellen Borges','Isabely Matos','Joel Marcos','Jeronimo','Livia Andrea'], offset: 0, cor: '#A78BFA', emoji: '🟢' },
+  { id: 'verde', nome: 'Equipe Verde', lideres: 'Jhony e Linda', membros: ['Emanuel','Hellen Borges','Isabely Matos','Joel Marcos','Jeronimo','Livia Andrea'], offset: 0, cor: 'var(--accent-light)', emoji: '🟢' },
   { id: 'amarelo', nome: 'Equipe Amarelo', lideres: 'Gustavo e Taiwa', membros: ['Hugo Lacroix','Lorena','Maria Clara','Matheus Almeida','Stephany'], offset: 1, cor: '#FCD34D', emoji: '🟡' },
   { id: 'azul', nome: 'Equipe Azul', lideres: 'Walterley e Maria Julia', membros: ['Ludymila','Mariana Gabrielle','Mauricio','Rafael','Ryan Guedes'], offset: 2, cor: '#60A5FA', emoji: '🔵' },
   { id: 'vermelho', nome: 'Equipe Vermelho', lideres: 'Francisco e Clara Cunha', membros: ['Gabriel Mendes','Leticia Nascimento','Nicoly','Rennan','Vic'], offset: 3, cor: '#F87171', emoji: '🔴' },
@@ -24,6 +26,7 @@ function getTurno(eq, data) {
 const dias = Array.from({ length: 11 }, (_, i) => new Date(INICIO.getTime() + i * 86400000))
 
 export default function Supervisor({ onVoltar, nome, abas }) {
+  const tx = useTexto()
   const [aba, setAba] = useState(abas[0] || 'avisos')
   const [avisos, setAvisos] = useState([])
   const [avisoTexto, setAvisoTexto] = useState('')
@@ -46,13 +49,13 @@ export default function Supervisor({ onVoltar, nome, abas }) {
     if (!avisoTexto.trim()) return
     const hj = new Date()
     const hora = hj.getHours() + ':' + String(hj.getMinutes()).padStart(2, '0')
-    await supabase.from('avisos').insert({ texto: avisoTexto.trim(), data: hj.getDate() + '/07', hora })
+    await syncOp('insert', 'avisos', { texto: avisoTexto.trim(), data: hj.getDate() + '/07', hora })
     setAvisoTexto('')
     carregarAvisos()
   }
 
   async function deletarAviso(id) {
-    await supabase.from('avisos').delete().eq('id', id)
+    await syncOp('delete', 'avisos', { id })
     carregarAvisos()
   }
 
@@ -70,13 +73,13 @@ export default function Supervisor({ onVoltar, nome, abas }) {
     const novo = atual === status ? '' : status
     const obs = chamadaData[chave]?.obs || ''
     setChamadaData(prev => ({ ...prev, [chave]: { status: novo, obs } }))
-    await supabase.from('chamada').upsert({ chave, status: novo, obs }, { onConflict: 'chave' })
+    await syncOp('upsert', 'chamada', { chave, status: novo, obs }, { onConflict: 'chave' })
   }
 
   async function salvarObs(chave, obs) {
     const status = chamadaData[chave]?.status || ''
     setChamadaData(prev => ({ ...prev, [chave]: { status, obs } }))
-    await supabase.from('chamada').upsert({ chave, status, obs }, { onConflict: 'chave' })
+    await syncOp('upsert', 'chamada', { chave, status, obs }, { onConflict: 'chave' })
   }
 
   async function carregarFaltas() {
@@ -111,7 +114,7 @@ export default function Supervisor({ onVoltar, nome, abas }) {
       {/* ABAS */}
       <div style={{ display: 'flex', gap: 8, padding: '16px 22px', overflowX: 'auto', scrollbarWidth: 'none' }}>
         {abas.map(a => (
-          <button key={a} onClick={() => setAba(a)} style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 20, border: '1px solid var(--border-strong)', background: aba === a ? 'rgba(124,58,237,0.3)' : 'var(--bg-card)', color: aba === a ? '#C4B5FD' : 'var(--text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+          <button key={a} onClick={() => setAba(a)} style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 20, border: '1px solid var(--border-strong)', background: aba === a ? 'var(--accent-glow)' : 'var(--bg-card)', color: aba === a ? 'var(--accent-light)' : 'var(--text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
             {ABA_LABELS[a]}
           </button>
         ))}
@@ -124,7 +127,7 @@ export default function Supervisor({ onVoltar, nome, abas }) {
           <>
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: 18, marginBottom: 16 }}>
               <textarea value={avisoTexto} onChange={e => setAvisoTexto(e.target.value)} placeholder="Digite o aviso para todos verem..." style={{ width: '100%', padding: 12, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, fontSize: 14, resize: 'none', outline: 'none', color: 'var(--text)', fontFamily: 'Inter, sans-serif', minHeight: 100 }} />
-              <button onClick={publicarAviso} style={{ width: '100%', marginTop: 12, padding: 14, background: 'linear-gradient(135deg,#7C3AED,#60A5FA)', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text)', fontFamily: 'Syne, sans-serif' }}>
+              <button onClick={publicarAviso} style={{ width: '100%', marginTop: 12, padding: 14, background: 'var(--gradient)', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text)', fontFamily: 'Syne, sans-serif' }}>
                 📢 Publicar aviso
               </button>
             </div>
@@ -157,7 +160,7 @@ export default function Supervisor({ onVoltar, nome, abas }) {
                 <option value="N">Noite</option>
               </select>
             </div>
-            {(!diaSel || !turnoSel) && <p style={{ fontSize: 13, color: 'var(--text-faint)', textAlign: 'center', padding: 20 }}>Selecione o dia e turno</p>}
+            {(!diaSel || !turnoSel) && <p style={{ fontSize: 13, color: 'var(--text-faint)', textAlign: 'center', padding: 20 }}>{tx.selecioneDiaTurno}</p>}
             {diaSel && turnoSel && EQUIPES.map(eq => {
               const t = getTurno(eq, new Date(parseInt(diaSel)))
               if (t !== turnoSel) return null
@@ -178,7 +181,7 @@ export default function Supervisor({ onVoltar, nome, abas }) {
                             <button onClick={() => marcar(chKey, 'ausente')} style={{ padding: '6px 14px', borderRadius: 20, border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer', background: st === 'ausente' ? 'rgba(239,68,68,0.3)' : 'var(--input-bg)', color: st === 'ausente' ? '#F87171' : 'var(--text-muted)' }}>✗</button>
                           </div>
                         </div>
-                        <textarea defaultValue={obs} onBlur={e => salvarObs(chKey, e.target.value)} placeholder="Observação..." rows={1} style={{ width: '100%', padding: '8px 12px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, fontSize: 12, resize: 'none', outline: 'none', color: 'var(--text-secondary)', fontFamily: 'Inter, sans-serif' }} />
+                        <textarea defaultValue={obs} onBlur={e => salvarObs(chKey, e.target.value)} placeholder={tx.observacao} rows={1} style={{ width: '100%', padding: '8px 12px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, fontSize: 12, resize: 'none', outline: 'none', color: 'var(--text-secondary)', fontFamily: 'Inter, sans-serif' }} />
                       </div>
                     )
                   })}

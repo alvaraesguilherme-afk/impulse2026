@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useTexto } from '../lib/i18n'
 import { supabase } from '../lib/supabase'
 
 const INICIO = new Date(2026, 6, 15)
@@ -49,6 +50,17 @@ const SENHA_COORD = '1932'
 const MURAL_INICIO = new Date(2026, 6, 14)
 const MURAL_FIM = new Date(2026, 6, 27)
 
+const STAFF_NOMES = [
+  'Pr. Júnior','Pra. Stephanie',
+  'Alvarães','Alyson','Caetano','Clara Cunha','Daniel','Danilo','Edson Jr.',
+  'Eliel','Emanuel','Francisco','Gabriel Gomes','Gustavo Borges','Gustavo Massay',
+  'Hadstton Capell','Hellen Borges','Hugo Lacroix','Isabely Matos','Jerônimo',
+  'Jhony','Joel Marcos','Joyce','Juliana','Letícia','Linda','Lívia Andréa',
+  'Lorena','Ludmyla','Maria Clara','Maria Júlia','Mariana Gabrielle',
+  'Matheus Almeida','Maurício','Nicoly','Paula','Rafael Chaves','Rennan',
+  'Ryan Guedes','Samuel Lopes','Stephany','Taiwa','Victória','Walterley'
+]
+
 function podeMuralPostar() {
   const hj = new Date()
   hj.setHours(0, 0, 0, 0)
@@ -56,6 +68,7 @@ function podeMuralPostar() {
 }
 
 export default function Mural({ onVoltar }) {
+  const tx = useTexto()
   const [diaSel, setDiaSel] = useState(getDiaAtual)
   const [fotos, setFotos] = useState([])
   const [loading, setLoading] = useState(false)
@@ -68,9 +81,12 @@ export default function Mural({ onVoltar }) {
   const [senhaSelecao, setSenhaSelecao] = useState('')
   const [senhaSelecaoErro, setSenhaSelecaoErro] = useState('')
   const [jaTemVotacao, setJaTemVotacao] = useState(false)
+  const [showNomePicker, setShowNomePicker] = useState(false)
+  const [pendingFile, setPendingFile] = useState(null)
+  const [autorSelecionado, setAutorSelecionado] = useState(() => localStorage.getItem('mural_autor') || '')
+  const [filtroAutor, setFiltroAutor] = useState('')
   const inputGaleria = useRef(null)
   const inputCamera = useRef(null)
-  const diasRef = useRef(null)
 
   useEffect(() => { carregarFotos(); checarVotacao() }, [diaSel])
 
@@ -85,9 +101,29 @@ export default function Mural({ onVoltar }) {
     setLoading(false)
   }
 
-  async function handleUpload(e) {
+  function handleFileSelect(e) {
     const file = e.target.files?.[0]
     if (!file) return
+    e.target.value = ''
+    if (autorSelecionado) {
+      uploadFoto(file, autorSelecionado)
+    } else {
+      setPendingFile(file)
+      setShowNomePicker(true)
+    }
+  }
+
+  function confirmarAutor(nome) {
+    setAutorSelecionado(nome)
+    localStorage.setItem('mural_autor', nome)
+    setShowNomePicker(false)
+    if (pendingFile) {
+      uploadFoto(pendingFile, nome)
+      setPendingFile(null)
+    }
+  }
+
+  async function uploadFoto(file, autor) {
     setUploading(true)
     try {
       const blob = await comprimirImagem(file)
@@ -95,13 +131,12 @@ export default function Mural({ onVoltar }) {
       const { error } = await supabase.storage.from('mural').upload(nome, blob, { contentType: 'image/jpeg' })
       if (error) throw error
       const { data: urlData } = supabase.storage.from('mural').getPublicUrl(nome)
-      await supabase.from('mural_fotos').insert({ dia: DIAS[diaSel].num, url: urlData.publicUrl, arquivo: nome })
+      await supabase.from('mural_fotos').insert({ dia: DIAS[diaSel].num, url: urlData.publicUrl, arquivo: nome, autor })
       await carregarFotos()
     } catch (err) {
       console.error('Erro no upload:', err)
     }
     setUploading(false)
-    e.target.value = ''
   }
 
   async function checarVotacao() {
@@ -121,7 +156,7 @@ export default function Mural({ onVoltar }) {
       setModoSelecao(true)
       setSelecionadas([])
     } else {
-      setSenhaSelecaoErro('Senha incorreta.')
+      setSenhaSelecaoErro(tx.senhaIncorreta)
     }
   }
 
@@ -151,20 +186,41 @@ export default function Mural({ onVoltar }) {
     carregarFotos()
   }
 
+  function trocarAutor() {
+    setAutorSelecionado('')
+    localStorage.removeItem('mural_autor')
+  }
+
+  const SUPERVISORES = ['Alvarães', 'Danilo', 'Caetano', 'Alyson', 'Paula', 'Eliel', 'Edson', 'Pr. Júnior', 'Pra. Stephanie']
+  const podeDeletar = fotoAberta && (fotoAberta.autor === autorSelecionado || SUPERVISORES.includes(autorSelecionado))
+
+  const fotosExibidas = filtroAutor
+    ? fotos.filter(f => f.autor === filtroAutor)
+    : fotos
+
+  const autoresUnicos = [...new Set(fotos.map(f => f.autor).filter(Boolean))]
+
   return (
     <div style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
         <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'var(--input-bg)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: 'none', color: 'var(--text)' }}>‹</button>
-        <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700 }}>Feed Impulse</h2>
+        <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700 }}>{tx.feedImpulse}</h2>
+        {autorSelecionado && (
+          <button onClick={trocarAutor} style={{
+            marginLeft: 'auto', padding: '4px 10px', borderRadius: 10,
+            background: 'var(--accent-bg)', border: '1px solid var(--accent-glow)',
+            color: 'var(--accent-light)', fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
+          }}>{autorSelecionado} ✎</button>
+        )}
       </div>
 
-      <div ref={diasRef} style={{ display: 'flex', gap: 6, padding: '16px 22px', overflowX: 'auto', scrollbarWidth: 'none' }}>
+      <div style={{ display: 'flex', gap: 6, padding: '16px 22px', overflowX: 'auto', scrollbarWidth: 'none' }}>
         {DIAS.map((d, i) => (
-          <button key={i} onClick={() => setDiaSel(i)} style={{
+          <button key={i} onClick={() => { setDiaSel(i); setFiltroAutor('') }} style={{
             flexShrink: 0, padding: '8px 14px', borderRadius: 16,
-            border: diaSel === i ? '1px solid rgba(124,58,237,0.5)' : '1px solid var(--border-strong)',
-            background: diaSel === i ? 'rgba(124,58,237,0.25)' : 'var(--bg-card)',
-            color: diaSel === i ? '#C4B5FD' : 'var(--text-muted)',
+            border: diaSel === i ? '1px solid var(--accent-border)' : '1px solid var(--border-strong)',
+            background: diaSel === i ? 'var(--accent-bg)' : 'var(--bg-card)',
+            color: diaSel === i ? 'var(--accent-light)' : 'var(--text-muted)',
             fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2
           }}>
@@ -182,36 +238,28 @@ export default function Mural({ onVoltar }) {
             fontSize: 13, fontWeight: 600, cursor: uploading ? 'not-allowed' : 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             opacity: uploading ? 0.5 : 1, fontFamily: 'Inter, sans-serif'
-          }}>
-            🖼️ Galeria
-          </button>
+          }}>🖼️ Galeria</button>
           <button onClick={() => inputCamera.current?.click()} disabled={uploading} style={{
-            flex: 1, padding: '14px', borderRadius: 16, border: '1px solid rgba(124,58,237,0.4)',
-            background: 'rgba(124,58,237,0.15)', color: '#C4B5FD',
+            flex: 1, padding: '14px', borderRadius: 16, border: '1px solid var(--accent-border)',
+            background: 'var(--accent-bg)', color: 'var(--accent-light)',
             fontSize: 13, fontWeight: 600, cursor: uploading ? 'not-allowed' : 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             opacity: uploading ? 0.5 : 1, fontFamily: 'Inter, sans-serif'
-          }}>
-            📷 Câmera
-          </button>
-          <input ref={inputGaleria} type="file" accept="image/*" onChange={handleUpload} style={{ display: 'none' }} />
-          <input ref={inputCamera} type="file" accept="image/*" capture="environment" onChange={handleUpload} style={{ display: 'none' }} />
+          }}>📷 Câmera</button>
+          <input ref={inputGaleria} type="file" accept="image/*" onChange={handleFileSelect} style={{ display: 'none' }} />
+          <input ref={inputCamera} type="file" accept="image/*" capture="environment" onChange={handleFileSelect} style={{ display: 'none' }} />
         </div>
       ) : (
         <div style={{ padding: '0 22px 16px' }}>
-          <div style={{
-            padding: '12px 14px', borderRadius: 14, background: 'var(--bg-card)',
-            border: '1px solid var(--border)', fontSize: 12, color: 'var(--text-faint)',
-            textAlign: 'center'
-          }}>
-            📷 Upload disponível de 14 a 27 de julho
+          <div style={{ padding: '12px 14px', borderRadius: 14, background: 'var(--bg-card)', border: '1px solid var(--border)', fontSize: 12, color: 'var(--text-faint)', textAlign: 'center' }}>
+            📷 {tx.uploadDisponivel}
           </div>
         </div>
       )}
 
       {uploading && (
         <div style={{ padding: '0 22px 16px' }}>
-          <div style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: 14, padding: '12px', fontSize: 13, color: '#C4B5FD', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-glow)', borderRadius: 14, padding: '12px', fontSize: 13, color: 'var(--accent-light)', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             <div style={{ width: 16, height: 16, border: '2px solid #C4B5FD', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
             Enviando foto...
           </div>
@@ -227,7 +275,7 @@ export default function Mural({ onVoltar }) {
                 marginLeft: 'auto', padding: '4px 10px', borderRadius: 10, border: '1px solid var(--border-strong)',
                 background: 'var(--bg-card)', color: 'var(--text-muted)',
                 fontSize: 10, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
-              }}>Refazer</button>
+              }}>{tx.refazer}</button>
             </div>
           ) : (
             <button onClick={iniciarSelecao} style={{
@@ -246,40 +294,57 @@ export default function Mural({ onVoltar }) {
             background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)',
             borderRadius: 14, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
           }}>
-            <span style={{ fontSize: 12, color: '#FBBF24', fontWeight: 600 }}>
-              {selecionadas.length}/5 selecionadas
-            </span>
+            <span style={{ fontSize: 12, color: '#FBBF24', fontWeight: 600 }}>{selecionadas.length}/5 selecionadas</span>
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={enviarVotacao} disabled={selecionadas.length === 0} style={{
                 padding: '6px 14px', borderRadius: 10, border: 'none',
                 background: selecionadas.length > 0 ? 'linear-gradient(135deg,#F59E0B,#EF4444)' : 'var(--border-strong)',
-                color: 'var(--text)', fontSize: 11, fontWeight: 700, cursor: selecionadas.length > 0 ? 'pointer' : 'not-allowed',
+                color: 'white', fontSize: 11, fontWeight: 700, cursor: selecionadas.length > 0 ? 'pointer' : 'not-allowed',
                 fontFamily: 'Inter, sans-serif'
-              }}>Confirmar</button>
+              }}>{tx.confirmar}</button>
               <button onClick={() => { setModoSelecao(false); setSelecionadas([]) }} style={{
                 padding: '6px 14px', borderRadius: 10, border: '1px solid var(--border-strong)',
                 background: 'var(--bg-card)', color: 'var(--text-muted)',
                 fontSize: 11, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
-              }}>Cancelar</button>
+              }}>{tx.cancelar}</button>
             </div>
           </div>
         </div>
       )}
 
+      {autoresUnicos.length > 1 && !modoSelecao && (
+        <div style={{ display: 'flex', gap: 6, padding: '0 22px 12px', overflowX: 'auto', scrollbarWidth: 'none' }}>
+          <button onClick={() => setFiltroAutor('')} style={{
+            flexShrink: 0, padding: '5px 12px', borderRadius: 14, fontSize: 10, fontWeight: 600, cursor: 'pointer',
+            border: !filtroAutor ? '1px solid var(--accent-border)' : '1px solid var(--border)',
+            background: !filtroAutor ? 'var(--accent-bg)' : 'var(--bg-card)',
+            color: !filtroAutor ? 'var(--accent-light)' : 'var(--text-muted)', fontFamily: 'Inter, sans-serif'
+          }}>{tx.todos}</button>
+          {autoresUnicos.map(a => (
+            <button key={a} onClick={() => setFiltroAutor(a)} style={{
+              flexShrink: 0, padding: '5px 12px', borderRadius: 14, fontSize: 10, fontWeight: 600, cursor: 'pointer',
+              border: filtroAutor === a ? '1px solid var(--accent-border)' : '1px solid var(--border)',
+              background: filtroAutor === a ? 'var(--accent-bg)' : 'var(--bg-card)',
+              color: filtroAutor === a ? 'var(--accent-light)' : 'var(--text-muted)', fontFamily: 'Inter, sans-serif'
+            }}>{a}</button>
+          ))}
+        </div>
+      )}
+
       <div style={{ padding: '0 22px 12px', fontSize: 11, color: 'var(--text-faint)', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase' }}>
-        {loading ? 'Carregando...' : `${fotos.length} foto${fotos.length !== 1 ? 's' : ''} · Dia ${DIAS[diaSel].num}`}
+        {loading ? 'Carregando...' : `${fotosExibidas.length} foto${fotosExibidas.length !== 1 ? 's' : ''}${filtroAutor ? ` · ${filtroAutor}` : ` · Dia ${DIAS[diaSel].num}`}`}
       </div>
 
-      {!loading && fotos.length === 0 && (
+      {!loading && fotosExibidas.length === 0 && (
         <div style={{ textAlign: 'center', padding: '60px 22px' }}>
           <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.6 }}>📷</div>
-          <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 700, marginBottom: 6 }}>Nenhuma foto ainda</div>
+          <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 700, marginBottom: 6 }}>{tx.nenhumaFoto}</div>
           <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Seja o primeiro a postar no Dia {DIAS[diaSel].num}!</div>
         </div>
       )}
 
       <div style={{ padding: '0 22px 100px', columnCount: 2, columnGap: 8 }}>
-        {fotos.map(foto => {
+        {fotosExibidas.map(foto => {
           const estaSelecionada = selecionadas.find(f => f.id === foto.id)
           return (
             <div key={foto.id} onClick={() => modoSelecao ? toggleSelecao(foto) : (setFotoAberta(foto), setConfirmDelete(false))} style={{
@@ -296,8 +361,11 @@ export default function Mural({ onVoltar }) {
                   alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#000'
                 }}>{selecionadas.findIndex(f => f.id === foto.id) + 1}</div>
               )}
-              <div style={{ padding: '8px 10px', fontSize: 10, color: 'var(--text-faint)' }}>
-                {new Date(foto.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+              <div style={{ padding: '8px 10px' }}>
+                {foto.autor && <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 2 }}>{foto.autor}</div>}
+                <div style={{ fontSize: 10, color: 'var(--text-faint)' }}>
+                  {new Date(foto.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                </div>
               </div>
             </div>
           )
@@ -312,47 +380,77 @@ export default function Mural({ onVoltar }) {
         }}>
           <button onClick={e => { e.stopPropagation(); setFotoAberta(null); setConfirmDelete(false) }} style={{
             position: 'absolute', top: 20, right: 20, width: 36, height: 36,
-            background: 'var(--input-bg)', borderRadius: 12, border: 'none',
-            color: 'var(--text)', fontSize: 18, cursor: 'pointer', display: 'flex',
+            background: 'rgba(255,255,255,0.1)', borderRadius: 12, border: 'none',
+            color: 'white', fontSize: 18, cursor: 'pointer', display: 'flex',
             alignItems: 'center', justifyContent: 'center'
           }}>✕</button>
 
           <img src={fotoAberta.url} alt="" onClick={e => e.stopPropagation()} style={{
-            maxWidth: '100%', maxHeight: '75vh', borderRadius: 12, objectFit: 'contain'
+            maxWidth: '100%', maxHeight: '70vh', borderRadius: 12, objectFit: 'contain'
           }} />
 
-          <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: 12, marginTop: 20 }}>
-            {!confirmDelete ? (
-              <button onClick={() => setConfirmDelete(true)} style={{
-                padding: '10px 20px', borderRadius: 14, border: '1px solid rgba(239,68,68,0.3)',
-                background: 'rgba(239,68,68,0.15)', color: '#F87171',
-                fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
-              }}>🗑️ Excluir</button>
-            ) : (
-              <>
-                <button onClick={() => deletarFoto(fotoAberta)} style={{
-                  padding: '10px 20px', borderRadius: 14, border: 'none',
-                  background: '#EF4444', color: 'var(--text)',
-                  fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
-                }}>Confirmar exclusão</button>
-                <button onClick={() => setConfirmDelete(false)} style={{
-                  padding: '10px 20px', borderRadius: 14, border: '1px solid var(--border-strong)',
-                  background: 'var(--input-bg)', color: 'var(--text)',
-                  fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
-                }}>Cancelar</button>
-              </>
-            )}
-          </div>
+          {fotoAberta.autor && (
+            <div style={{ marginTop: 12, fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>
+              📸 {fotoAberta.autor}
+            </div>
+          )}
 
-          <div style={{ marginTop: 12, fontSize: 11, color: 'var(--text-faint)' }}>
+          {podeDeletar && (
+            <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: 12, marginTop: 12 }}>
+              {!confirmDelete ? (
+                <button onClick={() => setConfirmDelete(true)} style={{
+                  padding: '10px 20px', borderRadius: 14, border: '1px solid rgba(239,68,68,0.3)',
+                  background: 'rgba(239,68,68,0.15)', color: '#F87171',
+                  fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
+                }}>🗑️ Excluir</button>
+              ) : (
+                <>
+                  <button onClick={() => deletarFoto(fotoAberta)} style={{
+                    padding: '10px 20px', borderRadius: 14, border: 'none',
+                    background: '#EF4444', color: 'white',
+                    fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
+                  }}>{tx.confirmarExclusao}</button>
+                  <button onClick={() => setConfirmDelete(false)} style={{
+                    padding: '10px 20px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.15)',
+                    background: 'rgba(255,255,255,0.08)', color: 'white',
+                    fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
+                  }}>{tx.cancelar}</button>
+                </>
+              )}
+            </div>
+          )}
+
+          <div style={{ marginTop: 8, fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
             Dia {DIAS[diaSel].num} · {new Date(fotoAberta.created_at).toLocaleString('pt-BR')}
           </div>
         </div>
       )}
 
+      {showNomePicker && (
+        <div className="overlay-bg" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.85)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="overlay-enter" style={{ background: 'var(--overlay-bg)', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '24px 20px', width: '90%', maxWidth: 340, maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ fontSize: 24, textAlign: 'center', marginBottom: 8 }}>📸</div>
+            <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 700, textAlign: 'center', marginBottom: 4 }}>Quem é você?</h2>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', marginBottom: 14 }}>{tx.selecioneNome}</p>
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', padding: '4px 0' }}>
+              {STAFF_NOMES.map(n => (
+                <button key={n} onClick={() => confirmarAutor(n)} style={{
+                  padding: '6px 12px', borderRadius: 14, border: '1px solid var(--border-strong)',
+                  background: 'var(--bg-card)', color: 'var(--text-secondary)',
+                  fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
+                }}>{n}</button>
+              ))}
+            </div>
+            <button onClick={() => { setShowNomePicker(false); setPendingFile(null) }} style={{
+              marginTop: 12, background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer'
+            }}>{tx.cancelar}</button>
+          </div>
+        </div>
+      )}
+
       {showSenhaSelecao && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.85)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#1a1a2e', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '28px 24px', width: '90%', maxWidth: 340, textAlign: 'center' }}>
+        <div className="overlay-bg" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.85)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="overlay-enter" style={{ background: 'var(--overlay-bg)', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '28px 24px', width: '90%', maxWidth: 340, textAlign: 'center' }}>
             <div style={{ fontSize: 32, marginBottom: 12 }}>⭐</div>
             <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Foto do Dia</h2>
             <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>Senha do coordenador geral</p>
@@ -364,13 +462,11 @@ export default function Mural({ onVoltar }) {
               style={{ width: '100%', padding: '14px 16px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 20, textAlign: 'center', letterSpacing: '.3em', outline: 'none', color: 'var(--text)', marginBottom: 12, fontFamily: 'Inter, sans-serif' }}
             />
             {senhaSelecaoErro && <p style={{ fontSize: 12, color: '#F87171', marginBottom: 10 }}>{senhaSelecaoErro}</p>}
-            <button onClick={confirmarSenhaSelecao} style={{ width: '100%', padding: 14, background: 'linear-gradient(135deg,#F59E0B,#EF4444)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'var(--text)', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>Entrar</button>
-            <button onClick={() => setShowSenhaSelecao(false)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
+            <button onClick={confirmarSenhaSelecao} style={{ width: '100%', padding: 14, background: 'linear-gradient(135deg,#F59E0B,#EF4444)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'white', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>{tx.entrar}</button>
+            <button onClick={() => setShowSenhaSelecao(false)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer' }}>{tx.cancelar}</button>
           </div>
         </div>
       )}
-
-      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )
 }

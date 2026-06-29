@@ -1,12 +1,17 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { syncOp } from '../lib/offlineSync'
+import { useTexto } from '../lib/i18n'
 
 const INICIO = new Date(2026, 6, 15)
+const FIM = new Date(2026, 6, 25, 23, 59, 59)
 
 const AUTORES_FRASE = {
   '1932': 'Alvarães',
   '6090': 'Danilo',
   '0404': 'Caetano',
+  '5050': 'Pr. Júnior',
+  '4780': 'Pra. Stephanie',
   '2121': 'Alyson',
   '9089': 'Paula',
 }
@@ -20,9 +25,33 @@ function getDiaEvento() {
   return 1
 }
 
+function useContador() {
+  const [agora, setAgora] = useState(new Date())
+  useEffect(() => {
+    const t = setInterval(() => setAgora(new Date()), 1000)
+    return () => clearInterval(t)
+  }, [])
+  const diff = INICIO.getTime() - agora.getTime()
+  const diffFim = agora.getTime() - FIM.getTime()
+  if (diff > 0) {
+    const d = Math.floor(diff / 86400000)
+    const h = Math.floor((diff % 86400000) / 3600000)
+    const m = Math.floor((diff % 3600000) / 60000)
+    const s = Math.floor((diff % 60000) / 1000)
+    return { fase: 'antes', dias: d, horas: h, minutos: m, segundos: s }
+  }
+  if (diffFim <= 0) {
+    const diaAtual = Math.floor((agora.getTime() - INICIO.getTime()) / 86400000) + 1
+    return { fase: 'durante', diaAtual, totalDias: 11 }
+  }
+  return { fase: 'depois' }
+}
+
 export default function Home({ onNavegar }) {
+  const tx = useTexto()
   const [avisos, setAvisos] = useState([])
-  const [diasRestantes, setDiasRestantes] = useState(0)
+  const contador = useContador()
+  const diasRestantes = contador.fase === 'antes' ? contador.dias : 0
   const [frase, setFrase] = useState(null)
   const [showFraseModal, setShowFraseModal] = useState(false)
   const [fraseInput, setFraseInput] = useState('')
@@ -35,10 +64,6 @@ export default function Home({ onNavegar }) {
   const diaEvento = getDiaEvento()
 
   useEffect(() => {
-    const hj = new Date()
-    hj.setHours(0, 0, 0, 0)
-    const d = Math.ceil((INICIO.getTime() - hj.getTime()) / 86400000)
-    setDiasRestantes(d)
     supabase.from('avisos').select('*').order('created_at', { ascending: false }).then(({ data }) => {
       if (data) setAvisos(data)
     })
@@ -69,13 +94,13 @@ export default function Home({ onNavegar }) {
   async function salvarFrase() {
     if (!fraseSenha) { setFraseErro('Digite a senha.'); return }
     if (frase?.frase) {
-      if (fraseSenha !== SENHA_EDITAR) { setFraseErro('Apenas o coordenador geral pode alterar.'); return }
+      if (fraseSenha !== SENHA_EDITAR) { setFraseErro(tx.apenasCoordenador); return }
     } else {
-      if (!AUTORES_FRASE[fraseSenha]) { setFraseErro('Senha incorreta.'); return }
+      if (!AUTORES_FRASE[fraseSenha]) { setFraseErro(tx.senhaIncorreta); return }
     }
     const autor = AUTORES_FRASE[fraseSenha]
     if (!fraseInput.trim()) { setFraseErro('Digite a frase.'); return }
-    await supabase.from('frase_do_dia').upsert({ dia: diaEvento, frase: fraseInput.trim(), autor }, { onConflict: 'dia' })
+    await syncOp('upsert', 'frase_do_dia', { dia: diaEvento, frase: fraseInput.trim(), autor }, { onConflict: 'dia' })
     setFrase({ dia: diaEvento, frase: fraseInput.trim(), autor })
     setShowFraseModal(false)
   }
@@ -84,7 +109,7 @@ export default function Home({ onNavegar }) {
     if (jaVotou) return
     const foto = votacao.find(f => f.id === fotoId)
     if (!foto) return
-    await supabase.from('foto_votacao').update({ votos: (foto.votos || 0) + 1 }).eq('id', fotoId)
+    await syncOp('update', 'foto_votacao', { values: { votos: (foto.votos || 0) + 1 }, filters: { id: fotoId } })
     localStorage.setItem(`votou_dia_${diaEvento}`, fotoId)
     setJaVotou(true)
     setVotacao(prev => prev.map(f => f.id === fotoId ? { ...f, votos: (f.votos || 0) + 1 } : f))
@@ -94,10 +119,10 @@ export default function Home({ onNavegar }) {
   const votouEm = localStorage.getItem(`votou_dia_${diaEvento}`)
 
   const modulos = [
-    { id: 'apoio', icon: '🙌', nome: 'Apoio', desc: 'Escalas e times', grad: 'linear-gradient(145deg,#4C1D95,#7C3AED)' },
-    { id: 'staff', icon: '👤', nome: 'Staff', desc: 'Colaboradores', grad: 'linear-gradient(145deg,#0C4A6E,#0EA5E9)' },
-    { id: 'midia', icon: '🎥', nome: 'Mídia', desc: 'Escalas e equipe', grad: 'linear-gradient(145deg,#78350F,#F59E0B)' },
-    { id: 'mural', icon: '📸', nome: 'Feed Impulse', desc: 'Fotos do staff', grad: 'linear-gradient(145deg,#831843,#EC4899)' },
+    { id: 'apoio', icon: '🙌', nome: tx.apoio, desc: tx.escalasETimes, grad: 'linear-gradient(145deg,#4C1D95,#7C3AED)' },
+    { id: 'staff', icon: '👤', nome: tx.staff, desc: tx.colaboradores, grad: 'linear-gradient(145deg,#0C4A6E,#0EA5E9)' },
+    { id: 'midia', icon: '🎥', nome: tx.midia, desc: tx.escalasEEquipe, grad: 'linear-gradient(145deg,#78350F,#F59E0B)' },
+    { id: 'mural', icon: '📸', nome: tx.feedImpulse, desc: tx.fotosDoStaff, grad: 'linear-gradient(145deg,#831843,#EC4899)' },
   ]
 
   return (
@@ -113,25 +138,58 @@ export default function Home({ onNavegar }) {
           <span>Escola Impulse</span>
         </div>
         <div style={{ padding: '24px 22px 0' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--input-bg)', backdropFilter: 'blur(20px)', border: '1px solid var(--border-strong)', borderRadius: 30, padding: '6px 14px', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 20 }}>
-            <div style={{ width: 7, height: 7, background: '#EF4444', borderRadius: '50%', boxShadow: '0 0 8px #EF4444', animation: 'blink 1.5s infinite' }} />
-            {diasRestantes > 0 ? `${diasRestantes} dias para o evento` : 'Evento em andamento'}
-          </div>
           <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 42, fontWeight: 800, lineHeight: 1.0, letterSpacing: -1, marginBottom: 8 }}>
             Escola<br />
-            <span style={{ background: 'linear-gradient(90deg,#A78BFA,#60A5FA)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Impulse</span><br />
+            <span style={{ background: 'var(--gradient-text)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Impulse</span><br />
             2026
           </div>
-          <div style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 500 }}>15 a 25 de julho · Rancho Império</div>
+          <div style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 500, marginBottom: 24 }}>15 a 25 de julho · Rancho Império</div>
+
+          {contador.fase === 'antes' && (
+            <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 20, padding: '18px 16px', textAlign: 'center' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-light)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>Faltam</div>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
+                {[
+                  [contador.dias, tx.dias],
+                  [contador.horas, tx.hrs],
+                  [contador.minutos, tx.min],
+                  [contador.segundos, tx.seg],
+                ].map(([v, l]) => (
+                  <div key={l} style={{ minWidth: 52, padding: '8px 4px', background: 'var(--bg-card)', borderRadius: 14, border: '1px solid var(--border)' }}>
+                    <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 24, fontWeight: 800, color: 'var(--accent-light)' }}>{String(v).padStart(2, '0')}</div>
+                    <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 2, textTransform: 'uppercase', fontWeight: 600 }}>{l}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {contador.fase === 'durante' && (
+            <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 20, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{ width: 7, height: 7, background: '#EF4444', borderRadius: '50%', boxShadow: '0 0 8px #EF4444', animation: 'blink 1.5s infinite', flexShrink: 0 }} />
+              <div>
+                <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 700, color: 'var(--accent-light)' }}>Dia {contador.diaAtual} de {contador.totalDias}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{tx.eventoEmAndamento}</div>
+              </div>
+            </div>
+          )}
+
+          {contador.fase === 'depois' && (
+            <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 20, padding: '18px', textAlign: 'center' }}>
+              <div style={{ fontSize: 28, marginBottom: 8 }}>💜</div>
+              <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, color: 'var(--accent-light)' }}>{tx.saudades}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>{tx.saudadesMsg}</div>
+            </div>
+          )}
         </div>
 
         {diaEvento && (
           <div onClick={abrirFraseModal} style={{
-            margin: '32px 22px 0', borderRadius: 20, padding: '20px 18px',
-            background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)',
+            margin: '24px 22px 0', borderRadius: 20, padding: '20px 18px',
+            background: 'var(--accent-bg)', border: '1px solid var(--accent-border)',
             cursor: 'pointer'
           }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(167,139,250,0.6)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-light)', opacity: 0.7, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
               ✦ Frase do Dia
             </div>
             {frase?.frase ? (
@@ -142,7 +200,7 @@ export default function Home({ onNavegar }) {
                 <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 8 }}>— {frase.autor}</div>
               </>
             ) : (
-              <div style={{ fontSize: 13, color: 'var(--text-faint)', fontStyle: 'italic' }}>Toque para definir</div>
+              <div style={{ fontSize: 13, color: 'var(--text-faint)', fontStyle: 'italic' }}>{tx.toquePraDefinir}</div>
             )}
           </div>
         )}
@@ -167,7 +225,7 @@ export default function Home({ onNavegar }) {
               📸 Vote na Foto do Dia {diaEvento}
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-faint)', marginBottom: 12 }}>
-              {jaVotou ? `Você já votou! ${totalVotos} voto${totalVotos !== 1 ? 's' : ''} no total` : 'Toque na sua favorita'}
+              {jaVotou ? `Você já votou! ${totalVotos} voto${totalVotos !== 1 ? 's' : ''} no total` : '{tx.toqueFavorita}'}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
               {votacao.map((foto, i) => {
@@ -186,7 +244,7 @@ export default function Home({ onNavegar }) {
                         padding: '20px 10px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
                       }}>
                         <span style={{ fontSize: 11, color: 'var(--text)', fontWeight: 700 }}>{foto.votos || 0} voto{(foto.votos || 0) !== 1 ? 's' : ''}</span>
-                        {isVotada && <span style={{ fontSize: 10, background: '#EC4899', color: 'var(--text)', padding: '2px 8px', borderRadius: 10, fontWeight: 700 }}>Seu voto</span>}
+                        {isVotada && <span style={{ fontSize: 10, background: '#EC4899', color: 'var(--text)', padding: '2px 8px', borderRadius: 10, fontWeight: 700 }}>{tx.seuVoto}</span>}
                       </div>
                     )}
                   </div>
@@ -206,7 +264,7 @@ export default function Home({ onNavegar }) {
             <div style={{ fontSize: 18, color: 'var(--text-faint)' }}>›</div>
           </div>
         )}
-        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: 2, textTransform: 'uppercase', padding: '24px 22px 14px' }}>Módulos</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: 2, textTransform: 'uppercase', padding: '24px 22px 14px' }}>{tx.modulos}</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, padding: '0 22px 100px' }}>
           {modulos.map(m => (
             <div key={m.id} onClick={() => onNavegar(m.id)} className="card-modulo"
@@ -252,7 +310,7 @@ export default function Home({ onNavegar }) {
               style={{ width: '100%', padding: '14px 16px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 16, textAlign: 'center', letterSpacing: '.2em', outline: 'none', color: 'var(--text)', marginBottom: 12, fontFamily: 'Inter, sans-serif' }}
             />
             {fraseErro && <p style={{ fontSize: 12, color: '#F87171', marginBottom: 10 }}>{fraseErro}</p>}
-            <button onClick={salvarFrase} style={{ width: '100%', padding: 14, background: 'linear-gradient(135deg,#7C3AED,#60A5FA)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'var(--text)', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>Salvar</button>
+            <button onClick={salvarFrase} style={{ width: '100%', padding: 14, background: 'var(--gradient)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'var(--text)', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>Salvar</button>
             <button onClick={() => setShowFraseModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
           </div>
         </div>

@@ -1,4 +1,6 @@
+import { useTexto } from '../lib/i18n'
 const STAFF_AREAS = [
+  { area: '⛪ Liderança Pastoral', nomes: ['Pr. Júnior Bandeira', 'Pra. Stephanie Bandeira'] },
   { area: '🙌 Apoio', nomes: ['Alvarães','Clara Cunha','Emanuel','Francisco','Gabriel Gomes','Gustavo Massay','Hellen Borges','Hugo Lacroix','Isabely Matos','Jerônimo','Jhony','Joel Marcos','Letícia','Linda','Lívia Andréa','Lorena','Ludmyla','Maria Clara','Maria Júlia','Mariana Gabrielle','Matheus Almeida','Maurício','Nicoly','Rafael Chaves','Rennan','Ryan Guedes','Stephany','Taiwa','Victória','Walterley'] },
   { area: '🎥 Mídia', nomes: ['Alyson','Caetano','Daniel','Joyce','Juliana','Stephany','Victória','Yua','Maria Clara'] },
   { area: '🍳 Cozinha', nomes: ['Samuel Lopes'] },
@@ -20,9 +22,10 @@ function BackBtn({ onVoltar, titulo }) {
 }
 
 export default function Staff({ onVoltar }) {
+  const tx = useTexto()
   return (
     <div style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
-      <BackBtn onVoltar={onVoltar} titulo="Staff" />
+      <BackBtn onVoltar={onVoltar} titulo={tx.staff} />
       <div style={{ padding: '24px 22px 100px' }}>
         {STAFF_AREAS.filter(s => s.nomes.length > 0).map(s => (
           <div key={s.area} style={{ marginBottom: 24 }}>
