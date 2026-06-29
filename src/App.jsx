@@ -2,14 +2,13 @@ import { useState } from 'react'
 import Home from './components/Home'
 import Apoio from './components/Apoio'
 import Staff from './components/Staff'
-import Checkin from './components/Checkin'
-import Alunos from './components/Alunos'
 import Supervisor from './components/Supervisor'
+import Mural from './components/Mural'
+import Midia from './components/Midia'
+import Programacao from './components/Programacao'
 
 const SENHAS = {
   supervisor: { '1932': 'Alvarães', '6090': 'Danilo', '0404': 'Caetano', '2121': 'Alyson', '9089': 'Paula', '1778': 'Eliel', '3321': 'Edson' },
-  checkin: ['1932', '6090', '2121'],
-  alunos: ['1932', '6090'],
 }
 
 const ABAS_SUPERVISOR = {
@@ -31,8 +30,6 @@ export default function App() {
   const [navAtiva, setNavAtiva] = useState('home')
 
   function navegarPara(id) {
-    if (id === 'checkin') { abrirOverlay('checkin'); return }
-    if (id === 'alunos') { abrirOverlay('alunos'); return }
     if (id === 'supervisor') { abrirOverlay('supervisor'); return }
     setTela(id)
     setNavAtiva(id)
@@ -48,12 +45,6 @@ export default function App() {
     if (overlay === 'supervisor') {
       const nome = SENHAS.supervisor[senhaInput]
       if (nome) { setSupervisorNome(nome); setOverlay(null); setTela('supervisor'); setNavAtiva('supervisor') }
-      else setSenhaErro('Senha incorreta.')
-    } else if (overlay === 'checkin') {
-      if (SENHAS.checkin.includes(senhaInput)) { setOverlay(null); setTela('checkin') }
-      else setSenhaErro('Senha incorreta.')
-    } else if (overlay === 'alunos') {
-      if (SENHAS.alunos.includes(senhaInput)) { setOverlay(null); setTela('alunos') }
       else setSenhaErro('Senha incorreta.')
     }
   }
@@ -71,16 +62,10 @@ export default function App() {
       {tela === 'home' && <Home onNavegar={navegarPara} />}
       {tela === 'apoio' && <Apoio onVoltar={() => { setTela('home'); setNavAtiva('home') }} />}
       {tela === 'staff' && <Staff onVoltar={() => { setTela('home'); setNavAtiva('home') }} />}
-      {tela === 'checkin' && <Checkin onVoltar={() => { setTela('home'); setNavAtiva('home') }} />}
-      {tela === 'alunos' && <Alunos onVoltar={() => { setTela('home'); setNavAtiva('home') }} />}
       {tela === 'supervisor' && <Supervisor onVoltar={() => { setTela('home'); setNavAtiva('home') }} nome={supervisorNome} abas={ABAS_SUPERVISOR[supervisorNome] || []} />}
-      {tela === 'programacao' && (
-        <div style={{ background: '#080C14', minHeight: '100vh', padding: '60px 22px', textAlign: 'center' }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>📅</div>
-          <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Programação</div>
-          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>Em breve</div>
-        </div>
-      )}
+      {tela === 'mural' && <Mural onVoltar={() => { setTela('home'); setNavAtiva('home') }} />}
+      {tela === 'midia' && <Midia onVoltar={() => { setTela('home'); setNavAtiva('home') }} />}
+      {tela === 'programacao' && <Programacao onVoltar={() => { setTela('home'); setNavAtiva('home') }} />}
       {tela === 'config' && (
         <div style={{ background: '#080C14', minHeight: '100vh', padding: '60px 22px', textAlign: 'center' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>⚙️</div>
@@ -105,10 +90,10 @@ export default function App() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.85)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: '28px 24px', width: '90%', maxWidth: 340, textAlign: 'center' }}>
             <div style={{ fontSize: 32, marginBottom: 12 }}>
-              {overlay === 'supervisor' ? '🔐' : overlay === 'checkin' ? '✅' : '🎒'}
+              {overlay === 'supervisor' ? '🔐' : '🔑'}
             </div>
             <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>
-              {overlay === 'supervisor' ? 'Área do Supervisor' : overlay === 'checkin' ? 'Check-in' : 'Alunos'}
+              {overlay === 'supervisor' ? 'Área do Supervisor' : 'Acesso Restrito'}
             </h2>
             <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>Digite sua senha para acessar</p>
             <input

@@ -1,0 +1,359 @@
+import { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase'
+
+const INICIO = new Date(2026, 6, 15)
+const TOTAL_DIAS = 11
+const DIAS = Array.from({ length: TOTAL_DIAS }, (_, i) => {
+  const d = new Date(INICIO.getTime() + i * 86400000)
+  return { num: i + 1, data: d, label: `${d.getDate()} Jul` }
+})
+
+function getDiaAtual() {
+  const hj = new Date()
+  hj.setHours(0, 0, 0, 0)
+  const diff = Math.round((hj.getTime() - INICIO.getTime()) / 86400000)
+  if (diff >= 0 && diff < TOTAL_DIAS) return diff
+  return 0
+}
+
+const MEMBROS_FIXOS = ['Alyson', 'Caetano', 'Daniel', 'Joyce', 'Juliana']
+const MEMBROS_EXTRAS = ['Stephany', 'Victória', 'Taiwa', 'Maria Clara']
+const TODOS_MEMBROS = [...MEMBROS_FIXOS, ...MEMBROS_EXTRAS]
+
+const FUNCOES_PADRAO = ['Stories', 'Fotografia', 'Gravação de vídeo']
+const TURNOS = [
+  { id: 'M', label: 'Manhã', icon: '🌅', temFixas: true },
+  { id: 'T', label: 'Tarde', icon: '☀️', temFixas: false },
+  { id: 'N', label: 'Noite', icon: '🌙', temFixas: true },
+]
+
+const SENHAS_COORD = ['0404', '2121', '1932']
+
+const CICLO_APOIO = ['M', 'T', 'N', 'F']
+const TURNO_NOME = { M: 'Manhã', T: 'Tarde', N: 'Noite', F: 'Folga' }
+const EQUIPE_MEMBRO = {
+  'Stephany': { equipeId: 'amarelo', offset: 1 },
+  'Maria Clara': { equipeId: 'amarelo', offset: 1 },
+  'Victória': { equipeId: 'vermelho', offset: 3 },
+  'Taiwa': { equipeId: 'amarelo', offset: 1 },
+}
+
+function getTurnoApoio(nome, diaNum) {
+  const eq = EQUIPE_MEMBRO[nome]
+  if (!eq) return null
+  const diff = diaNum - 1
+  if (diff < 0 || diff > 10) return null
+  if (eq.equipeId === 'vermelho' && diff === 0) return 'N'
+  if (diff === 0) return null
+  return CICLO_APOIO[(diff - 1 + eq.offset) % 4]
+}
+
+function checarDisponibilidade(nome, diaNum, turnoMidia) {
+  if (MEMBROS_FIXOS.includes(nome)) return { livre: true }
+  const turnoApoio = getTurnoApoio(nome, diaNum)
+  if (!turnoApoio || turnoApoio === 'F') return { livre: true }
+  if (turnoApoio === turnoMidia) return { livre: false, motivo: `Apoio (${TURNO_NOME[turnoApoio]})` }
+  return { livre: true }
+}
+
+export default function Midia({ onVoltar }) {
+  const [diaSel, setDiaSel] = useState(getDiaAtual)
+  const [escalas, setEscalas] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [coordenador, setCoordenador] = useState(false)
+  const [showLogin, setShowLogin] = useState(false)
+  const [senhaInput, setSenhaInput] = useState('')
+  const [senhaErro, setSenhaErro] = useState('')
+  const [addingTo, setAddingTo] = useState(null)
+  const [novaFuncao, setNovaFuncao] = useState('')
+
+  useEffect(() => { carregarEscalas() }, [diaSel])
+
+  async function carregarEscalas() {
+    setLoading(true)
+    const { data } = await supabase
+      .from('midia_escalas')
+      .select('*')
+      .eq('dia', DIAS[diaSel].num)
+      .order('created_at', { ascending: true })
+    setEscalas(data || [])
+    setLoading(false)
+  }
+
+  function verificarSenha() {
+    if (SENHAS_COORD.includes(senhaInput)) {
+      setCoordenador(true)
+      setShowLogin(false)
+    } else {
+      setSenhaErro('Senha incorreta.')
+    }
+  }
+
+  async function atribuirPessoa(turno, funcao, pessoa) {
+    const existing = escalas.find(e => e.turno === turno && e.funcao === funcao)
+    if (existing) {
+      await supabase.from('midia_escalas').update({ pessoa: pessoa || null }).eq('id', existing.id)
+    } else {
+      await supabase.from('midia_escalas').insert({
+        dia: DIAS[diaSel].num, turno, funcao, pessoa: pessoa || null, fixo: true
+      })
+    }
+    carregarEscalas()
+  }
+
+  async function adicionarFuncao(turno) {
+    if (!novaFuncao.trim()) return
+    await supabase.from('midia_escalas').insert({
+      dia: DIAS[diaSel].num, turno, funcao: novaFuncao.trim(), pessoa: null, fixo: false
+    })
+    setNovaFuncao('')
+    setAddingTo(null)
+    carregarEscalas()
+  }
+
+  async function removerFuncao(id) {
+    await supabase.from('midia_escalas').delete().eq('id', id)
+    carregarEscalas()
+  }
+
+  function getEscalasTurno(turnoId) {
+    const turno = TURNOS.find(t => t.id === turnoId)
+    const registros = escalas.filter(e => e.turno === turnoId)
+    const resultado = []
+
+    if (turno.temFixas) {
+      for (const funcao of FUNCOES_PADRAO) {
+        const reg = registros.find(e => e.funcao === funcao)
+        resultado.push({ id: reg?.id, funcao, pessoa: reg?.pessoa || '', fixo: true })
+      }
+    }
+
+    for (const e of registros) {
+      if (!turno.temFixas || !FUNCOES_PADRAO.includes(e.funcao)) {
+        resultado.push({ id: e.id, funcao: e.funcao, pessoa: e.pessoa || '', fixo: false })
+      }
+    }
+
+    return resultado
+  }
+
+  return (
+    <div style={{ background: '#080C14', minHeight: '100vh' }}>
+      <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
+        <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.08)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: 'none', color: 'white' }}>‹</button>
+        <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700 }}>Mídia</h2>
+        <div style={{ marginLeft: 'auto' }}>
+          {!coordenador ? (
+            <button onClick={() => { setShowLogin(true); setSenhaInput(''); setSenhaErro('') }} style={{
+              padding: '6px 14px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.1)',
+              background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)',
+              fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
+            }}>🔒 Coordenador</button>
+          ) : (
+            <button onClick={() => setCoordenador(false)} style={{
+              padding: '6px 14px', borderRadius: 20, border: '1px solid rgba(124,58,237,0.4)',
+              background: 'rgba(124,58,237,0.15)', color: '#C4B5FD',
+              fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
+            }}>✓ Editando</button>
+          )}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 6, padding: '16px 22px', overflowX: 'auto', scrollbarWidth: 'none' }}>
+        {DIAS.map((d, i) => (
+          <button key={i} onClick={() => setDiaSel(i)} style={{
+            flexShrink: 0, padding: '8px 14px', borderRadius: 16,
+            border: diaSel === i ? '1px solid rgba(124,58,237,0.5)' : '1px solid rgba(255,255,255,0.1)',
+            background: diaSel === i ? 'rgba(124,58,237,0.25)' : 'rgba(255,255,255,0.05)',
+            color: diaSel === i ? '#C4B5FD' : 'rgba(255,255,255,0.5)',
+            fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2
+          }}>
+            <span style={{ fontSize: 13, fontWeight: 700 }}>Dia {d.num}</span>
+            <span style={{ fontSize: 9, opacity: 0.6 }}>{d.label}</span>
+          </button>
+        ))}
+      </div>
+
+      <div style={{ padding: '0 22px 100px' }}>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>Carregando...</div>
+        ) : (
+          TURNOS.map(turno => {
+            const itens = getEscalasTurno(turno.id)
+            return (
+              <div key={turno.id} style={{ marginBottom: 24 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <span style={{ fontSize: 18 }}>{turno.icon}</span>
+                  <span style={{ fontFamily: 'Syne, sans-serif', fontSize: 15, fontWeight: 700 }}>{turno.label}</span>
+                  {!turno.temFixas && itens.length === 0 && (
+                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', fontStyle: 'italic', marginLeft: 4 }}>sem escala definida</span>
+                  )}
+                </div>
+
+                {itens.map((item, idx) => {
+                  const pessoaIndisponivel = item.pessoa && MEMBROS_EXTRAS.includes(item.pessoa)
+                    ? checarDisponibilidade(item.pessoa, DIAS[diaSel].num, turno.id)
+                    : null
+
+                  return (
+                    <div key={item.id || `fixed-${idx}`} style={{
+                      background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: 16, padding: '12px 14px', marginBottom: 8,
+                      display: 'flex', alignItems: 'center', gap: 12
+                    }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          {item.funcao}
+                          {item.fixo && <span style={{ fontSize: 9, background: 'rgba(124,58,237,0.2)', color: '#C4B5FD', padding: '2px 6px', borderRadius: 6, fontWeight: 700 }}>FIXA</span>}
+                        </div>
+                        {coordenador ? (
+                          <>
+                            <select
+                              value={item.pessoa}
+                              onChange={e => atribuirPessoa(turno.id, item.funcao, e.target.value)}
+                              style={{
+                                width: '100%', padding: '8px 10px', background: 'rgba(255,255,255,0.07)',
+                                border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10,
+                                fontSize: 12, color: 'white', outline: 'none', fontFamily: 'Inter, sans-serif'
+                              }}
+                            >
+                              <option value="">Selecionar pessoa...</option>
+                              <optgroup label="Equipe fixa">
+                                {MEMBROS_FIXOS.map(m => (
+                                  <option key={m} value={m}>{m}</option>
+                                ))}
+                              </optgroup>
+                              <optgroup label="Esporádicos">
+                                {MEMBROS_EXTRAS.map(m => {
+                                  const disp = checarDisponibilidade(m, DIAS[diaSel].num, turno.id)
+                                  return (
+                                    <option key={m} value={m}>
+                                      {m} {disp.livre ? '— Livre' : `— ${disp.motivo}`}
+                                    </option>
+                                  )
+                                })}
+                              </optgroup>
+                            </select>
+                            {pessoaIndisponivel && !pessoaIndisponivel.livre && (
+                              <div style={{
+                                marginTop: 6, padding: '6px 10px', borderRadius: 8,
+                                background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)',
+                                fontSize: 11, color: '#FBBF24', fontWeight: 500
+                              }}>
+                                ⚠️ {item.pessoa} está no {pessoaIndisponivel.motivo} neste turno
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ fontSize: 12, color: item.pessoa ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.25)', fontStyle: item.pessoa ? 'normal' : 'italic' }}>
+                              {item.pessoa || 'Não atribuído'}
+                            </span>
+                            {item.pessoa && MEMBROS_EXTRAS.includes(item.pessoa) && pessoaIndisponivel && !pessoaIndisponivel.livre && (
+                              <span style={{ fontSize: 9, background: 'rgba(245,158,11,0.2)', color: '#FBBF24', padding: '2px 6px', borderRadius: 6, fontWeight: 700 }}>APOIO</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      {coordenador && !item.fixo && (
+                        <button onClick={() => removerFuncao(item.id)} style={{
+                          width: 32, height: 32, borderRadius: 10, border: 'none',
+                          background: 'rgba(239,68,68,0.15)', color: '#F87171',
+                          fontSize: 14, cursor: 'pointer', display: 'flex',
+                          alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                        }}>✕</button>
+                      )}
+                    </div>
+                  )
+                })}
+
+                {coordenador && (
+                  addingTo === turno.id ? (
+                    <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                      <input
+                        value={novaFuncao}
+                        onChange={e => setNovaFuncao(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && adicionarFuncao(turno.id)}
+                        placeholder="Nome da função..."
+                        autoFocus
+                        style={{
+                          flex: 1, padding: '10px 14px', background: 'rgba(255,255,255,0.07)',
+                          border: '1px solid rgba(255,255,255,0.15)', borderRadius: 12,
+                          fontSize: 13, color: 'white', outline: 'none', fontFamily: 'Inter, sans-serif'
+                        }}
+                      />
+                      <button onClick={() => adicionarFuncao(turno.id)} style={{
+                        padding: '10px 16px', borderRadius: 12, border: 'none',
+                        background: 'linear-gradient(135deg,#7C3AED,#60A5FA)', color: 'white',
+                        fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
+                      }}>+</button>
+                      <button onClick={() => { setAddingTo(null); setNovaFuncao('') }} style={{
+                        padding: '10px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)',
+                        background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)',
+                        fontSize: 13, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
+                      }}>✕</button>
+                    </div>
+                  ) : (
+                    <button onClick={() => { setAddingTo(turno.id); setNovaFuncao('') }} style={{
+                      width: '100%', padding: '10px', borderRadius: 12,
+                      border: '1px dashed rgba(255,255,255,0.15)', background: 'transparent',
+                      color: 'rgba(255,255,255,0.35)', fontSize: 12, fontWeight: 600,
+                      cursor: 'pointer', marginTop: 4, fontFamily: 'Inter, sans-serif'
+                    }}>+ Adicionar função</button>
+                  )
+                )}
+              </div>
+            )
+          })
+        )}
+
+        <div style={{
+          marginTop: 16, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+          borderRadius: 16, padding: 16
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.25)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>Equipe Mídia</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {MEMBROS_FIXOS.map(m => (
+              <span key={m} style={{ fontSize: 11, background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: 20, padding: '4px 10px', color: '#C4B5FD', fontWeight: 500 }}>{m}</span>
+            ))}
+            {MEMBROS_EXTRAS.map(m => {
+              const turnoApoio = getTurnoApoio(m, DIAS[diaSel].num)
+              const ocupado = turnoApoio && turnoApoio !== 'F'
+              return (
+                <span key={m} style={{
+                  fontSize: 11, borderRadius: 20, padding: '4px 10px', fontWeight: 500,
+                  background: ocupado ? 'rgba(245,158,11,0.1)' : 'rgba(16,185,129,0.1)',
+                  border: ocupado ? '1px solid rgba(245,158,11,0.25)' : '1px solid rgba(16,185,129,0.25)',
+                  color: ocupado ? '#FBBF24' : '#6EE7B7'
+                }}>
+                  {m} — {!turnoApoio || turnoApoio === 'F' ? 'Livre o dia todo' : `Apoio ${TURNO_NOME[turnoApoio]}`}
+                </span>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      {showLogin && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.85)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: '28px 24px', width: '90%', maxWidth: 340, textAlign: 'center' }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>🎥</div>
+            <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Coordenador de Mídia</h2>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>Digite sua senha para editar escalas</p>
+            <input
+              type="password" value={senhaInput}
+              onChange={e => { setSenhaInput(e.target.value); setSenhaErro('') }}
+              onKeyDown={e => e.key === 'Enter' && verificarSenha()}
+              placeholder="••••" maxLength={10} autoFocus
+              style={{ width: '100%', padding: '14px 16px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, fontSize: 20, textAlign: 'center', letterSpacing: '.3em', outline: 'none', color: 'white', marginBottom: 12, fontFamily: 'Inter, sans-serif' }}
+            />
+            {senhaErro && <p style={{ fontSize: 12, color: '#F87171', marginBottom: 10 }}>{senhaErro}</p>}
+            <button onClick={verificarSenha} style={{ width: '100%', padding: 14, background: 'linear-gradient(135deg,#7C3AED,#60A5FA)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'white', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>Entrar</button>
+            <button onClick={() => setShowLogin(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

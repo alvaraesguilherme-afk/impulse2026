@@ -4,8 +4,6 @@ export default function Escola({ onVoltar, onAbrirArea }) {
     { id: 'midia', emoji: '🎥', nome: 'Mídia', desc: 'Membros e escalas', bg: '#f3e8ff' },
     { id: 'louvor', emoji: '🎵', nome: 'Louvor', desc: 'Louvor e Ministrações', bg: '#fef9c3' },
     { id: 'staff', emoji: '👤', nome: 'Staff', desc: 'Lista completa de colaboradores', bg: '#f1f5f9' },
-    { id: 'checkin', emoji: '✅', nome: 'Check-in', desc: 'Chegada de staff e alunos', bg: '#dcfce7', lock: true },
-    { id: 'alunos', emoji: '🎒', nome: 'Alunos', desc: 'Dados e identificação', bg: '#fce7f3', lock: true },
   ]
 
   return (

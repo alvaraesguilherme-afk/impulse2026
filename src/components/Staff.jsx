@@ -1,9 +1,10 @@
 const STAFF_AREAS = [
-  { area: '👑 Liderança Geral', nomes: ['Alvarães', 'Danilo', 'Eliel'] },
-  { area: '🙌 Apoio', nomes: ['Clara Cunha','Emanuel','Francisco','Gustavo Massay','Hellen Borges','Hugo Lacroix','Isabely Matos','Jerônimo','Jhony','Joel Marcos','Letícia','Linda','Lívia Andréa','Lorena','Ludmyla','Maria Clara','Maria Júlia','Mariana Gabrielle','Matheus Almeida','Maurício','Nicoly','Rafael Chaves','Rennan','Ryan Guedes','Stephany','Taiwa','Victória','Walterley'] },
-  { area: '🎥 Mídia', nomes: ['Alyson','Caetano','Daniel','Joyce','Juliana'] },
+  { area: '🙌 Apoio', nomes: ['Alvarães','Clara Cunha','Emanuel','Francisco','Gabriel Gomes','Gustavo Massay','Hellen Borges','Hugo Lacroix','Isabely Matos','Jerônimo','Jhony','Joel Marcos','Letícia','Linda','Lívia Andréa','Lorena','Ludmyla','Maria Clara','Maria Júlia','Mariana Gabrielle','Matheus Almeida','Maurício','Nicoly','Rafael Chaves','Rennan','Ryan Guedes','Stephany','Taiwa','Victória','Walterley'] },
+  { area: '🎥 Mídia', nomes: ['Alyson','Caetano','Daniel','Joyce','Juliana','Stephany','Victória','Yua','Maria Clara'] },
   { area: '🍳 Cozinha', nomes: ['Samuel Lopes'] },
   { area: '🛒 Cantina', nomes: ['Hadstton Capell'] },
+  { area: '📋 Secretário', nomes: ['Danilo'] },
+  { area: '📅 Programação', nomes: ['Eliel'] },
   { area: '🎤 Preletores', nomes: ['Paula'] },
   { area: '💡 Iluminação', nomes: ['Gustavo Borges'] },
   { area: '📦 Logística', nomes: ['Edson Jr.'] },

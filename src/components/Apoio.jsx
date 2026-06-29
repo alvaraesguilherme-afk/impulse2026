@@ -5,15 +5,20 @@ const EQUIPES = [
   { id: 'verde', nome: 'Equipe Verde', lideres: 'Jhony e Linda', membros: ['Emanuel','Hellen Borges','Isabely Matos','Joel Marcos','Jerônimo','Lívia Andréa'], offset: 0, cor: '#A78BFA', grad: 'linear-gradient(135deg,#4C1D95,#7C3AED)', emoji: '🟢' },
   { id: 'amarelo', nome: 'Equipe Amarelo', lideres: 'Gustavo Massay e Taiwa', membros: ['Hugo Lacroix','Lorena','Maria Clara','Matheus Almeida','Stephany'], offset: 1, cor: '#FCD34D', grad: 'linear-gradient(135deg,#78350F,#F59E0B)', emoji: '🟡' },
   { id: 'azul', nome: 'Equipe Azul', lideres: 'Walterley e Maria Júlia', membros: ['Ludmyla','Mariana Gabrielle','Maurício','Rafael Chaves','Ryan Guedes'], offset: 2, cor: '#60A5FA', grad: 'linear-gradient(135deg,#0C4A6E,#0EA5E9)', emoji: '🔵' },
-  { id: 'vermelho', nome: 'Equipe Vermelho', lideres: 'Francisco e Clara Cunha', membros: ['Gabriel Mendes','Letícia','Nicoly','Rennan','Victória'], offset: 3, cor: '#F87171', grad: 'linear-gradient(135deg,#7F1D1D,#EF4444)', emoji: '🔴' },
+  { id: 'vermelho', nome: 'Equipe Vermelho', lideres: 'Francisco e Clara Cunha', membros: ['Gabriel Gomes','Gabriel Mendes','Letícia','Nicoly','Rennan','Victória'], offset: 3, cor: '#F87171', grad: 'linear-gradient(135deg,#7F1D1D,#EF4444)', emoji: '🔴' },
 ]
 
 const CICLO = ['M','T','N','F']
 const TURNO_LABEL = { M:'Manhã', T:'Tarde', N:'Noite', F:'Folga' }
+const TAREFAS_TURNO = {
+  M: ['Servir café da manhã', 'Lavar louças', 'Limpeza e organização do refeitório', 'Retirada do lixo'],
+  T: ['Servir almoço', 'Lavar louças', 'Limpeza e organização do refeitório', 'Limpeza e organização do templo'],
+  N: ['Servir jantar', 'Lavar louças', 'Limpeza e organização do refeitório', 'Limpeza e organização do templo'],
+}
+const TURNO_ICON = { M: '🌅', T: '☀️', N: '🌙', F: '😴' }
 const DIAS_C = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
 const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
 const INICIO = new Date(2026,6,15)
-const INICIO_VISIVEL = new Date(2026,6,10)
 const FIM = new Date(2026,6,25)
 
 const LIDERES_CHAMADA = [
@@ -53,6 +58,11 @@ export default function Apoio({ onVoltar }) {
   const [turnoSel, setTurnoSel] = useState('')
   const [chamadaData, setChamadaData] = useState({})
   const hj = new Date(); hj.setHours(0,0,0,0)
+  const [diaEscala, setDiaEscala] = useState(() => {
+    const diff = Math.round((hj.getTime() - INICIO.getTime()) / 86400000)
+    if (diff >= 0 && diff <= 10) return dias[diff]
+    return dias[0]
+  })
 
   function abrirChamada() {
     if (lider) { setAba('chamada'); return }
@@ -117,39 +127,72 @@ export default function Apoio({ onVoltar }) {
           </div>
         ))}
         {aba === 'escalas' && (
-          hj < INICIO_VISIVEL ? (
-            <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 20, padding: 24, textAlign: 'center' }}>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>⏳</div>
-              <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, marginBottom: 4 }}>Em breve</div>
-              <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 36, fontWeight: 800, background: 'linear-gradient(90deg,#A78BFA,#60A5FA)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                {Math.ceil((INICIO.getTime() - hj.getTime()) / 86400000)} dias
-              </div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>O evento começa em 15 de julho</div>
-            </div>
-          ) : (
             <>
-              <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 18, marginBottom: 16 }}>
-                <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 24, fontWeight: 800, marginBottom: 2 }}>{hj.getDate()} de {MESES[hj.getMonth()]}</div>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 14 }}>{hj >= INICIO && hj <= FIM ? ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'][hj.getDay()] : 'Fora do período'}</div>
-                {EQUIPES.map(eq => { const t = getTurno(eq, hj); if (!t) return null; return (
-                  <div key={eq.id} style={{ borderRadius: 14, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                    <div><div style={{ fontSize: 14, fontWeight: 600, color: eq.cor }}>{eq.nome}</div><div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>{eq.lideres}</div></div>
-                    <div style={{ fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 20, background: 'rgba(124,58,237,0.3)', color: '#C4B5FD' }}>{TURNO_LABEL[t]}</div>
+              <div onClick={() => setDiaEscala(hj >= INICIO && hj <= FIM ? hj : dias[0])} style={{
+                background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)',
+                borderRadius: 16, padding: '14px 18px', marginBottom: 16, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+              }}>
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(96,165,250,0.7)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>Hoje</div>
+                  <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 20, fontWeight: 800, color: '#60A5FA' }}>
+                    {hj.getDate()} de {MESES[hj.getMonth()]}
                   </div>
-                )})}
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
+                    {['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'][hj.getDay()]}
+                  </div>
+                </div>
+                <div style={{ fontSize: 11, color: 'rgba(96,165,250,0.6)', fontWeight: 600 }}>Ver escala →</div>
               </div>
               <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Calendário</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
-                {dias.map(dia => { const isHoje = dia.getTime() === hj.getTime(); return (
-                  <div key={dia.getTime()} style={{ background: isHoje ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.04)', border: isHoje ? '1px solid rgba(124,58,237,0.5)' : '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '10px 4px', textAlign: 'center', cursor: 'pointer' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, marginBottom: 16 }}>
+                {dias.map(dia => { const isSel = dia.getTime() === diaEscala.getTime(); const isHoje = dia.getTime() === hj.getTime(); return (
+                  <div key={dia.getTime()} onClick={() => setDiaEscala(dia)} style={{ background: isSel ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.04)', border: isSel ? '1px solid rgba(124,58,237,0.5)' : isHoje ? '1px solid rgba(96,165,250,0.4)' : '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '10px 4px', textAlign: 'center', cursor: 'pointer' }}>
                     <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: 2 }}>{DIAS_C[dia.getDay()]}</div>
-                    <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 800, color: isHoje ? '#A78BFA' : 'white' }}>{dia.getDate()}</div>
+                    <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 800, color: isSel ? '#A78BFA' : isHoje ? '#60A5FA' : 'white' }}>{dia.getDate()}</div>
                     <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 1 }}>Jul</div>
                   </div>
                 )})}
               </div>
+              <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 22, fontWeight: 800, marginBottom: 2 }}>{diaEscala.getDate()} de {MESES[diaEscala.getMonth()]}</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 16 }}>{['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'][diaEscala.getDay()]}</div>
+
+              {['M', 'T', 'N'].map(turnoId => {
+                const equipe = EQUIPES.find(eq => getTurno(eq, diaEscala) === turnoId)
+                if (!equipe) return null
+                return (
+                  <div key={turnoId} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 18, marginBottom: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 18 }}>{TURNO_ICON[turnoId]}</span>
+                        <span style={{ fontFamily: 'Syne, sans-serif', fontSize: 15, fontWeight: 700 }}>{TURNO_LABEL[turnoId]}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ fontSize: 12, color: equipe.cor, fontWeight: 600 }}>{equipe.emoji} {equipe.nome}</span>
+                      </div>
+                    </div>
+                    {TAREFAS_TURNO[turnoId].map((tarefa, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, marginBottom: 6 }}>
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: equipe.cor, flexShrink: 0 }} />
+                        <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>{tarefa}</span>
+                      </div>
+                    ))}
+                  </div>
+                )
+              })}
+
+              {EQUIPES.filter(eq => getTurno(eq, diaEscala) === 'F').map(eq => (
+                <div key={eq.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, marginBottom: 8 }}>
+                  <span style={{ fontSize: 14 }}>{eq.emoji}</span>
+                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>{eq.nome}</span>
+                  <span style={{ marginLeft: 'auto', fontSize: 11, color: 'rgba(255,255,255,0.25)', fontWeight: 600 }}>😴 Folga</span>
+                </div>
+              ))}
+
+              {EQUIPES.every(eq => !getTurno(eq, diaEscala)) && (
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: 12 }}>Nenhuma escala neste dia</div>
+              )}
             </>
-          )
         )}
         {aba === 'chamada' && lider && (
           <>
