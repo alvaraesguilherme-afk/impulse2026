@@ -263,7 +263,7 @@ export default function Mural({ onVoltar }) {
           zIndex: 0, willChange: 'transform'
         }}>
           {MOSAICO_TILES.map((src, i) => (
-            <img key={i} src={src} alt="" onLoad={medirAltura} style={{ width: '100%', display: 'block', marginBottom: 3, breakInside: 'avoid' }} />
+            <img key={i} src={src} alt="" onLoad={medirAltura} loading={i < 9 ? 'eager' : 'lazy'} decoding="async" style={{ width: '100%', display: 'block', marginBottom: 3, breakInside: 'avoid' }} />
           ))}
         </div>
       )}

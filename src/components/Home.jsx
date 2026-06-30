@@ -275,7 +275,7 @@ export default function Home({ onNavegar }) {
               ⭐ Foto Destaque — Dia {fotoDestaque.dia}
             </div>
             <div style={{ borderRadius: 20, overflow: 'hidden', border: '2px solid rgba(245,158,11,0.3)' }}>
-              <img src={fotoDestaque.foto_url} alt="" style={{ width: '100%', display: 'block' }} />
+              <img src={fotoDestaque.foto_url} alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block' }} />
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 6, textAlign: 'center' }}>
               {fotoDestaque.votos} voto{fotoDestaque.votos !== 1 ? 's' : ''}
@@ -300,7 +300,7 @@ export default function Home({ onNavegar }) {
                     border: isVotada ? '2px solid #EC4899' : '1px solid var(--border)',
                     position: 'relative', gridColumn: i === 4 ? 'span 2' : undefined
                   }}>
-                    <img src={foto.foto_url} alt="" style={{ width: '100%', display: 'block', aspectRatio: i === 4 ? '2/1' : '1/1', objectFit: 'cover' }} />
+                    <img src={foto.foto_url} alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block', aspectRatio: i === 4 ? '2/1' : '1/1', objectFit: 'cover' }} />
                     {jaVotou && (
                       <div style={{
                         position: 'absolute', bottom: 0, left: 0, right: 0,
