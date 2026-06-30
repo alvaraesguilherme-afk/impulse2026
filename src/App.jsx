@@ -14,6 +14,13 @@ const SENHAS = {
   supervisor: { '1932': 'Alvarães', '6090': 'Danilo', '0404': 'Caetano', '2121': 'Alyson', '9089': 'Paula', '1778': 'Eliel', '3321': 'Edson', '5050': 'Pr. Júnior', '4780': 'Pra. Stephanie' },
 }
 
+const ANIM_TELA = {
+  apoio: 'tela-enter-apoio',
+  staff: 'tela-enter-staff',
+  midia: 'tela-enter-midia',
+  mural: 'tela-enter-mural',
+}
+
 const ABAS_SUPERVISOR = {
   'Alvarães': ['avisos', 'chamada', 'faltas'],
   'Danilo': ['avisos'],
@@ -147,7 +154,7 @@ export default function App() {
         </div>
       )}
 
-      <div key={telaKey} className="tela-enter">
+      <div key={telaKey} className={ANIM_TELA[tela] || 'tela-enter'}>
         {tela === 'home' && <Home onNavegar={navegarPara} />}
         {tela === 'apoio' && <Apoio onVoltar={voltar} />}
         {tela === 'staff' && <Staff onVoltar={voltar} />}

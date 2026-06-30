@@ -124,6 +124,38 @@ body::-webkit-scrollbar { display: none; }
   to { opacity: 1; transform: translateY(0); }
 }
 
+.tela-enter-apoio {
+  animation: slideUpIn 0.35s cubic-bezier(.22,1,.36,1);
+}
+@keyframes slideUpIn {
+  from { opacity: 0; transform: translateY(50px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.tela-enter-staff {
+  animation: slideLeftIn 0.35s cubic-bezier(.22,1,.36,1);
+}
+@keyframes slideLeftIn {
+  from { opacity: 0; transform: translateX(-50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.tela-enter-midia {
+  animation: slideRightIn 0.35s cubic-bezier(.22,1,.36,1);
+}
+@keyframes slideRightIn {
+  from { opacity: 0; transform: translateX(50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.tela-enter-mural {
+  animation: zoomIn 0.32s cubic-bezier(.22,1,.36,1);
+}
+@keyframes zoomIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 .card-modulo {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   will-change: transform;
