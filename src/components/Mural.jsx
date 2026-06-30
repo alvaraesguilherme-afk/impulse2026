@@ -436,7 +436,7 @@ export default function Mural({ onVoltar }) {
               border: estaSelecionada ? '2px solid #F59E0B' : '1px solid var(--border)',
               background: 'var(--bg-card)'
             }}>
-              <img src={foto.url} alt="" loading="lazy" style={{ width: '100%', display: 'block', opacity: modoSelecao && !estaSelecionada && selecionadas.length >= 5 ? 0.3 : 1 }} />
+              <img src={foto.url} alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block', opacity: modoSelecao && !estaSelecionada && selecionadas.length >= 5 ? 0.3 : 1 }} />
               {modoSelecao && estaSelecionada && (
                 <div style={{
                   position: 'absolute', top: 8, right: 8, width: 24, height: 24,
@@ -468,7 +468,7 @@ export default function Mural({ onVoltar }) {
             alignItems: 'center', justifyContent: 'center'
           }}>✕</button>
 
-          <img src={fotoAberta.url} alt="" onClick={e => e.stopPropagation()} style={{
+          <img src={fotoAberta.url} alt="" decoding="async" onClick={e => e.stopPropagation()} style={{
             maxWidth: '100%', maxHeight: '70vh', borderRadius: 12, objectFit: 'contain'
           }} />
 

@@ -62,10 +62,10 @@ export default function Supervisor({ onVoltar, nome, abas }) {
 
   async function carregarChamada(ts, turno) {
     if (!ts || !turno) return
-    const { data } = await supabase.from('chamada').select('*')
     const prefix = ts + '_' + turno + '_'
+    const { data } = await supabase.from('chamada').select('chave,status,obs').like('chave', prefix + '%')
     const cache = {}
-    if (data) data.forEach(r => { if (r.chave?.startsWith(prefix)) cache[r.chave] = { status: r.status, obs: r.obs || '' } })
+    if (data) data.forEach(r => { cache[r.chave] = { status: r.status, obs: r.obs || '' } })
     setChamadaData(cache)
   }
 
