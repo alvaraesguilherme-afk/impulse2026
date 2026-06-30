@@ -185,9 +185,11 @@ export default function Mural({ onVoltar }) {
   async function deletarFoto(foto) {
     await supabase.storage.from('mural').remove([foto.arquivo])
     await supabase.from('mural_fotos').delete().eq('id', foto.id)
+    await supabase.from('foto_votacao').delete().eq('foto_url', foto.url)
     setFotoAberta(null)
     setConfirmDelete(false)
     carregarFotos()
+    checarVotacao()
   }
 
   function trocarAutor() {
