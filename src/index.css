@@ -203,6 +203,28 @@ body::-webkit-scrollbar { display: none; }
   transition: width 0.25s ease, opacity 0.25s ease;
 }
 
+.intro-overlay {
+  animation: introFadeIn 0.7s cubic-bezier(.16,1,.3,1);
+}
+.intro-overlay.intro-saindo {
+  animation: introFadeOut 0.5s ease forwards;
+}
+.intro-slide {
+  animation: introSlideIn 0.6s cubic-bezier(.16,1,.3,1);
+}
+@keyframes introFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes introFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes introSlideIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .overlay-enter {
   animation: overlayIn 0.25s ease-out;
 }

@@ -61,6 +61,9 @@ const STAFF_NOMES = [
   'Ryan Guedes','Samuel Lopes','Stephany','Taiwa','Victória','Walterley'
 ]
 
+const MOSAICO_GLOB = import.meta.glob('/src/assets/mosaico/*.{jpg,jpeg,png,webp,JPG,JPEG,PNG,WEBP}', { eager: true })
+const MOSAICO_FOTOS = Object.values(MOSAICO_GLOB).map(m => m.default)
+
 function podeMuralPostar() {
   const hj = new Date()
   hj.setHours(0, 0, 0, 0)
@@ -91,8 +94,19 @@ export default function Mural({ onVoltar }) {
   const [senhaTesteErro, setSenhaTesteErro] = useState('')
   const inputGaleria = useRef(null)
   const inputCamera = useRef(null)
+  const parallaxRef = useRef(null)
 
   useEffect(() => { carregarFotos(); checarVotacao() }, [diaSel])
+
+  useEffect(() => {
+    function onScroll() {
+      if (parallaxRef.current) {
+        parallaxRef.current.style.transform = `translateY(${window.scrollY * 0.25}px)`
+      }
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   async function carregarFotos() {
     setLoading(true)
@@ -221,7 +235,21 @@ export default function Mural({ onVoltar }) {
   const autoresUnicos = [...new Set(fotos.map(f => f.autor).filter(Boolean))]
 
   return (
-    <div style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
+    <div style={{ background: 'var(--bg-tela)', minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+      {MOSAICO_FOTOS.length > 0 && (
+        <div ref={parallaxRef} style={{
+          position: 'absolute', top: 0, left: 0, right: 0, minHeight: '170vh',
+          columnCount: 3, columnGap: 3,
+          zIndex: 0, willChange: 'transform'
+        }}>
+          {Array.from({ length: 36 }, (_, i) => MOSAICO_FOTOS[i % MOSAICO_FOTOS.length]).map((src, i) => (
+            <img key={i} src={src} alt="" style={{ width: '100%', display: 'block', marginBottom: 3, breakInside: 'avoid' }} />
+          ))}
+        </div>
+      )}
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(5,5,20,0.78)', zIndex: 0 }} />
+
+      <div style={{ position: 'relative', zIndex: 1 }}>
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
         <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'var(--input-bg)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: 'none', color: 'var(--text)' }}>‹</button>
         <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700 }}>{tx.feedImpulse}</h2>
@@ -519,6 +547,7 @@ export default function Mural({ onVoltar }) {
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }
