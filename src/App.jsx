@@ -67,16 +67,33 @@ const ABAS_SUPERVISOR = {
   'Pra. Stephanie': ['avisos', 'chamada', 'faltas'],
 }
 
-function NavIcon({ id, active }) {
-  const color = active ? 'var(--text)' : 'var(--text-faint)'
+function NavIcon({ id, active, size = 22 }) {
+  const color = active ? 'var(--accent-light)' : 'var(--text-faint)'
+  const s = { width: size, height: size }
   const icons = {
-    home: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
-    programacao: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
-    supervisor: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
-    config: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+    home: <svg {...s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+    programacao: <svg {...s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+    supervisor: <svg {...s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
+    config: <svg {...s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+    mural: <svg {...s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>,
+    apoio: <svg {...s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+    midia: <svg {...s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>,
+    staff: <svg {...s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
   }
   return icons[id] || null
 }
+
+const SIDEBAR_ITEMS = [
+  { id: 'home', label: 'Início' },
+  { id: 'mural', label: 'Feed Impulse' },
+  { id: 'apoio', label: 'Apoio' },
+  { id: 'midia', label: 'Mídia' },
+  { id: 'staff', label: 'Staff' },
+  { id: 'programacao', label: 'Programação' },
+  null,
+  { id: 'supervisor', label: 'Supervisor' },
+  { id: 'config', label: 'Configurações' },
+]
 
 export default function App() {
   const [splash, setSplash] = useState(true)
@@ -90,6 +107,13 @@ export default function App() {
 
   const [idioma, setIdiomaState] = useState(() => localStorage.getItem('impulse_idioma') || 'pt-BR')
   const [tema, setTemaState] = useState(() => localStorage.getItem('tema') || 'dark')
+  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768)
+
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 768)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   function setIdioma(i) {
     setIdiomaState(i)
@@ -194,7 +218,7 @@ export default function App() {
 
   return (
     <IdiomaContext.Provider value={idioma}>
-    <div style={{ background: 'var(--bg-app)', minHeight: '100vh', paddingBottom: 80 }}>
+    <div style={{ background: 'var(--bg-app)', minHeight: '100vh', paddingBottom: isDesktop ? 0 : 80 }}>
 
       {splash && (
         <div className={`splash ${splashExit ? 'splash-exit' : ''}`}>
@@ -215,15 +239,69 @@ export default function App() {
         </div>
       )}
 
-      <div key={telaKey} className={ANIM_TELA[tela] || 'tela-enter'}>
-        {tela === 'home' && <Home onNavegar={navegarPara} />}
-        {tela === 'apoio' && <Apoio onVoltar={voltar} />}
-        {tela === 'staff' && <Staff onVoltar={voltar} />}
-        {tela === 'supervisor' && <Supervisor onVoltar={voltar} nome={supervisorNome} abas={ABAS_SUPERVISOR[supervisorNome] || []} />}
-        {tela === 'mural' && <Mural onVoltar={voltar} />}
-        {tela === 'midia' && <Midia onVoltar={voltar} />}
-        {tela === 'programacao' && <Programacao onVoltar={voltar} />}
-        {tela === 'config' && <Config onVoltar={voltar} tema={tema} setTema={setTema} idioma={idioma} setIdioma={setIdioma} />}
+      {/* SIDEBAR DESKTOP */}
+      {isDesktop && (
+        <div style={{
+          position: 'fixed', left: 0, top: 0, bottom: 0, width: 240,
+          background: 'var(--bg-app)',
+          borderRight: '1px solid var(--border)',
+          display: 'flex', flexDirection: 'column',
+          padding: '28px 12px 24px',
+          zIndex: 50, overflowY: 'auto'
+        }}>
+          <div style={{ padding: '0 10px', marginBottom: 36 }}>
+            <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 20, fontWeight: 800, lineHeight: 1.2, letterSpacing: -0.5 }}>
+              Escola{' '}
+              <span style={{ background: 'var(--gradient-text)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Impulse</span>{' '}2026
+            </div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 5, letterSpacing: 1.5, textTransform: 'uppercase' }}>15 a 25 de julho</div>
+          </div>
+
+          {SIDEBAR_ITEMS.map((item, idx) => {
+            if (!item) return (
+              <div key={'sep-' + idx} style={{ height: 1, background: 'var(--border)', margin: '6px 10px 10px' }} />
+            )
+            const active = navAtiva === item.id
+            return (
+              <div
+                key={item.id}
+                onClick={() => navegarPara(item.id)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  padding: '10px 14px', borderRadius: 12, cursor: 'pointer',
+                  marginBottom: 2,
+                  background: active ? 'var(--accent-bg)' : 'transparent',
+                  color: active ? 'var(--accent-light)' : 'var(--text-secondary)',
+                  fontSize: 14, fontWeight: active ? 600 : 400,
+                  transition: 'background 0.15s ease, color 0.15s ease',
+                  userSelect: 'none',
+                }}
+                onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'var(--bg-card)' }}
+                onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
+              >
+                <NavIcon id={item.id} active={active} size={18} />
+                <span>{item.label}</span>
+                {item.id === 'supervisor' && (
+                  <svg style={{ marginLeft: 'auto', opacity: 0.4 }} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* CONTEÚDO PRINCIPAL */}
+      <div style={{ marginLeft: isDesktop ? 240 : 0, minHeight: '100vh' }}>
+        <div key={telaKey} className={ANIM_TELA[tela] || 'tela-enter'}>
+          {tela === 'home' && <Home onNavegar={navegarPara} />}
+          {tela === 'apoio' && <Apoio onVoltar={voltar} />}
+          {tela === 'staff' && <Staff onVoltar={voltar} />}
+          {tela === 'supervisor' && <Supervisor onVoltar={voltar} nome={supervisorNome} abas={ABAS_SUPERVISOR[supervisorNome] || []} />}
+          {tela === 'mural' && <Mural onVoltar={voltar} />}
+          {tela === 'midia' && <Midia onVoltar={voltar} />}
+          {tela === 'programacao' && <Programacao onVoltar={voltar} />}
+          {tela === 'config' && <Config onVoltar={voltar} tema={tema} setTema={setTema} idioma={idioma} setIdioma={setIdioma} />}
+        </div>
       </div>
 
       {/* INTRO OVERLAY */}
@@ -259,39 +337,41 @@ export default function App() {
         )
       })()}
 
-      {/* NAV BAR */}
-      <div style={{
-        position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
-        width: '100%', maxWidth: 390, display: 'flex',
-        background: 'var(--nav-bg)', backdropFilter: 'blur(24px) saturate(180%)',
-        borderTop: '1px solid var(--border)',
-        padding: '10px 6px 28px', zIndex: 50
-      }}>
-        {NAV.map(n => {
-          const active = navAtiva === n.id
-          return (
-            <div key={n.id} onClick={() => navegarPara(n.id)}
-              className={`nav-item ${active ? 'nav-item-active' : ''}`}
-              style={{
-                flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
-                gap: 4, fontSize: 10, cursor: 'pointer', fontWeight: 600,
-                color: active ? 'var(--text)' : 'var(--text-faint)',
-                padding: '4px 0'
-              }}
-            >
-              <div className="nav-icon" style={{ height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <NavIcon id={n.id} active={active} />
+      {/* NAV BAR MOBILE */}
+      {!isDesktop && (
+        <div style={{
+          position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
+          width: '100%', maxWidth: 390, display: 'flex',
+          background: 'var(--nav-bg)', backdropFilter: 'blur(24px) saturate(180%)',
+          borderTop: '1px solid var(--border)',
+          padding: '10px 6px 28px', zIndex: 50
+        }}>
+          {NAV.map(n => {
+            const active = navAtiva === n.id
+            return (
+              <div key={n.id} onClick={() => navegarPara(n.id)}
+                className={`nav-item ${active ? 'nav-item-active' : ''}`}
+                style={{
+                  flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+                  gap: 4, fontSize: 10, cursor: 'pointer', fontWeight: 600,
+                  color: active ? 'var(--text)' : 'var(--text-faint)',
+                  padding: '4px 0'
+                }}
+              >
+                <div className="nav-icon" style={{ height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <NavIcon id={n.id} active={active} />
+                </div>
+                <span style={{ fontSize: 9, letterSpacing: 0.3 }}>{n.label}</span>
+                <div className="nav-indicator" style={{
+                  width: active ? 20 : 0, height: 3, opacity: active ? 1 : 0,
+                  background: 'var(--gradient-text)',
+                  borderRadius: 2, marginTop: 1
+                }} />
               </div>
-              <span style={{ fontSize: 9, letterSpacing: 0.3 }}>{n.label}</span>
-              <div className="nav-indicator" style={{
-                width: active ? 20 : 0, height: 3, opacity: active ? 1 : 0,
-                background: 'var(--gradient-text)',
-                borderRadius: 2, marginTop: 1
-              }} />
-            </div>
-          )
-        })}
-      </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* OVERLAY SENHA */}
       {overlay && (
