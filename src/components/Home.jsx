@@ -252,11 +252,11 @@ export default function Home({ onNavegar }) {
                 height: 140, borderRadius: 24, padding: 18,
                 display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
                 cursor: 'pointer', background: m.grad,
-                border: '1px solid rgba(255,255,255,0.18)',
-                borderTop: '1px solid rgba(255,255,255,0.35)',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2)',
-                backdropFilter: 'blur(18px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(18px) saturate(180%)',
+                border: '1px solid rgba(255,255,255,0.25)',
+                borderTop: '1px solid rgba(255,255,255,0.55)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -12px 20px -10px rgba(0,0,0,0.25)',
+                backdropFilter: 'blur(22px) saturate(200%)',
+                WebkitBackdropFilter: 'blur(22px) saturate(200%)',
                 position: 'relative', overflow: 'hidden'
               }}
             >
