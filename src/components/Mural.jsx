@@ -61,8 +61,20 @@ const STAFF_NOMES = [
   'Ryan Guedes','Samuel Lopes','Stephany','Taiwa','Victória','Walterley'
 ]
 
-const MOSAICO_GLOB = import.meta.glob('/src/assets/mosaico/*.{jpg,jpeg,png,webp,JPG,JPEG,PNG,WEBP}', { eager: true })
+const MOSAICO_GLOB = import.meta.glob('/src/assets/mosaico/*.{jpg,jpeg,jfif,png,webp,JPG,JPEG,JFIF,PNG,WEBP}', { eager: true })
 const MOSAICO_FOTOS = Object.values(MOSAICO_GLOB).map(m => m.default)
+
+function buildMosaico(fotos) {
+  if (!fotos.length) return []
+  const alvo = Math.min(Math.max(fotos.length, 36), 150)
+  const result = []
+  while (result.length < alvo) {
+    const embaralhado = [...fotos].sort(() => Math.random() - 0.5)
+    result.push(...embaralhado)
+  }
+  return result.slice(0, alvo)
+}
+const MOSAICO_TILES = buildMosaico(MOSAICO_FOTOS)
 
 function podeMuralPostar() {
   const hj = new Date()
@@ -95,6 +107,7 @@ export default function Mural({ onVoltar }) {
   const inputGaleria = useRef(null)
   const inputCamera = useRef(null)
   const parallaxRef = useRef(null)
+  const [mosaicoAltura, setMosaicoAltura] = useState(0)
 
   useEffect(() => { carregarFotos(); checarVotacao() }, [diaSel])
 
@@ -107,6 +120,13 @@ export default function Mural({ onVoltar }) {
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  function medirAltura() {
+    if (parallaxRef.current) {
+      const h = parallaxRef.current.offsetHeight
+      if (h > 0) setMosaicoAltura(h)
+    }
+  }
 
   async function carregarFotos() {
     setLoading(true)
@@ -235,19 +255,19 @@ export default function Mural({ onVoltar }) {
   const autoresUnicos = [...new Set(fotos.map(f => f.autor).filter(Boolean))]
 
   return (
-    <div style={{ background: 'var(--bg-tela)', minHeight: MOSAICO_FOTOS.length > 0 ? '170vh' : '100vh', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ background: 'var(--bg-tela)', minHeight: mosaicoAltura > 0 ? mosaicoAltura : '100vh', position: 'relative' }}>
       {MOSAICO_FOTOS.length > 0 && (
         <div ref={parallaxRef} style={{
-          position: 'absolute', top: 0, left: 0, right: 0, minHeight: '170vh',
+          position: 'absolute', top: 0, left: 0, right: 0,
           columnCount: 3, columnGap: 3,
           zIndex: 0, willChange: 'transform'
         }}>
-          {Array.from({ length: Math.min(Math.max(MOSAICO_FOTOS.length, 36), 150) }, (_, i) => MOSAICO_FOTOS[i % MOSAICO_FOTOS.length]).map((src, i) => (
-            <img key={i} src={src} alt="" style={{ width: '100%', display: 'block', marginBottom: 3, breakInside: 'avoid' }} />
+          {MOSAICO_TILES.map((src, i) => (
+            <img key={i} src={src} alt="" onLoad={medirAltura} style={{ width: '100%', display: 'block', marginBottom: 3, breakInside: 'avoid' }} />
           ))}
         </div>
       )}
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(5,5,20,0.78)', zIndex: 0 }} />
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '140%', background: 'rgba(5,5,20,0.78)', zIndex: 0 }} />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
