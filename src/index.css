@@ -157,12 +157,14 @@ body::-webkit-scrollbar { display: none; }
 }
 
 .card-modulo {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.28s cubic-bezier(.34,1.56,.64,1), box-shadow 0.2s ease, filter 0.1s ease;
   will-change: transform;
 }
 .card-modulo:active {
-  transform: scale(0.95) !important;
+  transform: scale(0.92) !important;
+  filter: brightness(1.12);
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  transition: transform 0.08s ease, filter 0.08s ease;
 }
 
 .card-glass::before {

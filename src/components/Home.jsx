@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { syncOp } from '../lib/offlineSync'
 import { useTexto } from '../lib/i18n'
+import { vibrar } from '../lib/haptics'
 
 const INICIO = new Date(2026, 6, 15)
 const FIM = new Date(2026, 6, 25, 23, 59, 59)
@@ -295,7 +296,7 @@ export default function Home({ onNavegar }) {
         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: 2, textTransform: 'uppercase', padding: '24px 22px 14px' }}>{tx.modulos}</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, padding: '0 22px 100px' }}>
           {modulos.map(m => (
-            <div key={m.id} onClick={() => onNavegar(m.id)} className="card-modulo card-glass"
+            <div key={m.id} onClick={() => { vibrar(); onNavegar(m.id) }} className="card-modulo card-glass"
               style={{
                 height: 140, borderRadius: 24, padding: 18,
                 display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
