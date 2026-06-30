@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Home from './components/Home'
 import Apoio from './components/Apoio'
 import Staff from './components/Staff'
@@ -84,6 +84,7 @@ export default function App() {
   const [senhaErro, setSenhaErro] = useState('')
   const [supervisorNome, setSupervisorNome] = useState(null)
   const [navAtiva, setNavAtiva] = useState('home')
+  const homeScrollRef = useRef(0)
 
   useEffect(() => {
     function handleBack(e) {
@@ -94,7 +95,12 @@ export default function App() {
     return () => window.removeEventListener('popstate', handleBack)
   }, [tela, overlay])
 
+  useEffect(() => {
+    window.scrollTo(0, tela === 'home' ? homeScrollRef.current : 0)
+  }, [telaKey])
+
   function navegarPara(id) {
+    if (tela === 'home') homeScrollRef.current = window.scrollY
     if (id === 'supervisor') { abrirOverlay('supervisor'); return }
     if (id !== tela) window.history.pushState(null, '')
     setTela(id)

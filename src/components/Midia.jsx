@@ -69,6 +69,7 @@ export default function Midia({ onVoltar }) {
   const [senhaErro, setSenhaErro] = useState('')
   const [addingTo, setAddingTo] = useState(null)
   const [novaFuncao, setNovaFuncao] = useState('')
+  const [funcaoSelecionada, setFuncaoSelecionada] = useState('')
 
   useEffect(() => { carregarEscalas() }, [diaSel])
 
@@ -106,11 +107,13 @@ export default function Midia({ onVoltar }) {
   }
 
   async function adicionarFuncao(turno) {
-    if (!novaFuncao.trim()) return
+    const nome = funcaoSelecionada === 'outra' ? novaFuncao.trim() : funcaoSelecionada
+    if (!nome) return
     await syncOp('insert', 'midia_escalas', {
-      dia: DIAS[diaSel].num, turno, funcao: novaFuncao.trim(), pessoa: null, fixo: false
+      dia: DIAS[diaSel].num, turno, funcao: nome, pessoa: null, fixo: FUNCOES_PADRAO.includes(nome)
     })
     setNovaFuncao('')
+    setFuncaoSelecionada('')
     setAddingTo(null)
     carregarEscalas()
   }
@@ -128,13 +131,16 @@ export default function Midia({ onVoltar }) {
     if (turno.temFixas) {
       for (const funcao of FUNCOES_PADRAO) {
         const reg = registros.find(e => e.funcao === funcao)
-        resultado.push({ id: reg?.id, funcao, pessoa: reg?.pessoa || '', fixo: true })
+        resultado.push({ id: reg?.id, funcao, pessoa: reg?.pessoa || '', fixo: true, removivel: false })
       }
-    }
-
-    for (const e of registros) {
-      if (!turno.temFixas || !FUNCOES_PADRAO.includes(e.funcao)) {
-        resultado.push({ id: e.id, funcao: e.funcao, pessoa: e.pessoa || '', fixo: false })
+      for (const e of registros) {
+        if (!FUNCOES_PADRAO.includes(e.funcao)) {
+          resultado.push({ id: e.id, funcao: e.funcao, pessoa: e.pessoa || '', fixo: false, removivel: true })
+        }
+      }
+    } else {
+      for (const e of registros) {
+        resultado.push({ id: e.id, funcao: e.funcao, pessoa: e.pessoa || '', fixo: FUNCOES_PADRAO.includes(e.funcao), removivel: true })
       }
     }
 
@@ -260,7 +266,7 @@ export default function Midia({ onVoltar }) {
                           </div>
                         )}
                       </div>
-                      {coordenador && !item.fixo && (
+                      {coordenador && item.removivel && (
                         <button onClick={() => removerFuncao(item.id)} style={{
                           width: 32, height: 32, borderRadius: 10, border: 'none',
                           background: 'rgba(239,68,68,0.15)', color: '#F87171',
@@ -274,32 +280,59 @@ export default function Midia({ onVoltar }) {
 
                 {coordenador && (
                   addingTo === turno.id ? (
-                    <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                      <input
-                        value={novaFuncao}
-                        onChange={e => setNovaFuncao(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && adicionarFuncao(turno.id)}
-                        placeholder={tx.nomeFuncao}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
+                      <select
+                        value={funcaoSelecionada}
+                        onChange={e => setFuncaoSelecionada(e.target.value)}
                         autoFocus
                         style={{
-                          flex: 1, padding: '10px 14px', background: 'var(--input-bg)',
+                          width: '100%', padding: '10px 14px', background: 'var(--input-bg)',
                           border: '1px solid var(--border-strong)', borderRadius: 12,
                           fontSize: 13, color: 'var(--text)', outline: 'none', fontFamily: 'Inter, sans-serif'
                         }}
-                      />
-                      <button onClick={() => adicionarFuncao(turno.id)} style={{
-                        padding: '10px 16px', borderRadius: 12, border: 'none',
-                        background: 'var(--gradient)', color: 'var(--text)',
-                        fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
-                      }}>+</button>
-                      <button onClick={() => { setAddingTo(null); setNovaFuncao('') }} style={{
-                        padding: '10px 14px', borderRadius: 12, border: '1px solid var(--border-strong)',
-                        background: 'var(--bg-card)', color: 'var(--text-muted)',
-                        fontSize: 13, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
-                      }}>✕</button>
+                      >
+                        <option value="">Selecione a função...</option>
+                        {FUNCOES_PADRAO.filter(f => !itens.some(i => i.funcao === f)).map(f => (
+                          <option key={f} value={f}>{f}</option>
+                        ))}
+                        <option value="outra">+ Outra função...</option>
+                      </select>
+                      {funcaoSelecionada === 'outra' && (
+                        <input
+                          value={novaFuncao}
+                          onChange={e => setNovaFuncao(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && adicionarFuncao(turno.id)}
+                          placeholder={tx.nomeFuncao}
+                          autoFocus
+                          style={{
+                            width: '100%', padding: '10px 14px', background: 'var(--input-bg)',
+                            border: '1px solid var(--border-strong)', borderRadius: 12,
+                            fontSize: 13, color: 'var(--text)', outline: 'none', fontFamily: 'Inter, sans-serif'
+                          }}
+                        />
+                      )}
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button
+                          onClick={() => adicionarFuncao(turno.id)}
+                          disabled={!funcaoSelecionada || (funcaoSelecionada === 'outra' && !novaFuncao.trim())}
+                          style={{
+                            flex: 1, padding: 10, borderRadius: 12, border: 'none',
+                            background: (!funcaoSelecionada || (funcaoSelecionada === 'outra' && !novaFuncao.trim())) ? 'var(--input-bg)' : 'var(--gradient)',
+                            color: (!funcaoSelecionada || (funcaoSelecionada === 'outra' && !novaFuncao.trim())) ? 'var(--text-faint)' : 'var(--text)',
+                            fontSize: 13, fontWeight: 700,
+                            cursor: (!funcaoSelecionada || (funcaoSelecionada === 'outra' && !novaFuncao.trim())) ? 'not-allowed' : 'pointer',
+                            fontFamily: 'Inter, sans-serif'
+                          }}
+                        >+ Adicionar</button>
+                        <button onClick={() => { setAddingTo(null); setNovaFuncao(''); setFuncaoSelecionada('') }} style={{
+                          padding: '10px 14px', borderRadius: 12, border: '1px solid var(--border-strong)',
+                          background: 'var(--bg-card)', color: 'var(--text-muted)',
+                          fontSize: 13, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
+                        }}>✕</button>
+                      </div>
                     </div>
                   ) : (
-                    <button onClick={() => { setAddingTo(turno.id); setNovaFuncao('') }} style={{
+                    <button onClick={() => { setAddingTo(turno.id); setNovaFuncao(''); setFuncaoSelecionada('') }} style={{
                       width: '100%', padding: '10px', borderRadius: 12,
                       border: '1px dashed var(--border-strong)', background: 'transparent',
                       color: 'var(--text-muted)', fontSize: 12, fontWeight: 600,

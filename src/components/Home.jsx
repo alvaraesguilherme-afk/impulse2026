@@ -149,9 +149,9 @@ export default function Home({ onNavegar }) {
   const votouEm = localStorage.getItem(`votou_dia_${diaEvento}`)
 
   const modulos = [
-    { id: 'apoio', icon: '🙌', nome: tx.apoio, desc: tx.escalasETimes, grad: 'linear-gradient(145deg,rgba(76,29,149,0.55),rgba(124,58,237,0.55))' },
-    { id: 'staff', icon: '👤', nome: tx.staff, desc: tx.colaboradores, grad: 'linear-gradient(145deg,rgba(12,74,110,0.55),rgba(14,165,233,0.55))' },
-    { id: 'midia', icon: '🎥', nome: tx.midia, desc: tx.escalasEEquipe, grad: 'linear-gradient(145deg,rgba(120,53,15,0.55),rgba(245,158,11,0.55))' },
+    { id: 'apoio', icon: '🦺', nome: tx.apoio, desc: tx.escalasETimes, grad: 'linear-gradient(145deg,rgba(76,29,149,0.55),rgba(124,58,237,0.55))' },
+    { id: 'staff', icon: '👥', nome: tx.staff, desc: tx.colaboradores, grad: 'linear-gradient(145deg,rgba(12,74,110,0.55),rgba(14,165,233,0.55))' },
+    { id: 'midia', icon: '📹', nome: tx.midia, desc: tx.escalasEEquipe, grad: 'linear-gradient(145deg,rgba(120,53,15,0.55),rgba(245,158,11,0.55))' },
     { id: 'mural', icon: '📸', nome: tx.feedImpulse, desc: tx.fotosDoStaff, grad: 'linear-gradient(145deg,rgba(131,24,67,0.55),rgba(236,72,153,0.55))' },
   ]
 
@@ -234,8 +234,43 @@ export default function Home({ onNavegar }) {
           </div>
         )}
 
+        {avisos.length > 0 && (
+          <div style={{ margin: '24px 22px 0', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 16, padding: 14, display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => onNavegar('supervisor')}>
+            <div style={{ fontSize: 20 }}>📢</div>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.4 }}>{avisos[0].texto}</p>
+              <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{avisos[0].data} às {avisos[0].hora}</span>
+            </div>
+            <div style={{ fontSize: 18, color: 'var(--text-faint)' }}>›</div>
+          </div>
+        )}
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: 2, textTransform: 'uppercase', padding: '24px 22px 14px' }}>{tx.modulos}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, padding: '0 22px' }}>
+          {modulos.map(m => (
+            <div key={m.id} onClick={() => { vibrar(); onNavegar(m.id) }} className="card-modulo card-glass"
+              style={{
+                height: 140, borderRadius: 24, padding: 18,
+                display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                cursor: 'pointer', background: m.grad,
+                border: '1px solid rgba(255,255,255,0.18)',
+                borderTop: '1px solid rgba(255,255,255,0.35)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2)',
+                backdropFilter: 'blur(18px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(18px) saturate(180%)',
+                position: 'relative', overflow: 'hidden'
+              }}
+            >
+              <div style={{ fontSize: 28 }}>{m.icon}</div>
+              <div>
+                <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{m.nome}</div>
+                <div style={{ fontSize: 10, color: 'var(--text-secondary)' }}>{m.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
         {fotoDestaque && (
-          <div style={{ margin: '16px 22px 0' }}>
+          <div style={{ margin: '24px 22px 0' }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(245,158,11,0.6)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
               ⭐ Foto Destaque — Dia {fotoDestaque.dia}
             </div>
@@ -283,40 +318,7 @@ export default function Home({ onNavegar }) {
           </div>
         )}
 
-        {avisos.length > 0 && (
-          <div style={{ margin: '24px 22px 0', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 16, padding: 14, display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => onNavegar('supervisor')}>
-            <div style={{ fontSize: 20 }}>📢</div>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.4 }}>{avisos[0].texto}</p>
-              <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{avisos[0].data} às {avisos[0].hora}</span>
-            </div>
-            <div style={{ fontSize: 18, color: 'var(--text-faint)' }}>›</div>
-          </div>
-        )}
-        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: 2, textTransform: 'uppercase', padding: '24px 22px 14px' }}>{tx.modulos}</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, padding: '0 22px 100px' }}>
-          {modulos.map(m => (
-            <div key={m.id} onClick={() => { vibrar(); onNavegar(m.id) }} className="card-modulo card-glass"
-              style={{
-                height: 140, borderRadius: 24, padding: 18,
-                display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                cursor: 'pointer', background: m.grad,
-                border: '1px solid rgba(255,255,255,0.18)',
-                borderTop: '1px solid rgba(255,255,255,0.35)',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2)',
-                backdropFilter: 'blur(18px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(18px) saturate(180%)',
-                position: 'relative', overflow: 'hidden'
-              }}
-            >
-              <div style={{ fontSize: 28 }}>{m.icon}</div>
-              <div>
-                <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{m.nome}</div>
-                <div style={{ fontSize: 10, color: 'var(--text-secondary)' }}>{m.desc}</div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <div style={{ height: 100 }} />
       </div>
 
       {showFraseModal && (
