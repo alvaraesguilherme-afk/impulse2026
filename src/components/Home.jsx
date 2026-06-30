@@ -26,7 +26,22 @@ function getDiaEvento() {
   hj.setHours(0, 0, 0, 0)
   const diff = Math.round((hj.getTime() - INICIO.getTime()) / 86400000)
   if (diff >= 0 && diff <= 10) return diff + 1
+  return 1
+}
+
+function getDiaFrase() {
+  const hj = new Date()
+  hj.setHours(0, 0, 0, 0)
+  const diff = Math.round((hj.getTime() - INICIO.getTime()) / 86400000)
+  if (diff >= 0 && diff <= 10) return diff + 1
   return Math.floor(hj.getTime() / 86400000)
+}
+
+function foraDoEvento() {
+  const hj = new Date()
+  hj.setHours(0, 0, 0, 0)
+  const diff = Math.round((hj.getTime() - INICIO.getTime()) / 86400000)
+  return diff < 0 || diff > 10
 }
 
 function useContador() {
@@ -66,17 +81,19 @@ export default function Home({ onNavegar }) {
   const [jaVotou, setJaVotou] = useState(false)
 
   const diaEvento = getDiaEvento()
+  const diaFrase = getDiaFrase()
 
   useEffect(() => {
     supabase.from('avisos').select('*').order('created_at', { ascending: false }).then(({ data }) => {
       if (data) setAvisos(data)
     })
+    supabase.from('frase_do_dia').select('*').eq('dia', diaFrase).maybeSingle().then(({ data }) => {
+      setFrase(data || null)
+    })
     if (diaEvento) {
-      supabase.from('frase_do_dia').select('*').eq('dia', diaEvento).maybeSingle().then(({ data }) => {
-        if (data) setFrase(data)
-      })
-      if (diaEvento > 1) {
-        supabase.from('foto_votacao').select('*').eq('dia', diaEvento - 1).order('votos', { ascending: false }).limit(1).then(({ data }) => {
+      const diaDestaque = foraDoEvento() ? diaEvento : diaEvento - 1
+      if (diaEvento > 1 || foraDoEvento()) {
+        supabase.from('foto_votacao').select('*').eq('dia', diaDestaque).order('votos', { ascending: false }).limit(1).then(({ data }) => {
           if (data && data.length > 0 && data[0].votos > 0) setFotoDestaque(data[0])
         })
       }
@@ -104,14 +121,14 @@ export default function Home({ onNavegar }) {
     }
     const autor = AUTORES_FRASE[fraseSenha]
     if (!fraseInput.trim()) { setFraseErro('Digite a frase.'); return }
-    await syncOp('upsert', 'frase_do_dia', { dia: diaEvento, frase: fraseInput.trim(), autor }, { onConflict: 'dia' })
-    setFrase({ dia: diaEvento, frase: fraseInput.trim(), autor })
+    await syncOp('upsert', 'frase_do_dia', { dia: diaFrase, frase: fraseInput.trim(), autor }, { onConflict: 'dia' })
+    setFrase({ dia: diaFrase, frase: fraseInput.trim(), autor })
     setShowFraseModal(false)
   }
 
   async function excluirFrase() {
     if (!SENHAS_EXCLUIR_FRASE.includes(fraseSenha)) { setFraseErro('Senha sem permissão para excluir.'); return }
-    await syncOp('delete', 'frase_do_dia', { dia: diaEvento })
+    await syncOp('delete', 'frase_do_dia', { dia: diaFrase })
     setFrase(null)
     setFraseInput('')
     setShowFraseModal(false)
@@ -306,7 +323,7 @@ export default function Home({ onNavegar }) {
               {frase?.frase ? 'Editar frase do dia' : 'Frase do dia'}
             </h2>
             <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
-              {frase?.frase ? 'Apenas o coordenador geral pode alterar' : 'Defina a frase para o Dia ' + diaEvento}
+              {frase?.frase ? 'Apenas o coordenador geral pode alterar' : 'Defina a frase de hoje'}
             </p>
             <textarea
               value={fraseInput} onChange={e => setFraseInput(e.target.value)}
