@@ -185,7 +185,7 @@ export default function App() {
                 padding: '4px 0'
               }}
             >
-              <div className="nav-icon" style={{ height: 24, display: 'flex', alignItems: 'center' }}>
+              <div className="nav-icon" style={{ height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <NavIcon id={n.id} active={active} />
               </div>
               <span style={{ fontSize: 9, letterSpacing: 0.3 }}>{n.label}</span>
