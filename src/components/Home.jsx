@@ -149,10 +149,10 @@ export default function Home({ onNavegar }) {
   const votouEm = localStorage.getItem(`votou_dia_${diaEvento}`)
 
   const modulos = [
-    { id: 'apoio', icon: '🦺', nome: tx.apoio, desc: tx.escalasETimes, grad: 'linear-gradient(145deg,rgba(76,29,149,0.55),rgba(124,58,237,0.55))' },
+    { id: 'apoio', icon: '🦺', nome: tx.apoio, desc: tx.escalasETimes, grad: 'linear-gradient(145deg,rgba(76,29,149,0.55),rgba(124,58,237,0.55))', foto: '/pexels-bulat843-1243575272-37704234.jpg' },
     { id: 'staff', icon: '👥', nome: tx.staff, desc: tx.colaboradores, grad: 'linear-gradient(145deg,rgba(12,74,110,0.55),rgba(14,165,233,0.55))' },
-    { id: 'midia', icon: '📹', nome: tx.midia, desc: tx.escalasEEquipe, grad: 'linear-gradient(145deg,rgba(120,53,15,0.55),rgba(245,158,11,0.55))' },
-    { id: 'mural', icon: '📸', nome: tx.feedImpulse, desc: tx.fotosDoStaff, grad: 'linear-gradient(145deg,rgba(131,24,67,0.55),rgba(236,72,153,0.55))' },
+    { id: 'midia', icon: '📹', nome: tx.midia, desc: tx.escalasEEquipe, grad: 'linear-gradient(145deg,rgba(120,53,15,0.55),rgba(245,158,11,0.55))', foto: '/pexels-brunomassao-2095597.jpg' },
+    { id: 'mural', icon: '📸', nome: tx.feedImpulse, desc: tx.fotosDoStaff, grad: 'linear-gradient(145deg,rgba(131,24,67,0.55),rgba(236,72,153,0.55))', foto: '/pexels-alejandro-aznar-155337093-16055216.jpg' },
   ]
 
   return (
@@ -251,7 +251,8 @@ export default function Home({ onNavegar }) {
               style={{
                 height: 140, borderRadius: 24, padding: 18,
                 display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                cursor: 'pointer', background: m.grad,
+                cursor: 'pointer',
+                background: m.foto ? `${m.grad}, url(${m.foto}) center/cover` : m.grad,
                 border: '1px solid rgba(255,255,255,0.25)',
                 borderTop: '1px solid rgba(255,255,255,0.55)',
                 boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -12px 20px -10px rgba(0,0,0,0.25)',
@@ -260,7 +261,6 @@ export default function Home({ onNavegar }) {
                 position: 'relative', overflow: 'hidden'
               }}
             >
-              <div style={{ fontSize: 28 }}>{m.icon}</div>
               <div>
                 <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{m.nome}</div>
                 <div style={{ fontSize: 10, color: 'var(--text-secondary)' }}>{m.desc}</div>
