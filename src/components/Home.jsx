@@ -148,10 +148,10 @@ export default function Home({ onNavegar }) {
   const votouEm = localStorage.getItem(`votou_dia_${diaEvento}`)
 
   const modulos = [
-    { id: 'apoio', icon: '🙌', nome: tx.apoio, desc: tx.escalasETimes, grad: 'linear-gradient(145deg,#4C1D95,#7C3AED)' },
-    { id: 'staff', icon: '👤', nome: tx.staff, desc: tx.colaboradores, grad: 'linear-gradient(145deg,#0C4A6E,#0EA5E9)' },
-    { id: 'midia', icon: '🎥', nome: tx.midia, desc: tx.escalasEEquipe, grad: 'linear-gradient(145deg,#78350F,#F59E0B)' },
-    { id: 'mural', icon: '📸', nome: tx.feedImpulse, desc: tx.fotosDoStaff, grad: 'linear-gradient(145deg,#831843,#EC4899)' },
+    { id: 'apoio', icon: '🙌', nome: tx.apoio, desc: tx.escalasETimes, grad: 'linear-gradient(145deg,rgba(76,29,149,0.55),rgba(124,58,237,0.55))' },
+    { id: 'staff', icon: '👤', nome: tx.staff, desc: tx.colaboradores, grad: 'linear-gradient(145deg,rgba(12,74,110,0.55),rgba(14,165,233,0.55))' },
+    { id: 'midia', icon: '🎥', nome: tx.midia, desc: tx.escalasEEquipe, grad: 'linear-gradient(145deg,rgba(120,53,15,0.55),rgba(245,158,11,0.55))' },
+    { id: 'mural', icon: '📸', nome: tx.feedImpulse, desc: tx.fotosDoStaff, grad: 'linear-gradient(145deg,rgba(131,24,67,0.55),rgba(236,72,153,0.55))' },
   ]
 
   return (
@@ -295,14 +295,17 @@ export default function Home({ onNavegar }) {
         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: 2, textTransform: 'uppercase', padding: '24px 22px 14px' }}>{tx.modulos}</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, padding: '0 22px 100px' }}>
           {modulos.map(m => (
-            <div key={m.id} onClick={() => onNavegar(m.id)} className="card-modulo"
+            <div key={m.id} onClick={() => onNavegar(m.id)} className="card-modulo card-glass"
               style={{
                 height: 140, borderRadius: 24, padding: 18,
                 display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
                 cursor: 'pointer', background: m.grad,
-                border: '1px solid var(--border)',
-                boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
-                backdropFilter: 'blur(10px)'
+                border: '1px solid rgba(255,255,255,0.18)',
+                borderTop: '1px solid rgba(255,255,255,0.35)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2)',
+                backdropFilter: 'blur(18px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(18px) saturate(180%)',
+                position: 'relative', overflow: 'hidden'
               }}
             >
               <div style={{ fontSize: 28 }}>{m.icon}</div>
