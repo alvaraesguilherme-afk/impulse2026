@@ -34,6 +34,7 @@ export default function Supervisor({ onVoltar, nome, abas }) {
   const [turnoSel, setTurnoSel] = useState('')
   const [chamadaData, setChamadaData] = useState({})
   const [faltas, setFaltas] = useState({})
+  const [erroSalvar, setErroSalvar] = useState(false)
 
   useEffect(() => {
     if (aba === 'avisos') carregarAvisos()
@@ -73,13 +74,15 @@ export default function Supervisor({ onVoltar, nome, abas }) {
     const novo = atual === status ? '' : status
     const obs = chamadaData[chave]?.obs || ''
     setChamadaData(prev => ({ ...prev, [chave]: { status: novo, obs } }))
-    await syncOp('upsert', 'chamada', { chave, status: novo, obs }, { onConflict: 'chave' })
+    const ok = await syncOp('upsert', 'chamada', { chave, status: novo, obs }, { onConflict: 'chave' })
+    if (!ok) setErroSalvar(true)
   }
 
   async function salvarObs(chave, obs) {
     const status = chamadaData[chave]?.status || ''
     setChamadaData(prev => ({ ...prev, [chave]: { status, obs } }))
-    await syncOp('upsert', 'chamada', { chave, status, obs }, { onConflict: 'chave' })
+    const ok = await syncOp('upsert', 'chamada', { chave, status, obs }, { onConflict: 'chave' })
+    if (!ok) setErroSalvar(true)
   }
 
   async function carregarFaltas() {
@@ -97,6 +100,38 @@ export default function Supervisor({ onVoltar, nome, abas }) {
       }
     })
     setFaltas(por)
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]))
+  }
+
+  function exportarFaltasPDF() {
+    const linhas = []
+    EQUIPES.forEach(eq => {
+      (faltas[eq.id] || []).forEach(f => linhas.push({ equipe: eq.nome, ...f }))
+    })
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Faltas - Impulse 2026</title>
+      <style>
+        body{font-family:Arial,sans-serif;padding:24px;color:#111}
+        h1{font-size:18px;margin-bottom:4px}
+        .sub{color:#666;font-size:12px;margin-bottom:20px}
+        table{width:100%;border-collapse:collapse;font-size:12px}
+        th,td{border:1px solid #ccc;padding:6px 8px;text-align:left}
+        th{background:#f0f0f0}
+      </style></head><body>
+      <h1>Relatório de Faltas — Escola Impulse 2026</h1>
+      <div class="sub">Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')} · Total: ${linhas.length}</div>
+      <table>
+        <tr><th>Equipe</th><th>Nome</th><th>Data</th><th>Turno</th><th>Observação</th></tr>
+        ${linhas.map(l => `<tr><td>${escapeHtml(l.equipe)}</td><td>${escapeHtml(l.nome)}</td><td>${l.data.getDate()}/07 (${DIAS_C[l.data.getDay()]})</td><td>${escapeHtml(TURNO_LABEL[l.turno] || '')}</td><td>${escapeHtml(l.obs || '-')}</td></tr>`).join('')}
+      </table>
+    </body></html>`
+    const win = window.open('', '_blank')
+    if (!win) { alert('Não foi possível abrir a janela de exportação. Verifique o bloqueador de pop-up.'); return }
+    win.document.write(html)
+    win.document.close()
+    setTimeout(() => { win.focus(); win.print() }, 300)
   }
 
   return (
@@ -148,6 +183,11 @@ export default function Supervisor({ onVoltar, nome, abas }) {
         {/* CHAMADA */}
         {aba === 'chamada' && (
           <>
+            {erroSalvar && (
+              <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 14, padding: '12px 16px', marginBottom: 16, fontSize: 12, color: '#F87171' }}>
+                ⚠️ Não foi possível salvar agora. Verifique sua internet — a marcação ficará pendente até sincronizar.
+              </div>
+            )}
             <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
               <select value={diaSel} onChange={e => { setDiaSel(e.target.value); carregarChamada(e.target.value, turnoSel) }} style={{ flex: 1, padding: '12px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 13, color: 'var(--text)', outline: 'none' }}>
                 <option value="">Selecione o dia</option>
@@ -224,6 +264,17 @@ export default function Supervisor({ onVoltar, nome, abas }) {
                 </div>
               )
             })}
+            {!EQUIPES.every(eq => !faltas[eq.id]?.length) && (
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+                <button onClick={exportarFaltasPDF} title="Exportar PDF" style={{
+                  width: 38, height: 38, borderRadius: '50%',
+                  border: '1px solid var(--accent-border)',
+                  background: 'var(--accent-bg)', color: 'var(--accent-light)',
+                  fontSize: 15, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>📄</button>
+              </div>
+            )}
           </>
         )}
       </div>

@@ -14,15 +14,19 @@ const AUTORES_FRASE = {
   '4780': 'Pra. Stephanie',
   '2121': 'Alyson',
   '9089': 'Paula',
+  '6689': 'Francisco',
+  '1121': 'Gustavo Massay',
+  '3123': 'Walterley',
 }
 const SENHA_EDITAR = '1932'
+const SENHAS_EXCLUIR_FRASE = ['1932', '2121', '5050']
 
 function getDiaEvento() {
   const hj = new Date()
   hj.setHours(0, 0, 0, 0)
   const diff = Math.round((hj.getTime() - INICIO.getTime()) / 86400000)
   if (diff >= 0 && diff <= 10) return diff + 1
-  return 1
+  return Math.floor(hj.getTime() / 86400000)
 }
 
 function useContador() {
@@ -102,6 +106,14 @@ export default function Home({ onNavegar }) {
     if (!fraseInput.trim()) { setFraseErro('Digite a frase.'); return }
     await syncOp('upsert', 'frase_do_dia', { dia: diaEvento, frase: fraseInput.trim(), autor }, { onConflict: 'dia' })
     setFrase({ dia: diaEvento, frase: fraseInput.trim(), autor })
+    setShowFraseModal(false)
+  }
+
+  async function excluirFrase() {
+    if (!SENHAS_EXCLUIR_FRASE.includes(fraseSenha)) { setFraseErro('Senha sem permissão para excluir.'); return }
+    await syncOp('delete', 'frase_do_dia', { dia: diaEvento })
+    setFrase(null)
+    setFraseInput('')
     setShowFraseModal(false)
   }
 
@@ -197,7 +209,6 @@ export default function Home({ onNavegar }) {
                 <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 600, lineHeight: 1.5, color: 'var(--text)' }}>
                   "{frase.frase}"
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 8 }}>— {frase.autor}</div>
               </>
             ) : (
               <div style={{ fontSize: 13, color: 'var(--text-faint)', fontStyle: 'italic' }}>{tx.toquePraDefinir}</div>
@@ -311,6 +322,9 @@ export default function Home({ onNavegar }) {
             />
             {fraseErro && <p style={{ fontSize: 12, color: '#F87171', marginBottom: 10 }}>{fraseErro}</p>}
             <button onClick={salvarFrase} style={{ width: '100%', padding: 14, background: 'var(--gradient)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'var(--text)', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>Salvar</button>
+            {frase?.frase && (
+              <button onClick={excluirFrase} style={{ width: '100%', padding: 14, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', color: '#F87171', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>Excluir frase</button>
+            )}
             <button onClick={() => setShowFraseModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
           </div>
         </div>

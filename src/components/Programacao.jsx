@@ -116,7 +116,7 @@ export default function Programacao({ onVoltar }) {
 
   const ABAS = [
     { id: 'louvor', label: '🎵 Louvor' },
-    { id: 'ministro', label: '🎤 Ministros' },
+    { id: 'ministro', label: '🎤 Preletores' },
     ...(coordenador ? [{ id: 'cadastro', label: '⚙️ Cadastro' }] : []),
   ]
 
@@ -162,7 +162,7 @@ export default function Programacao({ onVoltar }) {
             return (
               <div key={tipo} style={{ marginBottom: 28 }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>
-                  {tipo === 'louvor' ? '🎵 Equipes de Louvor' : '🎤 Ministros'}
+                  {tipo === 'louvor' ? '🎵 Equipes de Louvor' : '🎤 Preletores'}
                 </div>
 
                 {lista.map(c => (
@@ -188,7 +188,7 @@ export default function Programacao({ onVoltar }) {
 
                 {lista.length === 0 && (
                   <div style={{ fontSize: 12, color: 'var(--text-faint)', fontStyle: 'italic', marginBottom: 8 }}>
-                    Nenhum{tipo === 'louvor' ? 'a equipe' : ' ministro'} cadastrad{tipo === 'louvor' ? 'a' : 'o'}
+                    Nenhum{tipo === 'louvor' ? 'a equipe' : ' preletor'} cadastrad{tipo === 'louvor' ? 'a' : 'o'}
                   </div>
                 )}
 
@@ -299,7 +299,7 @@ export default function Programacao({ onVoltar }) {
                           border: '1px solid rgba(245,158,11,0.2)', borderRadius: 12,
                           fontSize: 12, color: '#FBBF24', marginBottom: 8, textAlign: 'center'
                         }}>
-                          Cadastre {aba === 'louvor' ? 'equipes' : 'ministros'} na aba Cadastro primeiro
+                          Cadastre {aba === 'louvor' ? 'equipes' : 'preletores'} na aba Cadastro primeiro
                         </div>
                       )}
 

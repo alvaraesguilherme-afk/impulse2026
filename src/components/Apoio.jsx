@@ -60,6 +60,7 @@ export default function Apoio({ onVoltar }) {
   const [diaSel, setDiaSel] = useState('')
   const [turnoSel, setTurnoSel] = useState('')
   const [chamadaData, setChamadaData] = useState({})
+  const [erroSalvar, setErroSalvar] = useState(false)
   const hj = new Date(); hj.setHours(0,0,0,0)
   const [diaEscala, setDiaEscala] = useState(() => {
     const diff = Math.round((hj.getTime() - INICIO.getTime()) / 86400000)
@@ -92,13 +93,15 @@ export default function Apoio({ onVoltar }) {
     const novo = atual === status ? '' : status
     const obs = chamadaData[chave]?.obs || ''
     setChamadaData(prev => ({ ...prev, [chave]: { status: novo, obs } }))
-    await syncOp('upsert', 'chamada', { chave, status: novo, obs }, { onConflict: 'chave' })
+    const ok = await syncOp('upsert', 'chamada', { chave, status: novo, obs }, { onConflict: 'chave' })
+    if (!ok) setErroSalvar(true)
   }
 
   async function salvarObs(chave, obs) {
     const status = chamadaData[chave]?.status || ''
     setChamadaData(prev => ({ ...prev, [chave]: { status, obs } }))
-    await syncOp('upsert', 'chamada', { chave, status, obs }, { onConflict: 'chave' })
+    const ok = await syncOp('upsert', 'chamada', { chave, status, obs }, { onConflict: 'chave' })
+    if (!ok) setErroSalvar(true)
   }
 
   const equipesFiltradas = lider?.equipeId === '' ? EQUIPES : EQUIPES.filter(e => e.id === lider?.equipeId)
@@ -199,6 +202,11 @@ export default function Apoio({ onVoltar }) {
         )}
         {aba === 'chamada' && lider && (
           <>
+            {erroSalvar && (
+              <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 14, padding: '12px 16px', marginBottom: 16, fontSize: 12, color: '#F87171' }}>
+                ⚠️ Não foi possível salvar agora. Verifique sua internet — a marcação ficará pendente até sincronizar.
+              </div>
+            )}
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Logado: <strong style={{ color: 'var(--text)' }}>{lider.nome}</strong></span>
               <button onClick={() => { setLider(null); setAba('times') }} style={{ background: 'none', border: 'none', color: '#F87171', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>{tx.sair}</button>
