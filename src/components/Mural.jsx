@@ -182,6 +182,11 @@ export default function Mural({ onVoltar }) {
     setJaTemVotacao(true)
   }
 
+  async function limparVotacao() {
+    await supabase.from('foto_votacao').delete().eq('dia', DIAS[diaSel].num)
+    setJaTemVotacao(false)
+  }
+
   async function deletarFoto(foto) {
     await supabase.storage.from('mural').remove([foto.arquivo])
     await supabase.from('mural_fotos').delete().eq('id', foto.id)
@@ -286,25 +291,32 @@ export default function Mural({ onVoltar }) {
         </div>
       )}
 
-      {!modoSelecao && fotos.length > 0 && (
+      {!modoSelecao && (fotos.length > 0 || jaTemVotacao) && (
         <div style={{ padding: '0 22px 12px' }}>
           {jaTemVotacao ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 11, color: 'rgba(16,185,129,0.7)', fontWeight: 600 }}>✓ Votação do Dia {DIAS[diaSel].num} definida</span>
-              <button onClick={iniciarSelecao} style={{
-                marginLeft: 'auto', padding: '4px 10px', borderRadius: 10, border: '1px solid var(--border-strong)',
-                background: 'var(--bg-card)', color: 'var(--text-muted)',
+              {fotos.length > 0 && (
+                <button onClick={iniciarSelecao} style={{
+                  marginLeft: 'auto', padding: '4px 10px', borderRadius: 10, border: '1px solid var(--border-strong)',
+                  background: 'var(--bg-card)', color: 'var(--text-muted)',
+                  fontSize: 10, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
+                }}>{tx.refazer}</button>
+              )}
+              <button onClick={limparVotacao} style={{
+                marginLeft: fotos.length > 0 ? 0 : 'auto', padding: '4px 10px', borderRadius: 10, border: '1px solid rgba(239,68,68,0.3)',
+                background: 'rgba(239,68,68,0.1)', color: '#F87171',
                 fontSize: 10, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
-              }}>{tx.refazer}</button>
+              }}>Limpar</button>
             </div>
-          ) : (
+          ) : fotos.length > 0 ? (
             <button onClick={iniciarSelecao} style={{
               width: '100%', padding: '10px', borderRadius: 12,
               border: '1px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.08)',
               color: '#FBBF24', fontSize: 12, fontWeight: 600, cursor: 'pointer',
               fontFamily: 'Inter, sans-serif'
             }}>⭐ Selecionar fotos para votação</button>
-          )}
+          ) : null}
         </div>
       )}
 
