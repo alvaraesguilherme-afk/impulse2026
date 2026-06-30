@@ -67,11 +67,47 @@ function useContador() {
   return { fase: 'depois' }
 }
 
+function ContadorSection() {
+  const tx = useTexto()
+  const contador = useContador()
+  if (contador.fase === 'antes') {
+    return (
+      <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 20, padding: '18px 16px', textAlign: 'center' }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-light)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>Faltam</div>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
+          {[[contador.dias, tx.dias],[contador.horas, tx.hrs],[contador.minutos, tx.min],[contador.segundos, tx.seg]].map(([v, l]) => (
+            <div key={l} style={{ minWidth: 52, padding: '8px 4px', background: 'var(--bg-card)', borderRadius: 14, border: '1px solid var(--border)' }}>
+              <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 24, fontWeight: 800, color: 'var(--accent-light)' }}>{String(v).padStart(2, '0')}</div>
+              <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 2, textTransform: 'uppercase', fontWeight: 600 }}>{l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+  if (contador.fase === 'durante') {
+    return (
+      <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 20, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div style={{ width: 7, height: 7, background: '#EF4444', borderRadius: '50%', boxShadow: '0 0 8px #EF4444', animation: 'blink 1.5s infinite', flexShrink: 0 }} />
+        <div>
+          <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 700, color: 'var(--accent-light)' }}>Dia {contador.diaAtual} de {contador.totalDias}</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{tx.eventoEmAndamento}</div>
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 20, padding: '18px', textAlign: 'center' }}>
+      <div style={{ fontSize: 28, marginBottom: 8 }}>💜</div>
+      <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, color: 'var(--accent-light)' }}>{tx.saudades}</div>
+      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>{tx.saudadesMsg}</div>
+    </div>
+  )
+}
+
 export default function Home({ onNavegar }) {
   const tx = useTexto()
   const [avisos, setAvisos] = useState([])
-  const contador = useContador()
-  const diasRestantes = contador.fase === 'antes' ? contador.dias : 0
   const [frase, setFrase] = useState(null)
   const [showFraseModal, setShowFraseModal] = useState(false)
   const [fraseInput, setFraseInput] = useState('')
@@ -175,42 +211,7 @@ export default function Home({ onNavegar }) {
           </div>
           <div style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 500, marginBottom: 24 }}>15 a 25 de julho · Rancho Império</div>
 
-          {contador.fase === 'antes' && (
-            <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 20, padding: '18px 16px', textAlign: 'center' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-light)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>Faltam</div>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
-                {[
-                  [contador.dias, tx.dias],
-                  [contador.horas, tx.hrs],
-                  [contador.minutos, tx.min],
-                  [contador.segundos, tx.seg],
-                ].map(([v, l]) => (
-                  <div key={l} style={{ minWidth: 52, padding: '8px 4px', background: 'var(--bg-card)', borderRadius: 14, border: '1px solid var(--border)' }}>
-                    <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 24, fontWeight: 800, color: 'var(--accent-light)' }}>{String(v).padStart(2, '0')}</div>
-                    <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 2, textTransform: 'uppercase', fontWeight: 600 }}>{l}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {contador.fase === 'durante' && (
-            <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 20, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ width: 7, height: 7, background: '#EF4444', borderRadius: '50%', boxShadow: '0 0 8px #EF4444', animation: 'blink 1.5s infinite', flexShrink: 0 }} />
-              <div>
-                <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 700, color: 'var(--accent-light)' }}>Dia {contador.diaAtual} de {contador.totalDias}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{tx.eventoEmAndamento}</div>
-              </div>
-            </div>
-          )}
-
-          {contador.fase === 'depois' && (
-            <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 20, padding: '18px', textAlign: 'center' }}>
-              <div style={{ fontSize: 28, marginBottom: 8 }}>💜</div>
-              <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, color: 'var(--accent-light)' }}>{tx.saudades}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>{tx.saudadesMsg}</div>
-            </div>
-          )}
+          <ContadorSection />
         </div>
 
         {diaEvento && (
@@ -289,7 +290,7 @@ export default function Home({ onNavegar }) {
               📸 Vote na Foto do Dia {diaEvento}
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-faint)', marginBottom: 12 }}>
-              {jaVotou ? `Você já votou! ${totalVotos} voto${totalVotos !== 1 ? 's' : ''} no total` : '{tx.toqueFavorita}'}
+              {jaVotou ? `Você já votou! ${totalVotos} voto${totalVotos !== 1 ? 's' : ''} no total` : tx.toqueFavorita}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
               {votacao.map((foto, i) => {
