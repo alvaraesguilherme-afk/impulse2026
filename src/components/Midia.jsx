@@ -25,7 +25,7 @@ const TODOS_MEMBROS = [...MEMBROS_FIXOS, ...MEMBROS_EXTRAS]
 const FUNCOES_PADRAO = ['Stories', 'Fotografia', 'Gravação de vídeo']
 const TURNOS = [
   { id: 'M', label: 'Manhã', icon: '🌅', temFixas: true },
-  { id: 'T', label: 'Tarde', icon: '☀️', temFixas: false },
+  { id: 'T', label: 'Tarde', icon: '☀️', temFixas: true },
   { id: 'N', label: 'Noite', icon: '🌙', temFixas: true },
 ]
 
