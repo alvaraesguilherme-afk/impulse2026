@@ -235,14 +235,14 @@ export default function Mural({ onVoltar }) {
   const autoresUnicos = [...new Set(fotos.map(f => f.autor).filter(Boolean))]
 
   return (
-    <div style={{ background: 'var(--bg-tela)', minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ background: 'var(--bg-tela)', minHeight: MOSAICO_FOTOS.length > 0 ? '170vh' : '100vh', position: 'relative', overflow: 'hidden' }}>
       {MOSAICO_FOTOS.length > 0 && (
         <div ref={parallaxRef} style={{
           position: 'absolute', top: 0, left: 0, right: 0, minHeight: '170vh',
           columnCount: 3, columnGap: 3,
           zIndex: 0, willChange: 'transform'
         }}>
-          {Array.from({ length: 36 }, (_, i) => MOSAICO_FOTOS[i % MOSAICO_FOTOS.length]).map((src, i) => (
+          {Array.from({ length: Math.min(Math.max(MOSAICO_FOTOS.length, 36), 150) }, (_, i) => MOSAICO_FOTOS[i % MOSAICO_FOTOS.length]).map((src, i) => (
             <img key={i} src={src} alt="" style={{ width: '100%', display: 'block', marginBottom: 3, breakInside: 'avoid' }} />
           ))}
         </div>
@@ -251,8 +251,8 @@ export default function Mural({ onVoltar }) {
 
       <div style={{ position: 'relative', zIndex: 1 }}>
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
-        <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'var(--input-bg)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: 'none', color: 'var(--text)' }}>‹</button>
-        <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700 }}>{tx.feedImpulse}</h2>
+        <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'rgba(8,8,20,0.65)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.25)', color: '#fff' }}>‹</button>
+        <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>{tx.feedImpulse}</h2>
         {autorSelecionado && (
           <button onClick={trocarAutor} style={{
             marginLeft: 'auto', padding: '4px 10px', borderRadius: 10,
@@ -266,14 +266,15 @@ export default function Mural({ onVoltar }) {
         {DIAS.map((d, i) => (
           <button key={i} onClick={() => { setDiaSel(i); setFiltroAutor('') }} style={{
             flexShrink: 0, padding: '8px 14px', borderRadius: 16,
-            border: diaSel === i ? '1px solid var(--accent-border)' : '1px solid var(--border-strong)',
-            background: diaSel === i ? 'var(--accent-bg)' : 'var(--bg-card)',
-            color: diaSel === i ? 'var(--accent-light)' : 'var(--text-muted)',
-            fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
+            border: diaSel === i ? '1px solid var(--accent-border)' : '1px solid rgba(255,255,255,0.25)',
+            background: diaSel === i ? 'var(--accent-bg)' : 'rgba(8,8,20,0.65)',
+            backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+            color: diaSel === i ? 'var(--accent-light)' : 'rgba(255,255,255,0.9)',
+            fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2
           }}>
-            <span style={{ fontSize: 13, fontWeight: 700 }}>Dia {d.num}</span>
-            <span style={{ fontSize: 9, opacity: 0.6 }}>{d.label}</span>
+            <span style={{ fontSize: 13, fontWeight: 800 }}>Dia {d.num}</span>
+            <span style={{ fontSize: 9, opacity: 0.85 }}>{d.label}</span>
           </button>
         ))}
       </div>
@@ -299,7 +300,7 @@ export default function Mural({ onVoltar }) {
         </div>
       ) : (
         <div style={{ padding: '0 22px 16px' }}>
-          <div style={{ padding: '12px 14px', borderRadius: 14, background: 'var(--bg-card)', border: '1px solid var(--border)', fontSize: 12, color: 'var(--text-faint)', textAlign: 'center' }}>
+          <div style={{ padding: '12px 14px', borderRadius: 14, background: 'rgba(8,8,20,0.65)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.25)', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.9)', textAlign: 'center' }}>
             📷 {tx.uploadDisponivel}
           </div>
           <div style={{ textAlign: 'center', marginTop: 8 }}>
@@ -375,31 +376,33 @@ export default function Mural({ onVoltar }) {
       {autoresUnicos.length > 1 && !modoSelecao && (
         <div style={{ display: 'flex', gap: 6, padding: '0 22px 12px', overflowX: 'auto', scrollbarWidth: 'none' }}>
           <button onClick={() => setFiltroAutor('')} style={{
-            flexShrink: 0, padding: '5px 12px', borderRadius: 14, fontSize: 10, fontWeight: 600, cursor: 'pointer',
-            border: !filtroAutor ? '1px solid var(--accent-border)' : '1px solid var(--border)',
-            background: !filtroAutor ? 'var(--accent-bg)' : 'var(--bg-card)',
-            color: !filtroAutor ? 'var(--accent-light)' : 'var(--text-muted)', fontFamily: 'Inter, sans-serif'
+            flexShrink: 0, padding: '5px 12px', borderRadius: 14, fontSize: 10, fontWeight: 700, cursor: 'pointer',
+            border: !filtroAutor ? '1px solid var(--accent-border)' : '1px solid rgba(255,255,255,0.25)',
+            background: !filtroAutor ? 'var(--accent-bg)' : 'rgba(8,8,20,0.65)',
+            backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+            color: !filtroAutor ? 'var(--accent-light)' : 'rgba(255,255,255,0.9)', fontFamily: 'Inter, sans-serif'
           }}>{tx.todos}</button>
           {autoresUnicos.map(a => (
             <button key={a} onClick={() => setFiltroAutor(a)} style={{
-              flexShrink: 0, padding: '5px 12px', borderRadius: 14, fontSize: 10, fontWeight: 600, cursor: 'pointer',
-              border: filtroAutor === a ? '1px solid var(--accent-border)' : '1px solid var(--border)',
-              background: filtroAutor === a ? 'var(--accent-bg)' : 'var(--bg-card)',
-              color: filtroAutor === a ? 'var(--accent-light)' : 'var(--text-muted)', fontFamily: 'Inter, sans-serif'
+              flexShrink: 0, padding: '5px 12px', borderRadius: 14, fontSize: 10, fontWeight: 700, cursor: 'pointer',
+              border: filtroAutor === a ? '1px solid var(--accent-border)' : '1px solid rgba(255,255,255,0.25)',
+              background: filtroAutor === a ? 'var(--accent-bg)' : 'rgba(8,8,20,0.65)',
+              backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+              color: filtroAutor === a ? 'var(--accent-light)' : 'rgba(255,255,255,0.9)', fontFamily: 'Inter, sans-serif'
             }}>{a}</button>
           ))}
         </div>
       )}
 
-      <div style={{ padding: '0 22px 12px', fontSize: 11, color: 'var(--text-faint)', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase' }}>
+      <div style={{ padding: '0 22px 12px', fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>
         {loading ? 'Carregando...' : `${fotosExibidas.length} foto${fotosExibidas.length !== 1 ? 's' : ''}${filtroAutor ? ` · ${filtroAutor}` : ` · Dia ${DIAS[diaSel].num}`}`}
       </div>
 
       {!loading && fotosExibidas.length === 0 && (
         <div style={{ textAlign: 'center', padding: '60px 22px' }}>
-          <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.6 }}>📷</div>
-          <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 700, marginBottom: 6 }}>{tx.nenhumaFoto}</div>
-          <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Seja o primeiro a postar no Dia {DIAS[diaSel].num}!</div>
+          <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.85 }}>📷</div>
+          <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 700, marginBottom: 6, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>{tx.nenhumaFoto}</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>Seja o primeiro a postar no Dia {DIAS[diaSel].num}!</div>
         </div>
       )}
 
