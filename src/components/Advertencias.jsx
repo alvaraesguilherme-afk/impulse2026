@@ -1,15 +1,32 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
-function CartaoAdv({ adv, onToggle }) {
+const NIVEIS_SUPERVISOR = ['maximo', 'alto', 'medio', 'basico']
+
+function CartaoAdv({ adv, onToggle, onConfirmar, onNegar, isSupervisor }) {
   const hora = new Date(adv.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+
+  const aguardando = adv.status === 'aguardando'
+  const negada = adv.status === 'negada'
 
   return (
     <div style={{
       padding: '14px 16px', borderRadius: 16, marginBottom: 8,
-      background: adv.pago ? 'var(--bg-card)' : 'rgba(239,68,68,0.08)',
-      border: adv.pago ? '1px solid var(--border)' : '1px solid rgba(239,68,68,0.28)',
-      opacity: adv.pago ? 0.45 : 1,
+      background: aguardando
+        ? 'rgba(234,179,8,0.07)'
+        : negada
+          ? 'rgba(100,100,100,0.06)'
+          : adv.pago
+            ? 'var(--bg-card)'
+            : 'rgba(239,68,68,0.08)',
+      border: aguardando
+        ? '1px solid rgba(234,179,8,0.3)'
+        : negada
+          ? '1px solid var(--border)'
+          : adv.pago
+            ? '1px solid var(--border)'
+            : '1px solid rgba(239,68,68,0.28)',
+      opacity: (adv.pago || negada) ? 0.45 : 1,
       transition: 'opacity 0.2s'
     }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
@@ -17,32 +34,56 @@ function CartaoAdv({ adv, onToggle }) {
           <div style={{
             fontSize: 15, fontWeight: 700, color: 'var(--text)',
             fontFamily: 'Syne, sans-serif',
-            textDecoration: adv.pago ? 'line-through' : 'none'
+            textDecoration: (adv.pago || negada) ? 'line-through' : 'none'
           }}>{adv.aluno}</div>
           {adv.motivo && (
             <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4, lineHeight: 1.4 }}>
               {adv.motivo}
             </div>
           )}
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>
-            🕐 {hora}
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span>🕐 {hora}</span>
+            {aguardando && <span style={{ color: '#EAB308', fontWeight: 700 }}>· Aguardando avaliação</span>}
+            {negada && <span style={{ color: 'var(--text-muted)', fontWeight: 700 }}>· Não considerada</span>}
           </div>
         </div>
-        <button onClick={() => onToggle(adv)} title={adv.pago ? 'Desfazer' : 'Marcar como paga'} style={{
-          width: 40, height: 40, borderRadius: 12, cursor: 'pointer', flexShrink: 0,
-          border: adv.pago ? '1px solid var(--border)' : '1px solid rgba(34,197,94,0.4)',
-          background: adv.pago ? 'var(--bg-card)' : 'rgba(34,197,94,0.12)',
-          color: adv.pago ? 'var(--text-faint)' : '#4ADE80',
-          fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}>
-          {adv.pago ? '↩' : '✓'}
-        </button>
+
+        {/* Botão pago — só para aprovadas */}
+        {!aguardando && !negada && (
+          <button onClick={() => onToggle(adv)} title={adv.pago ? 'Desfazer' : 'Marcar como paga'} style={{
+            width: 40, height: 40, borderRadius: 12, cursor: 'pointer', flexShrink: 0,
+            border: adv.pago ? '1px solid var(--border)' : '1px solid rgba(34,197,94,0.4)',
+            background: adv.pago ? 'var(--bg-card)' : 'rgba(34,197,94,0.12)',
+            color: adv.pago ? 'var(--text-faint)' : '#4ADE80',
+            fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
+            {adv.pago ? '↩' : '✓'}
+          </button>
+        )}
       </div>
+
+      {/* Botões de avaliação — só para supervisores em advertências aguardando */}
+      {isSupervisor && aguardando && (
+        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+          <button onClick={() => onConfirmar(adv)} style={{
+            flex: 1, padding: '10px', borderRadius: 12, border: 'none',
+            background: 'rgba(34,197,94,0.15)', color: '#4ADE80',
+            fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+            border: '1px solid rgba(34,197,94,0.3)'
+          }}>✓ Confirmar</button>
+          <button onClick={() => onNegar(adv)} style={{
+            flex: 1, padding: '10px', borderRadius: 12, border: 'none',
+            background: 'rgba(100,100,100,0.12)', color: 'var(--text-muted)',
+            fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+            border: '1px solid var(--border)'
+          }}>✕ Negar</button>
+        </div>
+      )}
     </div>
   )
 }
 
-export default function Advertencias({ onVoltar }) {
+export default function Advertencias({ onVoltar, sessao }) {
   const [alunos, setAlunos] = useState([])
   const [advertencias, setAdvertencias] = useState([])
   const [alunoSel, setAlunoSel] = useState(null)
@@ -51,6 +92,8 @@ export default function Advertencias({ onVoltar }) {
   const [showInput, setShowInput] = useState(false)
   const [loading, setLoading] = useState(true)
   const [salvando, setSalvando] = useState(false)
+
+  const isSupervisor = NIVEIS_SUPERVISOR.includes(sessao?.nivel)
 
   useEffect(() => { carregarDados() }, [])
 
@@ -82,7 +125,7 @@ export default function Advertencias({ onVoltar }) {
     setSalvando(true)
     const { data, error } = await supabase
       .from('advertencias')
-      .insert({ aluno: alunoSel, motivo: motivo.trim() || null, pago: false })
+      .insert({ aluno: alunoSel, motivo: motivo.trim() || null, pago: false, status: 'aguardando' })
       .select()
       .single()
     if (!error && data) setAdvertencias(prev => [data, ...prev])
@@ -91,14 +134,28 @@ export default function Advertencias({ onVoltar }) {
     setSalvando(false)
   }
 
+  async function confirmarAdvertencia(adv) {
+    setAdvertencias(prev => prev.map(a => a.id === adv.id ? { ...a, status: 'confirmada' } : a))
+    await supabase.from('advertencias').update({ status: 'confirmada' }).eq('id', adv.id)
+  }
+
+  async function negarAdvertencia(adv) {
+    setAdvertencias(prev => prev.map(a => a.id === adv.id ? { ...a, status: 'negada' } : a))
+    await supabase.from('advertencias').update({ status: 'negada' }).eq('id', adv.id)
+  }
+
   async function togglePago(adv) {
     const novoPago = !adv.pago
     setAdvertencias(prev => prev.map(a => a.id === adv.id ? { ...a, pago: novoPago } : a))
     await supabase.from('advertencias').update({ pago: novoPago }).eq('id', adv.id)
   }
 
-  const pendentes = advertencias.filter(a => !a.pago)
-  const pagas = advertencias.filter(a => a.pago)
+  const aguardando = advertencias.filter(a => a.status === 'aguardando')
+  const pendentes  = advertencias.filter(a => a.status === 'confirmada' && !a.pago)
+  const pagas      = advertencias.filter(a => a.status === 'confirmada' && a.pago)
+  const negadas    = advertencias.filter(a => a.status === 'negada')
+
+  const totalAguardando = aguardando.length
 
   return (
     <div style={{ background: 'var(--bg-tela)', minHeight: '100vh', paddingBottom: 100 }}>
@@ -107,10 +164,15 @@ export default function Advertencias({ onVoltar }) {
       <div style={{ padding: '14px 22px', display: 'flex', alignItems: 'center', gap: 14, borderBottom: '1px solid var(--border)', position: 'sticky', top: 0, background: 'var(--bg-tela)', zIndex: 10 }}>
         <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'var(--bg-card)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: '1px solid var(--border)', color: 'var(--text)' }}>‹</button>
         <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>Advertências</h2>
-        <div style={{ marginLeft: 'auto' }}>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
           {pendentes.length > 0 && (
             <span style={{ fontSize: 11, fontWeight: 700, color: '#F87171' }}>
               {pendentes.length} pendente{pendentes.length !== 1 ? 's' : ''}
+            </span>
+          )}
+          {isSupervisor && totalAguardando > 0 && (
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#EAB308' }}>
+              · {totalAguardando} em avaliação
             </span>
           )}
         </div>
@@ -173,7 +235,7 @@ export default function Advertencias({ onVoltar }) {
           )}
         </div>
 
-        {/* Campo de motivo + botão — aparecem ao selecionar aluno */}
+        {/* Motivo + botão registrar */}
         {alunoSel && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 8 }}>
             <textarea
@@ -186,8 +248,7 @@ export default function Advertencias({ onVoltar }) {
                 width: '100%', padding: '12px 14px', borderRadius: 14,
                 background: 'var(--input-bg)', border: '1px solid var(--border-strong)',
                 color: 'var(--text)', fontSize: 14, outline: 'none',
-                resize: 'none', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box',
-                lineHeight: 1.5
+                resize: 'none', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box', lineHeight: 1.5
               }}
             />
             <button onClick={registrarAdvertencia} disabled={salvando} style={{
@@ -195,8 +256,7 @@ export default function Advertencias({ onVoltar }) {
               background: salvando ? 'rgba(220,38,38,0.5)' : '#DC2626',
               color: 'white', fontSize: 15, fontWeight: 700,
               cursor: salvando ? 'not-allowed' : 'pointer',
-              fontFamily: 'Syne, sans-serif',
-              boxShadow: '0 4px 20px rgba(220,38,38,0.3)'
+              fontFamily: 'Syne, sans-serif', boxShadow: '0 4px 20px rgba(220,38,38,0.3)'
             }}>
               ⚠️ Registrar advertência para {alunoSel}
             </button>
@@ -218,21 +278,51 @@ export default function Advertencias({ onVoltar }) {
           </div>
         ) : (
           <>
+            {/* Em avaliação */}
+            {aguardando.length > 0 && (
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: '#EAB308', marginBottom: 12 }}>
+                  Em avaliação · {aguardando.length}
+                </div>
+                {aguardando.map(adv => (
+                  <CartaoAdv key={adv.id} adv={adv} onToggle={togglePago} onConfirmar={confirmarAdvertencia} onNegar={negarAdvertencia} isSupervisor={isSupervisor} />
+                ))}
+              </div>
+            )}
+
+            {/* Pendentes */}
             {pendentes.length > 0 && (
-              <>
+              <div style={{ marginBottom: 24 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: '#F87171', marginBottom: 12 }}>
                   Pendentes · {pendentes.length}
                 </div>
-                {pendentes.map(adv => <CartaoAdv key={adv.id} adv={adv} onToggle={togglePago} />)}
-              </>
+                {pendentes.map(adv => (
+                  <CartaoAdv key={adv.id} adv={adv} onToggle={togglePago} onConfirmar={confirmarAdvertencia} onNegar={negarAdvertencia} isSupervisor={isSupervisor} />
+                ))}
+              </div>
             )}
 
+            {/* Pagas */}
             {pagas.length > 0 && (
-              <div style={{ marginTop: pendentes.length > 0 ? 24 : 0 }}>
+              <div style={{ marginBottom: 24 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 12 }}>
                   Penalidade cumprida · {pagas.length}
                 </div>
-                {pagas.map(adv => <CartaoAdv key={adv.id} adv={adv} onToggle={togglePago} />)}
+                {pagas.map(adv => (
+                  <CartaoAdv key={adv.id} adv={adv} onToggle={togglePago} onConfirmar={confirmarAdvertencia} onNegar={negarAdvertencia} isSupervisor={isSupervisor} />
+                ))}
+              </div>
+            )}
+
+            {/* Negadas */}
+            {negadas.length > 0 && (
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 12 }}>
+                  Não consideradas · {negadas.length}
+                </div>
+                {negadas.map(adv => (
+                  <CartaoAdv key={adv.id} adv={adv} onToggle={togglePago} onConfirmar={confirmarAdvertencia} onNegar={negarAdvertencia} isSupervisor={isSupervisor} />
+                ))}
               </div>
             )}
           </>
