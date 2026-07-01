@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTexto } from '../lib/i18n'
 import { supabase } from '../lib/supabase'
 import { syncOp } from '../lib/offlineSync'
+import { PINOS } from '../lib/pinos'
 
 const EQUIPES = [
   { id: 'verde', nome: 'Equipe Verde', lideres: 'Jhony e Linda', membros: ['Emanuel','Hellen Borges','Isabely Matos','Joel Marcos','Jeronimo','Livia Andrea'], offset: 0, cor: 'var(--accent-light)', emoji: '🟢' },
@@ -13,7 +14,16 @@ const CICLO = ['M','T','N','F']
 const TURNO_LABEL = { M:'Manhã', T:'Tarde', N:'Noite', F:'Folga' }
 const DIAS_C = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
 const INICIO = new Date(2026,6,15)
-const ABA_LABELS = { avisos:'📢 Avisos', chamada:'📋 Chamada', faltas:'❌ Faltas' }
+const ABA_LABELS = { avisos:'📢 Avisos', chamada:'📋 Chamada', faltas:'❌ Faltas', senhas:'🔐 Senhas' }
+
+const NIVEL_COR = {
+  maximo: { bg: 'rgba(124,58,237,0.18)', border: 'rgba(124,58,237,0.4)', text: '#A78BFA', label: 'Máximo' },
+  alto:   { bg: 'rgba(59,130,246,0.15)', border: 'rgba(59,130,246,0.35)', text: '#60A5FA', label: 'Alto' },
+  medio:  { bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.35)', text: '#34D399', label: 'Médio' },
+  basico: { bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.35)', text: '#FCD34D', label: 'Básico' },
+  staff:  { bg: 'var(--bg-card)', border: 'var(--border)', text: 'var(--text-secondary)', label: 'Staff' },
+}
+const ORDEM_NIVEL = ['maximo', 'alto', 'medio', 'basico', 'staff']
 
 function getTurno(eq, data) {
   const diff = Math.round((data.getTime() - INICIO.getTime()) / 86400000)
@@ -35,11 +45,21 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
   const [chamadaData, setChamadaData] = useState({})
   const [faltas, setFaltas] = useState({})
   const [erroSalvar, setErroSalvar] = useState(false)
+  const [convidados, setConvidados] = useState([])
+  const [loadingConvidados, setLoadingConvidados] = useState(false)
 
   useEffect(() => {
     if (aba === 'avisos') carregarAvisos()
     if (aba === 'faltas') carregarFaltas()
+    if (aba === 'senhas') carregarConvidados()
   }, [aba])
+
+  async function carregarConvidados() {
+    setLoadingConvidados(true)
+    const { data } = await supabase.from('convidados').select('nome, pin').order('nome')
+    setConvidados(data || [])
+    setLoadingConvidados(false)
+  }
 
   async function carregarAvisos() {
     const { data } = await supabase.from('avisos').select('*').order('created_at', { ascending: false })
@@ -280,6 +300,47 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
             )}
           </>
         )}
+        {/* SENHAS */}
+        {aba === 'senhas' && (
+          <>
+            {ORDEM_NIVEL.map(nivel => {
+              const membros = Object.entries(PINOS)
+                .filter(([, d]) => d.nivel === nivel)
+                .sort(([a], [b]) => a.localeCompare(b, 'pt-BR'))
+              if (!membros.length) return null
+              const cor = NIVEL_COR[nivel]
+              return (
+                <div key={nivel} style={{ marginBottom: 24 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: cor.text, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 10 }}>
+                    {cor.label} <span style={{ color: 'var(--text-faint)', fontWeight: 400 }}>({membros.length})</span>
+                  </div>
+                  {membros.map(([nome, dados]) => (
+                    <div key={nome} style={{ background: cor.bg, border: `1px solid ${cor.border}`, borderRadius: 14, padding: '10px 14px', marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: 13, fontWeight: 600 }}>{nome}</span>
+                      <span style={{ fontFamily: 'monospace', fontSize: 14, fontWeight: 700, color: cor.text, background: 'rgba(0,0,0,0.2)', borderRadius: 8, padding: '3px 10px', letterSpacing: '0.15em' }}>{dados.pin}</span>
+                    </div>
+                  ))}
+                </div>
+              )
+            })}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#F87171', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 10 }}>
+                Convidados <span style={{ color: 'var(--text-faint)', fontWeight: 400 }}>({convidados.length})</span>
+              </div>
+              {loadingConvidados ? (
+                <div style={{ fontSize: 13, color: 'var(--text-faint)', padding: '12px 0' }}>Carregando...</div>
+              ) : convidados.length === 0 ? (
+                <div style={{ fontSize: 13, color: 'var(--text-faint)', fontStyle: 'italic' }}>Nenhum convidado cadastrado ainda.</div>
+              ) : convidados.map(c => (
+                <div key={c.nome} style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.22)', borderRadius: 14, padding: '10px 14px', marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: 13, fontWeight: 600 }}>{c.nome}</span>
+                  <span style={{ fontFamily: 'monospace', fontSize: 14, fontWeight: 700, color: '#F87171', background: 'rgba(0,0,0,0.2)', borderRadius: 8, padding: '3px 10px', letterSpacing: '0.15em' }}>{c.pin}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
       </div>
     </div>
   )

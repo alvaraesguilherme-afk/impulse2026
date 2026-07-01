@@ -7,7 +7,6 @@ import Mural from './components/Mural'
 import Midia from './components/Midia'
 import Programacao from './components/Programacao'
 import Advertencias from './components/Advertencias'
-import AdminPanel from './components/AdminPanel'
 import Config from './components/Config'
 import Login from './components/Login'
 import { initSync } from './lib/offlineSync'
@@ -61,14 +60,14 @@ const INTROS = {
 }
 
 const ABAS_SUPERVISOR = {
-  'Alvarães': ['avisos', 'chamada', 'faltas'],
+  'Alvarães': ['avisos', 'chamada', 'faltas', 'senhas'],
   'Danilo': ['avisos'],
-  'Caetano': ['avisos'],
-  'Alyson': ['avisos'],
+  'Caetano': ['avisos', 'senhas'],
+  'Alyson': ['avisos', 'senhas'],
   'Paula': ['avisos'],
   'Eliel': ['avisos'],
   'Edson': ['avisos'],
-  'Pr. Júnior': ['avisos', 'chamada', 'faltas'],
+  'Pr. Júnior': ['avisos', 'chamada', 'faltas', 'senhas'],
   'Pra. Stephanie': ['avisos', 'chamada', 'faltas'],
 }
 
@@ -90,7 +89,7 @@ function NavIcon({ id, active, size = 22 }) {
   return icons[id] || null
 }
 
-function getSidebarItems(podeSupervisor, isAlvaraes) {
+function getSidebarItems(podeSupervisor) {
   return [
     { id: 'home', label: 'Início' },
     { id: 'mural', label: 'Feed Impulse' },
@@ -101,8 +100,6 @@ function getSidebarItems(podeSupervisor, isAlvaraes) {
     { id: 'advertencias', label: 'Advertências' },
     podeSupervisor ? null : undefined,
     podeSupervisor ? { id: 'supervisor', label: 'Supervisor' } : undefined,
-    isAlvaraes ? null : undefined,
-    isAlvaraes ? { id: 'admin', label: 'Bloco de Senhas' } : undefined,
     { id: 'config', label: 'Configurações' },
   ].filter(item => item !== undefined)
 }
@@ -313,7 +310,6 @@ export default function App() {
   const nivel = sessao?.nivel
   const NIVEIS_SUPERVISOR = ['maximo', 'alto', 'basico']
   const podeSupervisor = NIVEIS_SUPERVISOR.includes(nivel)
-  const isAlvaraes = ['Alvarães', 'Alyson', 'Pr. Júnior', 'Caetano'].includes(sessao?.nome)
 
   const NAV = [
     { id: 'home', label: t.home },
@@ -371,7 +367,7 @@ export default function App() {
             <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 5, letterSpacing: 1.5, textTransform: 'uppercase' }}>15 a 25 de julho</div>
           </div>
 
-          {getSidebarItems(podeSupervisor, isAlvaraes).map((item, idx) => {
+          {getSidebarItems(podeSupervisor).map((item, idx) => {
             if (!item) return (
               <div key={'sep-' + idx} style={{ height: 1, background: 'var(--border)', margin: '6px 10px 10px' }} />
             )
@@ -416,7 +412,6 @@ export default function App() {
           {tela === 'programacao' && <Programacao onVoltar={voltar} sessao={sessao} onAjuda={() => mostrarIntroForcar('programacao')} />}
           {tela === 'config' && <Config onVoltar={voltar} tema={tema} setTema={setTema} idioma={idioma} setIdioma={setIdioma} sessao={sessao} onLogout={fazerLogout} onAjuda={() => mostrarIntroForcar('config')} />}
           {tela === 'advertencias' && <Advertencias onVoltar={voltar} sessao={sessao} />}
-          {tela === 'admin' && isAlvaraes && <AdminPanel onVoltar={voltar} />}
         </div>
       </div>
 
