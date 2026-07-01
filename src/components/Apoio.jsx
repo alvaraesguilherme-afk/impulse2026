@@ -110,7 +110,7 @@ export default function Apoio({ onVoltar, sessao }) {
     <div style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
       <BackBtn onVoltar={onVoltar} titulo={tx.escalasDeServico} />
       <div style={{ display: 'flex', gap: 8, padding: '16px 22px', overflowX: 'auto', scrollbarWidth: 'none' }}>
-        {[{id:'times',label:`👥 ${tx.times}`},{id:'escalas',label:`📅 ${tx.escalas}`},!['staff','convidado'].includes(sessao?.nivel) && {id:'chamada',label:`📋 ${tx.chamada} 🔒`}].filter(Boolean).map(a => (
+        {[{id:'times',label:`👥 ${tx.times}`},{id:'escalas',label:`📅 ${tx.escalas}`},LIDERES_CHAMADA.some(l => l.nome === sessao?.nome) && {id:'chamada',label:`📋 ${tx.chamada} 🔒`}].filter(Boolean).map(a => (
           <button key={a.id} onClick={() => a.id === 'chamada' ? abrirChamada() : setAba(a.id)} style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 20, border: '1px solid var(--border-strong)', background: aba === a.id ? 'var(--accent-glow)' : 'var(--bg-card)', color: aba === a.id ? 'var(--accent-light)' : 'var(--text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
             {a.label}
           </button>

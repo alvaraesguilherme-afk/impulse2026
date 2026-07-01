@@ -125,7 +125,7 @@ export default function Programacao({ onVoltar, sessao }) {
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
         <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'var(--input-bg)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: 'none', color: 'var(--text)' }}>‹</button>
         <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700 }}>{tx.programacao}</h2>
-        {!['staff', 'convidado'].includes(sessao?.nivel) && (
+        {Object.values(SENHAS_COORD).includes(sessao?.nome) && (
           <div style={{ marginLeft: 'auto' }}>
             {!coordenador ? (
               <button onClick={() => { setShowLogin(true); setSenhaInput(''); setSenhaErro('') }} style={{
