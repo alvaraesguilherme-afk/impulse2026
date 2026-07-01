@@ -116,6 +116,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
     return set
   })
   const [filtroAutor, setFiltroAutor] = useState('')
+  const [todosOsDias, setTodosOsDias] = useState(false)
   const [modoTeste, setModoTeste] = useState(false)
   const [pendingFile, setPendingFile] = useState(null)
   const [pendingPreview, setPendingPreview] = useState(null)
@@ -124,7 +125,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
   const inputGaleria = useRef(null)
   const inputCamera = useRef(null)
 
-  useEffect(() => { carregarFotos() }, [diaSel])
+  useEffect(() => { carregarFotos(diaSel, todosOsDias, filtroAutor) }, [diaSel, todosOsDias, filtroAutor])
 
   useEffect(() => {
     if (fotoAberta) {
@@ -135,13 +136,15 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
     return () => document.body.classList.remove('foto-aberta')
   }, [fotoAberta])
 
-  async function carregarFotos() {
+  async function carregarFotos(diaIdx = diaSel, todos = todosOsDias, autorFiltro = filtroAutor) {
     setLoading(true)
-    const { data } = await supabase
-      .from('mural_fotos')
-      .select('*')
-      .eq('dia', DIAS[diaSel].num)
-      .order('created_at', { ascending: false })
+    let query = supabase.from('mural_fotos').select('*').order('created_at', { ascending: false })
+    if (todos && autorFiltro) {
+      query = query.eq('autor', autorFiltro)
+    } else {
+      query = query.eq('dia', DIAS[diaIdx].num)
+    }
+    const { data } = await query
     setFotos(data || [])
     setLoading(false)
   }
@@ -224,7 +227,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
   const SUPERVISORES = ['Alvarães', 'Danilo', 'Caetano', 'Alyson', 'Paula', 'Eliel', 'Edson', 'Pr. Júnior', 'Pra. Stephanie']
   const podeDeletar = fotoAberta && (fotoAberta.autor === autor || SUPERVISORES.includes(autor))
 
-  const fotosExibidas = filtroAutor
+  const fotosExibidas = (!todosOsDias && filtroAutor)
     ? fotos.filter(f => f.autor === filtroAutor)
     : fotos
 
@@ -259,12 +262,25 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
       </div>
 
       <div style={{ display: 'flex', gap: 6, padding: '16px 22px', overflowX: 'auto', scrollbarWidth: 'none' }}>
-        {DIAS.map((d, i) => (
-          <button key={i} onClick={() => { setDiaSel(i); setFiltroAutor('') }} style={{
+        {filtroAutor && (
+          <button onClick={() => setTodosOsDias(true)} style={{
             flexShrink: 0, padding: '8px 14px', borderRadius: 16,
-            border: diaSel === i ? '1px solid var(--accent-border)' : '1px solid rgba(255,255,255,0.2)',
-            background: diaSel === i ? 'var(--accent-bg)' : 'rgba(8,8,20,0.88)',
-            color: diaSel === i ? 'var(--accent-light)' : 'rgba(255,255,255,0.9)',
+            border: todosOsDias ? '1px solid var(--accent-border)' : '1px solid rgba(255,255,255,0.2)',
+            background: todosOsDias ? 'var(--accent-bg)' : 'rgba(8,8,20,0.88)',
+            color: todosOsDias ? 'var(--accent-light)' : 'rgba(255,255,255,0.9)',
+            fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2
+          }}>
+            <span style={{ fontSize: 13, fontWeight: 800 }}>📅 Todos</span>
+            <span style={{ fontSize: 9, opacity: 0.65 }}>os dias</span>
+          </button>
+        )}
+        {DIAS.map((d, i) => (
+          <button key={i} onClick={() => { setDiaSel(i); setTodosOsDias(false) }} style={{
+            flexShrink: 0, padding: '8px 14px', borderRadius: 16,
+            border: !todosOsDias && diaSel === i ? '1px solid var(--accent-border)' : '1px solid rgba(255,255,255,0.2)',
+            background: !todosOsDias && diaSel === i ? 'var(--accent-bg)' : 'rgba(8,8,20,0.88)',
+            color: !todosOsDias && diaSel === i ? 'var(--accent-light)' : 'rgba(255,255,255,0.9)',
             fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2
           }}>
@@ -319,14 +335,14 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
 
       {(autor || autoresUnicos.length > 1) && (
         <div style={{ display: 'flex', gap: 6, padding: '0 22px 12px', overflowX: 'auto', scrollbarWidth: 'none' }}>
-          <button onClick={() => setFiltroAutor('')} style={{
+          <button onClick={() => { setFiltroAutor(''); setTodosOsDias(false) }} style={{
             flexShrink: 0, padding: '5px 12px', borderRadius: 14, fontSize: 10, fontWeight: 700, cursor: 'pointer',
             border: !filtroAutor ? '1px solid var(--accent-border)' : '1px solid rgba(255,255,255,0.2)',
             background: !filtroAutor ? 'var(--accent-bg)' : 'rgba(8,8,20,0.88)',
             color: !filtroAutor ? 'var(--accent-light)' : 'rgba(255,255,255,0.9)', fontFamily: 'Inter, sans-serif'
           }}>{tx.todos}</button>
           {autor && (
-            <button onClick={() => setFiltroAutor(autor)} style={{
+            <button onClick={() => { setFiltroAutor(autor); setTodosOsDias(false) }} style={{
               flexShrink: 0, padding: '5px 12px', borderRadius: 14, fontSize: 10, fontWeight: 700, cursor: 'pointer',
               border: filtroAutor === autor ? '1px solid var(--accent-border)' : '1px solid rgba(255,255,255,0.2)',
               background: filtroAutor === autor ? 'var(--accent-bg)' : 'rgba(8,8,20,0.88)',
@@ -334,7 +350,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
             }}>👤 Minhas</button>
           )}
           {autoresUnicos.filter(a => a !== autor).map(a => (
-            <button key={a} onClick={() => setFiltroAutor(a)} style={{
+            <button key={a} onClick={() => { setFiltroAutor(a); setTodosOsDias(false) }} style={{
               flexShrink: 0, padding: '5px 12px', borderRadius: 14, fontSize: 10, fontWeight: 700, cursor: 'pointer',
               border: filtroAutor === a ? '1px solid var(--accent-border)' : '1px solid rgba(255,255,255,0.2)',
               background: filtroAutor === a ? 'var(--accent-bg)' : 'rgba(8,8,20,0.88)',
@@ -345,7 +361,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
       )}
 
       <div style={{ padding: '0 22px 12px', fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>
-        {loading ? 'Carregando...' : `${fotosExibidas.length} foto${fotosExibidas.length !== 1 ? 's' : ''}${filtroAutor ? ` · ${filtroAutor}` : ` · ${DIAS[diaSel].labelDia}`}`}
+        {loading ? 'Carregando...' : `${fotosExibidas.length} foto${fotosExibidas.length !== 1 ? 's' : ''}${filtroAutor ? ` · ${filtroAutor}${todosOsDias ? ' · todos os dias' : ` · ${DIAS[diaSel].labelDia}`}` : ` · ${DIAS[diaSel].labelDia}`}`}
       </div>
 
       {!loading && fotosExibidas.length === 0 && (
