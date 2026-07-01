@@ -7,6 +7,7 @@ import Mural from './components/Mural'
 import Midia from './components/Midia'
 import Programacao from './components/Programacao'
 import Advertencias from './components/Advertencias'
+import AdminPanel from './components/AdminPanel'
 import Config from './components/Config'
 import Login from './components/Login'
 import { initSync } from './lib/offlineSync'
@@ -84,11 +85,12 @@ function NavIcon({ id, active, size = 22 }) {
     midia: <svg {...s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>,
     staff: <svg {...s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
     advertencias: <svg {...s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+    admin: <svg {...s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16" r="1" fill={color}/></svg>,
   }
   return icons[id] || null
 }
 
-function getSidebarItems(podeSupervisor) {
+function getSidebarItems(podeSupervisor, isAlvaraes) {
   return [
     { id: 'home', label: 'Início' },
     { id: 'mural', label: 'Feed Impulse' },
@@ -99,6 +101,8 @@ function getSidebarItems(podeSupervisor) {
     { id: 'advertencias', label: 'Advertências' },
     podeSupervisor ? null : undefined,
     podeSupervisor ? { id: 'supervisor', label: 'Supervisor' } : undefined,
+    isAlvaraes ? null : undefined,
+    isAlvaraes ? { id: 'admin', label: 'Painel Admin' } : undefined,
     { id: 'config', label: 'Configurações' },
   ].filter(item => item !== undefined)
 }
@@ -309,6 +313,7 @@ export default function App() {
   const nivel = sessao?.nivel
   const NIVEIS_SUPERVISOR = ['maximo', 'alto', 'basico']
   const podeSupervisor = NIVEIS_SUPERVISOR.includes(nivel)
+  const isAlvaraes = sessao?.nome === 'Alvarães'
 
   const NAV = [
     { id: 'home', label: t.home },
@@ -366,7 +371,7 @@ export default function App() {
             <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 5, letterSpacing: 1.5, textTransform: 'uppercase' }}>15 a 25 de julho</div>
           </div>
 
-          {getSidebarItems(podeSupervisor).map((item, idx) => {
+          {getSidebarItems(podeSupervisor, isAlvaraes).map((item, idx) => {
             if (!item) return (
               <div key={'sep-' + idx} style={{ height: 1, background: 'var(--border)', margin: '6px 10px 10px' }} />
             )
@@ -411,6 +416,7 @@ export default function App() {
           {tela === 'programacao' && <Programacao onVoltar={voltar} sessao={sessao} onAjuda={() => mostrarIntroForcar('programacao')} />}
           {tela === 'config' && <Config onVoltar={voltar} tema={tema} setTema={setTema} idioma={idioma} setIdioma={setIdioma} sessao={sessao} onLogout={fazerLogout} onAjuda={() => mostrarIntroForcar('config')} />}
           {tela === 'advertencias' && <Advertencias onVoltar={voltar} sessao={sessao} />}
+          {tela === 'admin' && isAlvaraes && <AdminPanel onVoltar={voltar} />}
         </div>
       </div>
 

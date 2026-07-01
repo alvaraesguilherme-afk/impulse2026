@@ -39,7 +39,7 @@ const CICLO_APOIO = ['M', 'T', 'N', 'F']
 const TURNO_NOME = { M: 'Manhã', T: 'Tarde', N: 'Noite', F: 'Folga' }
 const EQUIPE_MEMBRO = {
   'Stephany': { equipeId: 'azul', offset: 2 },
-  'Maria Clara': { equipeId: 'amarelo', offset: 1 },
+  'Maria Clara': { equipeId: 'verde', offset: 0 },
   'Victória': { equipeId: 'vermelho', offset: 3 },
   'Taiwa': { equipeId: 'amarelo', offset: 1 },
 }
