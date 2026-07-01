@@ -152,6 +152,12 @@ export default function App() {
         .maybeSingle()
       if (!data) {
         fazerLogout('Sua sessão foi encerrada em outro dispositivo.')
+      } else {
+        // Renova updated_at para não expirar sessão ativa
+        supabase.from('sessoes_ativas').upsert(
+          { nome: sessao.nome, device_id: deviceId, updated_at: new Date().toISOString() },
+          { onConflict: 'nome,device_id' }
+        ).then()
       }
     }
 

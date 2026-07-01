@@ -30,19 +30,33 @@ const pinStyle = {
   fontFamily: 'Inter, sans-serif'
 }
 
+const EXPIRY_MS = 24 * 60 * 60 * 1000 // sessão expira após 24h sem uso
+
 async function verificarSessao(nome, nivel) {
   const deviceId = getDeviceId()
   const limite = LIMITE_DEVICES[nivel] || 1
 
   const { data: sessoes } = await supabase
     .from('sessoes_ativas')
-    .select('device_id')
+    .select('device_id, updated_at')
     .eq('nome', nome)
 
-  const lista = sessoes || []
-  const jaEsteDevice = lista.some(s => s.device_id === deviceId)
+  const agora = Date.now()
+  const todas = sessoes || []
 
-  if (!jaEsteDevice && lista.length >= limite) {
+  // Separa sessões frescas de expiradas
+  const frescas = todas.filter(s => agora - new Date(s.updated_at).getTime() < EXPIRY_MS)
+  const expiradas = todas.filter(s => agora - new Date(s.updated_at).getTime() >= EXPIRY_MS)
+
+  // Limpa expiradas em background
+  expiradas.forEach(s =>
+    supabase.from('sessoes_ativas').delete()
+      .eq('nome', nome).eq('device_id', s.device_id).then()
+  )
+
+  const jaEsteDevice = frescas.some(s => s.device_id === deviceId)
+
+  if (!jaEsteDevice && frescas.length >= limite) {
     const msg = limite >= 2
       ? 'Esta conta já está ativa em 2 aparelhos. Faça logout em um deles primeiro.'
       : 'Esta conta já está ativa em outro aparelho.'
