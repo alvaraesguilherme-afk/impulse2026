@@ -48,6 +48,8 @@ function comprimirImagem(file, maxKB = 500) {
 
 const MURAL_INICIO = new Date(2026, 6, 14)
 const MURAL_FIM = new Date(2026, 6, 27)
+const RECAP_INICIO = new Date(2026, 6, 28)
+function isRecapDisponivel() { return new Date() >= RECAP_INICIO }
 
 const STAFF_NOMES = [
   'Pr. Júnior','Pra. Stephanie',
@@ -117,6 +119,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
   })
   const [filtroAutor, setFiltroAutor] = useState('')
   const [todosOsDias, setTodosOsDias] = useState(false)
+  const [modoRecap, setModoRecap] = useState(false)
   const [modoTeste, setModoTeste] = useState(false)
   const [pendingFile, setPendingFile] = useState(null)
   const [pendingPreview, setPendingPreview] = useState(null)
@@ -125,7 +128,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
   const inputGaleria = useRef(null)
   const inputCamera = useRef(null)
 
-  useEffect(() => { carregarFotos(diaSel, todosOsDias, filtroAutor) }, [diaSel, todosOsDias, filtroAutor])
+  useEffect(() => { carregarFotos(diaSel, todosOsDias, filtroAutor, modoRecap) }, [diaSel, todosOsDias, filtroAutor, modoRecap])
 
   useEffect(() => {
     if (fotoAberta) {
@@ -136,13 +139,15 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
     return () => document.body.classList.remove('foto-aberta')
   }, [fotoAberta])
 
-  async function carregarFotos(diaIdx = diaSel, todos = todosOsDias, autorFiltro = filtroAutor) {
+  async function carregarFotos(diaIdx = diaSel, todos = todosOsDias, autorFiltro = filtroAutor, recap = modoRecap) {
     setLoading(true)
-    let query = supabase.from('mural_fotos').select('*').order('created_at', { ascending: false })
-    if (todos && autorFiltro) {
-      query = query.eq('autor', autorFiltro)
+    let query = supabase.from('mural_fotos').select('*')
+    if (recap) {
+      query = query.order('curtidas', { ascending: false }).limit(30)
+    } else if (todos && autorFiltro) {
+      query = query.eq('autor', autorFiltro).order('created_at', { ascending: false })
     } else {
-      query = query.eq('dia', DIAS[diaIdx].num)
+      query = query.eq('dia', DIAS[diaIdx].num).order('created_at', { ascending: false })
     }
     const { data } = await query
     setFotos(data || [])
@@ -276,11 +281,11 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
           </button>
         )}
         {DIAS.map((d, i) => (
-          <button key={i} onClick={() => { setDiaSel(i); setTodosOsDias(false) }} style={{
+          <button key={i} onClick={() => { setDiaSel(i); setTodosOsDias(false); setModoRecap(false) }} style={{
             flexShrink: 0, padding: '8px 14px', borderRadius: 16,
-            border: !todosOsDias && diaSel === i ? '1px solid var(--accent-border)' : '1px solid rgba(255,255,255,0.2)',
-            background: !todosOsDias && diaSel === i ? 'var(--accent-bg)' : 'rgba(8,8,20,0.88)',
-            color: !todosOsDias && diaSel === i ? 'var(--accent-light)' : 'rgba(255,255,255,0.9)',
+            border: !todosOsDias && !modoRecap && diaSel === i ? '1px solid var(--accent-border)' : '1px solid rgba(255,255,255,0.2)',
+            background: !todosOsDias && !modoRecap && diaSel === i ? 'var(--accent-bg)' : 'rgba(8,8,20,0.88)',
+            color: !todosOsDias && !modoRecap && diaSel === i ? 'var(--accent-light)' : 'rgba(255,255,255,0.9)',
             fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2
           }}>
@@ -288,9 +293,22 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
             <span style={{ fontSize: 9, opacity: 0.65 }}>{d.labelDia}</span>
           </button>
         ))}
+        {isRecapDisponivel() && (
+          <button onClick={() => { setModoRecap(true); setTodosOsDias(false); setFiltroAutor('') }} style={{
+            flexShrink: 0, padding: '8px 14px', borderRadius: 16,
+            border: modoRecap ? '1px solid #FFD700' : '1px solid rgba(255,215,0,0.35)',
+            background: modoRecap ? 'rgba(255,215,0,0.18)' : 'rgba(8,8,20,0.88)',
+            color: modoRecap ? '#FFD700' : 'rgba(255,215,0,0.7)',
+            fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2
+          }}>
+            <span style={{ fontSize: 13, fontWeight: 800 }}>🏆 Recap</span>
+            <span style={{ fontSize: 9, opacity: 0.8 }}>Top 30</span>
+          </button>
+        )}
       </div>
 
-      {podeMuralPostar() || modoTeste ? (
+      {!modoRecap && (podeMuralPostar() || modoTeste) ? (
         <div style={{ display: 'flex', gap: 10, padding: '0 22px 16px' }}>
           <button onClick={() => inputGaleria.current?.click()} disabled={uploading} style={{
             flex: 1, padding: '14px', borderRadius: 16, border: '1px solid var(--border-strong)',
@@ -309,7 +327,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
           <input ref={inputGaleria} type="file" accept="image/*" onChange={handleFileSelect} style={{ display: 'none' }} />
           <input ref={inputCamera} type="file" accept="image/*" capture="environment" onChange={handleFileSelect} style={{ display: 'none' }} />
         </div>
-      ) : (
+      ) : !modoRecap ? (
         <div style={{ padding: '0 22px 16px' }}>
           <div style={{ padding: '12px 14px', borderRadius: 14, background: 'rgba(8,8,20,0.88)', border: '1px solid rgba(255,255,255,0.2)', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.9)', textAlign: 'center' }}>
             📷 {tx.uploadDisponivel}
@@ -324,7 +342,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
         </div>
       )}
 
-      {uploading && (
+      {!modoRecap && uploading && (
         <div style={{ padding: '0 22px 16px' }}>
           <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-glow)', borderRadius: 14, padding: '12px', fontSize: 13, color: 'var(--accent-light)', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             <div style={{ width: 16, height: 16, border: '2px solid #C4B5FD', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
@@ -333,7 +351,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
         </div>
       )}
 
-      {(autor || autoresUnicos.length > 1) && (
+      {!modoRecap && (autor || autoresUnicos.length > 1) && (
         <div style={{ display: 'flex', gap: 6, padding: '0 22px 12px', overflowX: 'auto', scrollbarWidth: 'none' }}>
           <button onClick={() => { setFiltroAutor(''); setTodosOsDias(false) }} style={{
             flexShrink: 0, padding: '5px 12px', borderRadius: 14, fontSize: 10, fontWeight: 700, cursor: 'pointer',
@@ -360,48 +378,115 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
         </div>
       )}
 
-      <div style={{ padding: '0 22px 12px', fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>
-        {loading ? 'Carregando...' : `${fotosExibidas.length} foto${fotosExibidas.length !== 1 ? 's' : ''}${filtroAutor ? ` · ${filtroAutor}${todosOsDias ? ' · todos os dias' : ` · ${DIAS[diaSel].labelDia}`}` : ` · ${DIAS[diaSel].labelDia}`}`}
-      </div>
+      {modoRecap ? (
+        <div style={{ padding: '0 16px 100px' }}>
+          <div style={{ textAlign: 'center', padding: '18px 0 28px' }}>
+            <div style={{ fontSize: 44, marginBottom: 10 }}>🏆</div>
+            <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 21, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Top 30 do Impulso 2026</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', letterSpacing: 0.4 }}>as fotos mais curtidas do evento</div>
+          </div>
 
-      {!loading && fotosExibidas.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '60px 22px' }}>
-          <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.85 }}>📷</div>
-          <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 700, marginBottom: 6, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>{tx.nenhumaFoto}</div>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>Seja o primeiro a postar em {DIAS[diaSel].label}!</div>
-        </div>
-      )}
-
-      <div style={{ padding: '0 22px 100px', columnCount: 2, columnGap: 8 }}>
-        {fotosExibidas.map(foto => {
-          return (
-            <div key={foto.id} onClick={() => (setFotoAberta(foto), setConfirmDelete(false))} style={{
-              breakInside: 'avoid', marginBottom: 8, borderRadius: 14, overflow: 'hidden',
-              cursor: 'pointer', position: 'relative',
-              border: '1px solid var(--border)',
-              background: 'var(--bg-card)'
-            }}>
-              <img src={foto.url} alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block' }} />
-              <div style={{ padding: '6px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ flex: 1, minWidth: 0, marginRight: 4 }}>
-                  {foto.legenda && <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginBottom: 2, lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{foto.legenda}</div>}
-                  {foto.autor && <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 1 }}>{foto.autor}</div>}
-                  <div style={{ fontSize: 10, color: 'var(--text-faint)' }}>
-                    {new Date(foto.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '40px', color: 'rgba(255,255,255,0.35)', fontSize: 13 }}>Carregando...</div>
+          ) : fotos.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px 22px', color: 'rgba(255,255,255,0.35)', fontSize: 14 }}>Nenhuma foto ainda</div>
+          ) : (
+            <>
+              {fotos[0] && (
+                <div className="recap-card" style={{ animationDelay: '0s', position: 'relative', borderRadius: 18, overflow: 'hidden', marginBottom: 8, cursor: 'pointer', border: '2px solid #FFD700', boxShadow: '0 0 28px rgba(255,215,0,0.25)' }} onClick={() => { setFotoAberta(fotos[0]); setConfirmDelete(false) }}>
+                  <img src={fotos[0].url} alt="" loading="eager" style={{ width: '100%', display: 'block', maxHeight: 300, objectFit: 'cover' }} />
+                  <div style={{ position: 'absolute', top: 10, left: 10, background: '#FFD700', borderRadius: 10, padding: '4px 10px', fontSize: 12, fontWeight: 800, color: '#000', boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>🥇 #1</div>
+                  <div style={{ padding: '10px 14px', background: 'linear-gradient(0deg,rgba(0,0,0,0.85),rgba(0,0,0,0.4))' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        {fotos[0].legenda && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', marginBottom: 2 }}>{fotos[0].legenda}</div>}
+                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>{fotos[0].autor}</div>
+                      </div>
+                      <div style={{ fontSize: 15, color: '#FFD700', fontWeight: 800 }}>❤️ {fotos[0].curtidas || 0}</div>
+                    </div>
                   </div>
                 </div>
-                <button onClick={e => { e.stopPropagation(); curtirFoto(foto) }} className="btn-curtida" style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: 4, padding: '6px 4px', flexShrink: 0
-                }}>
-                  <span style={{ fontSize: 22 }}>{curtidas.has(String(foto.id)) ? '❤️' : '🤍'}</span>
-                  {(foto.curtidas || 0) > 0 && <span style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 700 }}>{foto.curtidas}</span>}
-                </button>
-              </div>
+              )}
+
+              {fotos.slice(1, 3).length > 0 && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+                  {fotos.slice(1, 3).map((foto, i) => {
+                    const MEDALS = ['🥈', '🥉']
+                    const CORES = ['#C0C0C0', '#CD7F32']
+                    return (
+                      <div key={foto.id} className="recap-card" style={{ animationDelay: `${(i + 1) * 0.09}s`, position: 'relative', borderRadius: 16, overflow: 'hidden', cursor: 'pointer', border: `2px solid ${CORES[i]}`, boxShadow: `0 0 16px ${CORES[i]}55` }} onClick={() => { setFotoAberta(foto); setConfirmDelete(false) }}>
+                        <img src={foto.url} alt="" loading="eager" style={{ width: '100%', display: 'block', height: 150, objectFit: 'cover' }} />
+                        <div style={{ position: 'absolute', top: 7, left: 7, background: CORES[i], borderRadius: 8, padding: '3px 8px', fontSize: 11, fontWeight: 800, color: '#000' }}>{MEDALS[i]} #{i + 2}</div>
+                        <div style={{ padding: '8px 10px', background: 'rgba(0,0,0,0.7)' }}>
+                          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', fontWeight: 600, marginBottom: 2 }}>{foto.autor}</div>
+                          <div style={{ fontSize: 11, color: CORES[i], fontWeight: 800 }}>❤️ {foto.curtidas || 0}</div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              {fotos.slice(3).length > 0 && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  {fotos.slice(3).map((foto, i) => (
+                    <div key={foto.id} className="recap-card" style={{ animationDelay: `${(i + 3) * 0.05}s`, position: 'relative', borderRadius: 14, overflow: 'hidden', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }} onClick={() => { setFotoAberta(foto); setConfirmDelete(false) }}>
+                      <img src={foto.url} alt="" loading="lazy" style={{ width: '100%', display: 'block' }} />
+                      <div style={{ position: 'absolute', top: 6, left: 6, background: 'rgba(0,0,0,0.72)', borderRadius: 6, padding: '2px 7px', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.85)' }}>#{i + 4}</div>
+                      <div style={{ padding: '6px 8px', background: 'rgba(0,0,0,0.65)' }}>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{foto.autor}</div>
+                        <div style={{ fontSize: 10, color: 'rgba(239,68,68,0.9)', fontWeight: 700 }}>❤️ {foto.curtidas || 0}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      ) : (
+        <>
+          <div style={{ padding: '0 22px 12px', fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>
+            {loading ? 'Carregando...' : `${fotosExibidas.length} foto${fotosExibidas.length !== 1 ? 's' : ''}${filtroAutor ? ` · ${filtroAutor}${todosOsDias ? ' · todos os dias' : ` · ${DIAS[diaSel].labelDia}`}` : ` · ${DIAS[diaSel].labelDia}`}`}
+          </div>
+
+          {!loading && fotosExibidas.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '60px 22px' }}>
+              <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.85 }}>📷</div>
+              <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 700, marginBottom: 6, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>{tx.nenhumaFoto}</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>Seja o primeiro a postar em {DIAS[diaSel].label}!</div>
             </div>
-          )
-        })}
-      </div>
+          )}
+
+          <div style={{ padding: '0 22px 100px', columnCount: 2, columnGap: 8 }}>
+            {fotosExibidas.map(foto => (
+              <div key={foto.id} onClick={() => (setFotoAberta(foto), setConfirmDelete(false))} style={{
+                breakInside: 'avoid', marginBottom: 8, borderRadius: 14, overflow: 'hidden',
+                cursor: 'pointer', position: 'relative',
+                border: '1px solid var(--border)', background: 'var(--bg-card)'
+              }}>
+                <img src={foto.url} alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block' }} />
+                <div style={{ padding: '6px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ flex: 1, minWidth: 0, marginRight: 4 }}>
+                    {foto.legenda && <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginBottom: 2, lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{foto.legenda}</div>}
+                    {foto.autor && <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 1 }}>{foto.autor}</div>}
+                    <div style={{ fontSize: 10, color: 'var(--text-faint)' }}>
+                      {new Date(foto.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                  <button onClick={e => { e.stopPropagation(); curtirFoto(foto) }} className="btn-curtida" style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 4, padding: '6px 4px', flexShrink: 0
+                  }}>
+                    <span style={{ fontSize: 22 }}>{curtidas.has(String(foto.id)) ? '❤️' : '🤍'}</span>
+                    {(foto.curtidas || 0) > 0 && <span style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 700 }}>{foto.curtidas}</span>}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       {fotoAberta && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 400, display: 'flex', flexDirection: 'column' }}>
