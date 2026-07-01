@@ -173,6 +173,15 @@ body::-webkit-scrollbar { display: none; }
   transition: transform 0.08s ease, filter 0.08s ease;
 }
 
+.btn-curtida {
+  transition: transform 0.2s cubic-bezier(.34,1.56,.64,1);
+  will-change: transform;
+}
+.btn-curtida:active {
+  transform: scale(1.3) !important;
+  transition: transform 0.08s ease;
+}
+
 .card-glass::before {
   content: '';
   position: absolute;

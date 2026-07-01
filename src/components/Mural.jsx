@@ -194,11 +194,18 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
 
   async function curtirFoto(foto) {
     const id = String(foto.id)
-    if (curtidas.has(id)) return
-    const novas = (foto.curtidas || 0) + 1
+    const jaCurtiu = curtidas.has(id)
+    const novas = jaCurtiu
+      ? Math.max(0, (foto.curtidas || 0) - 1)
+      : (foto.curtidas || 0) + 1
     await supabase.from('mural_fotos').update({ curtidas: novas }).eq('id', foto.id)
-    localStorage.setItem(`curtiu_${id}`, '1')
-    setCurtidas(prev => new Set([...prev, id]))
+    if (jaCurtiu) {
+      localStorage.removeItem(`curtiu_${id}`)
+      setCurtidas(prev => { const s = new Set(prev); s.delete(id); return s })
+    } else {
+      localStorage.setItem(`curtiu_${id}`, '1')
+      setCurtidas(prev => new Set([...prev, id]))
+    }
     setFotos(prev => prev.map(f => f.id === foto.id ? { ...f, curtidas: novas } : f))
     if (fotoAberta?.id === foto.id) setFotoAberta(prev => ({ ...prev, curtidas: novas }))
   }
@@ -356,12 +363,12 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
                     {new Date(foto.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
-                <button onClick={e => { e.stopPropagation(); curtirFoto(foto) }} style={{
+                <button onClick={e => { e.stopPropagation(); curtirFoto(foto) }} className="btn-curtida" style={{
                   background: 'none', border: 'none', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: 3, padding: '4px 2px', flexShrink: 0
+                  display: 'flex', alignItems: 'center', gap: 4, padding: '6px 4px', flexShrink: 0
                 }}>
-                  <span style={{ fontSize: 15 }}>{curtidas.has(String(foto.id)) ? '❤️' : '🤍'}</span>
-                  {(foto.curtidas || 0) > 0 && <span style={{ fontSize: 10, color: 'var(--text-faint)', fontWeight: 700 }}>{foto.curtidas}</span>}
+                  <span style={{ fontSize: 22 }}>{curtidas.has(String(foto.id)) ? '❤️' : '🤍'}</span>
+                  {(foto.curtidas || 0) > 0 && <span style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 700 }}>{foto.curtidas}</span>}
                 </button>
               </div>
             </div>
@@ -392,14 +399,14 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
                 📸 {fotoAberta.autor}
               </div>
             )}
-            <button onClick={() => curtirFoto(fotoAberta)} style={{
+            <button onClick={() => curtirFoto(fotoAberta)} className="btn-curtida" style={{
               marginLeft: 'auto', background: curtidas.has(String(fotoAberta.id)) ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.1)',
               border: curtidas.has(String(fotoAberta.id)) ? '1px solid rgba(239,68,68,0.4)' : '1px solid rgba(255,255,255,0.2)',
-              borderRadius: 14, padding: '8px 16px', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 6,
-              color: 'white', fontSize: 14, fontWeight: 600, fontFamily: 'Inter, sans-serif'
+              borderRadius: 14, padding: '12px 22px', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 8,
+              color: 'white', fontSize: 18, fontWeight: 600, fontFamily: 'Inter, sans-serif'
             }}>
-              <span>{curtidas.has(String(fotoAberta.id)) ? '❤️' : '🤍'}</span>
+              <span style={{ fontSize: 22 }}>{curtidas.has(String(fotoAberta.id)) ? '❤️' : '🤍'}</span>
               <span>{fotoAberta.curtidas || 0}</span>
             </button>
           </div>
