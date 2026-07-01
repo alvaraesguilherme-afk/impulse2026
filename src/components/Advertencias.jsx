@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 const NIVEIS_SUPERVISOR = ['maximo', 'alto', 'medio', 'basico']
 
 function CartaoAdv({ adv, onToggle, onConfirmar, onNegar, isSupervisor }) {
-  const hora = new Date(adv.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  const dataHora = new Date(adv.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 
   const aguardando = adv.status === 'aguardando'
   const negada = adv.status === 'negada'
@@ -42,7 +42,7 @@ function CartaoAdv({ adv, onToggle, onConfirmar, onNegar, isSupervisor }) {
             </div>
           )}
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span>🕐 {hora}</span>
+            <span>🕐 {dataHora}</span>
             {aguardando && <span style={{ color: '#EAB308', fontWeight: 700 }}>· Aguardando avaliação</span>}
             {negada && <span style={{ color: 'var(--text-muted)', fontWeight: 700 }}>· Não considerada</span>}
           </div>
