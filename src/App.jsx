@@ -102,7 +102,7 @@ function getSidebarItems(podeSupervisor, isAlvaraes) {
     podeSupervisor ? null : undefined,
     podeSupervisor ? { id: 'supervisor', label: 'Supervisor' } : undefined,
     isAlvaraes ? null : undefined,
-    isAlvaraes ? { id: 'admin', label: 'Painel Admin' } : undefined,
+    isAlvaraes ? { id: 'admin', label: 'Bloco de Senhas' } : undefined,
     { id: 'config', label: 'Configurações' },
   ].filter(item => item !== undefined)
 }
@@ -313,7 +313,7 @@ export default function App() {
   const nivel = sessao?.nivel
   const NIVEIS_SUPERVISOR = ['maximo', 'alto', 'basico']
   const podeSupervisor = NIVEIS_SUPERVISOR.includes(nivel)
-  const isAlvaraes = sessao?.nome === 'Alvarães'
+  const isAlvaraes = ['Alvarães', 'Alyson', 'Pr. Júnior', 'Caetano'].includes(sessao?.nome)
 
   const NAV = [
     { id: 'home', label: t.home },

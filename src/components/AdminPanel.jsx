@@ -42,8 +42,8 @@ export default function AdminPanel({ onVoltar }) {
     <div style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
         <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'var(--input-bg)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: 'none', color: 'var(--text)' }}>‹</button>
-        <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700 }}>Painel Admin</h2>
-        <div style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--text-faint)', fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase' }}>Só você vê isso</div>
+        <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700 }}>Bloco de Senhas</h2>
+        <div style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--text-faint)', fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase' }}>Acesso restrito</div>
       </div>
 
       <div style={{ padding: '20px 22px 100px' }}>

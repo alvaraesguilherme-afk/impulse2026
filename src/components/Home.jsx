@@ -172,7 +172,7 @@ export default function Home({ onNavegar, sessao }) {
     { id: 'midia', icon: '📹', nome: tx.midia, desc: tx.escalasEEquipe, grad: 'linear-gradient(145deg,rgba(120,53,15,0.55),rgba(245,158,11,0.55))', foto: '/pexels-brunomassao-2095597.jpg' },
     { id: 'mural', icon: '📸', nome: tx.feedImpulse, desc: tx.fotosDoStaff, grad: 'linear-gradient(145deg,rgba(131,24,67,0.55),rgba(236,72,153,0.55))', foto: '/pexels-alejandro-aznar-155337093-16055216.jpg' },
     { id: 'advertencias', icon: '⚠️', nome: 'Advertências', desc: 'Registro de advertências', grad: 'linear-gradient(145deg,rgba(120,20,20,0.55),rgba(220,38,38,0.55))', foto: '/istockphoto-2170470419-612x612.jpg' },
-    ...(sessao?.nome === 'Alvarães' ? [{ id: 'admin', icon: '🔐', nome: 'Painel Admin', desc: 'Perfis e senhas', grad: 'linear-gradient(145deg,rgba(15,23,42,0.8),rgba(30,41,59,0.8))' }] : []),
+    ...(['Alvarães', 'Alyson', 'Pr. Júnior', 'Caetano'].includes(sessao?.nome) ? [{ id: 'admin', icon: '🔐', nome: 'Bloco de Senhas', desc: 'Perfis e senhas', grad: 'linear-gradient(145deg,rgba(15,23,42,0.8),rgba(30,41,59,0.8))' }] : []),
   ]
   const modulosExibidos = modoRestrito ? modulos.filter(m => m.id === 'mural') : modulos
 
