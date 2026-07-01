@@ -445,7 +445,7 @@ export default function App() {
 
       {/* NAV BAR MOBILE */}
       {!isDesktop && (
-        <div style={{
+        <div className="nav-mobile" style={{
           position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
           width: '100%', maxWidth: 390, display: 'flex',
           background: 'var(--nav-bg)', backdropFilter: 'blur(24px) saturate(180%)',

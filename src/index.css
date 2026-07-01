@@ -182,6 +182,10 @@ body::-webkit-scrollbar { display: none; }
   transition: transform 0.08s ease;
 }
 
+body.foto-aberta .nav-mobile {
+  display: none !important;
+}
+
 .card-glass::before {
   content: '';
   position: absolute;

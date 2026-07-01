@@ -126,6 +126,15 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
 
   useEffect(() => { carregarFotos() }, [diaSel])
 
+  useEffect(() => {
+    if (fotoAberta) {
+      document.body.classList.add('foto-aberta')
+    } else {
+      document.body.classList.remove('foto-aberta')
+    }
+    return () => document.body.classList.remove('foto-aberta')
+  }, [fotoAberta])
+
   async function carregarFotos() {
     setLoading(true)
     const { data } = await supabase
@@ -379,73 +388,77 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
       </div>
 
       {fotoAberta && (
-        <div onClick={() => { setFotoAberta(null); setConfirmDelete(false) }} style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 300,
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          padding: 20
-        }}>
-          <button onClick={e => { e.stopPropagation(); setFotoAberta(null); setConfirmDelete(false) }} style={{
-            position: 'absolute', top: 20, right: 20, width: 36, height: 36,
-            background: 'rgba(255,255,255,0.1)', borderRadius: 12, border: 'none',
-            color: 'white', fontSize: 18, cursor: 'pointer', display: 'flex',
-            alignItems: 'center', justifyContent: 'center'
-          }}>✕</button>
-
-          <img src={fotoAberta.url} alt="" decoding="async" onClick={e => e.stopPropagation()} style={{
-            maxWidth: '100%', maxHeight: '70vh', borderRadius: 12, objectFit: 'contain'
-          }} />
-
-          <div onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 12 }}>
-            {fotoAberta.autor && (
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>
-                📸 {fotoAberta.autor}
-              </div>
-            )}
-            <button onClick={() => curtirFoto(fotoAberta)} className="btn-curtida" style={{
-              marginLeft: 'auto', background: curtidas.has(String(fotoAberta.id)) ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.1)',
-              border: curtidas.has(String(fotoAberta.id)) ? '1px solid rgba(239,68,68,0.4)' : '1px solid rgba(255,255,255,0.2)',
-              borderRadius: 14, padding: '12px 22px', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 8,
-              color: 'white', fontSize: 18, fontWeight: 600, fontFamily: 'Inter, sans-serif'
-            }}>
-              <span style={{ fontSize: 22 }}>{curtidas.has(String(fotoAberta.id)) ? '❤️' : '🤍'}</span>
-              <span>{fotoAberta.curtidas || 0}</span>
-            </button>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 400, display: 'flex', flexDirection: 'column' }}>
+          {/* Cabeçalho fixo — botão fechar sempre visível */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '14px 16px 0', flexShrink: 0 }}>
+            <button onClick={() => { setFotoAberta(null); setConfirmDelete(false) }} style={{
+              width: 36, height: 36, background: 'rgba(255,255,255,0.1)', borderRadius: 12,
+              border: 'none', color: 'white', fontSize: 18, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>✕</button>
           </div>
 
-          {fotoAberta.legenda && (
-            <div onClick={e => e.stopPropagation()} style={{ marginTop: 8, fontSize: 13, color: 'rgba(255,255,255,0.85)', textAlign: 'center', maxWidth: 300, lineHeight: 1.5 }}>
-              {fotoAberta.legenda}
-            </div>
-          )}
+          {/* Corpo scrollável */}
+          <div onClick={() => { setFotoAberta(null); setConfirmDelete(false) }} style={{
+            flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column',
+            alignItems: 'center', padding: '12px 20px 48px', gap: 12
+          }}>
+            <img src={fotoAberta.url} alt="" decoding="async" onClick={e => e.stopPropagation()} style={{
+              maxWidth: '100%', maxHeight: '60vh', borderRadius: 12, objectFit: 'contain'
+            }} />
 
-          {podeDeletar && (
-            <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: 12, marginTop: 12 }}>
-              {!confirmDelete ? (
-                <button onClick={() => setConfirmDelete(true)} style={{
-                  padding: '10px 20px', borderRadius: 14, border: '1px solid rgba(239,68,68,0.3)',
-                  background: 'rgba(239,68,68,0.15)', color: '#F87171',
-                  fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
-                }}>🗑️ Excluir</button>
-              ) : (
-                <>
-                  <button onClick={() => deletarFoto(fotoAberta)} style={{
-                    padding: '10px 20px', borderRadius: 14, border: 'none',
-                    background: '#EF4444', color: 'white',
-                    fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
-                  }}>{tx.confirmarExclusao}</button>
-                  <button onClick={() => setConfirmDelete(false)} style={{
-                    padding: '10px 20px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.15)',
-                    background: 'rgba(255,255,255,0.08)', color: 'white',
-                    fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
-                  }}>{tx.cancelar}</button>
-                </>
+            <div onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 16, width: '100%', maxWidth: 380 }}>
+              {fotoAberta.autor && (
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>
+                  📸 {fotoAberta.autor}
+                </div>
               )}
+              <button onClick={() => curtirFoto(fotoAberta)} className="btn-curtida" style={{
+                marginLeft: 'auto', background: curtidas.has(String(fotoAberta.id)) ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.1)',
+                border: curtidas.has(String(fotoAberta.id)) ? '1px solid rgba(239,68,68,0.4)' : '1px solid rgba(255,255,255,0.2)',
+                borderRadius: 14, padding: '12px 22px', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 8,
+                color: 'white', fontSize: 18, fontWeight: 600, fontFamily: 'Inter, sans-serif'
+              }}>
+                <span style={{ fontSize: 22 }}>{curtidas.has(String(fotoAberta.id)) ? '❤️' : '🤍'}</span>
+                <span>{fotoAberta.curtidas || 0}</span>
+              </button>
             </div>
-          )}
 
-          <div style={{ marginTop: 8, fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
-            Dia {DIAS[diaSel].num} · {new Date(fotoAberta.created_at).toLocaleString('pt-BR')}
+            {fotoAberta.legenda && (
+              <div onClick={e => e.stopPropagation()} style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', textAlign: 'center', maxWidth: 300, lineHeight: 1.5 }}>
+                {fotoAberta.legenda}
+              </div>
+            )}
+
+            {podeDeletar && (
+              <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: 12 }}>
+                {!confirmDelete ? (
+                  <button onClick={() => setConfirmDelete(true)} style={{
+                    padding: '10px 20px', borderRadius: 14, border: '1px solid rgba(239,68,68,0.3)',
+                    background: 'rgba(239,68,68,0.15)', color: '#F87171',
+                    fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
+                  }}>🗑️ Excluir</button>
+                ) : (
+                  <>
+                    <button onClick={() => deletarFoto(fotoAberta)} style={{
+                      padding: '10px 20px', borderRadius: 14, border: 'none',
+                      background: '#EF4444', color: 'white',
+                      fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
+                    }}>{tx.confirmarExclusao}</button>
+                    <button onClick={() => setConfirmDelete(false)} style={{
+                      padding: '10px 20px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.15)',
+                      background: 'rgba(255,255,255,0.08)', color: 'white',
+                      fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
+                    }}>{tx.cancelar}</button>
+                  </>
+                )}
+              </div>
+            )}
+
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
+              Dia {DIAS[diaSel].num} · {new Date(fotoAberta.created_at).toLocaleString('pt-BR')}
+            </div>
           </div>
         </div>
       )}
