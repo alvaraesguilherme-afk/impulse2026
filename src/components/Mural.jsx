@@ -185,11 +185,13 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
   }
 
   async function deletarFoto(foto) {
-    await supabase.storage.from('mural').remove([foto.arquivo])
-    await supabase.from('mural_fotos').delete().eq('id', foto.id)
     setFotoAberta(null)
     setConfirmDelete(false)
-    carregarFotos()
+    setFotos(prev => prev.filter(f => f.id !== foto.id))
+    await Promise.all([
+      supabase.storage.from('mural').remove([foto.arquivo]),
+      supabase.from('mural_fotos').delete().eq('id', foto.id)
+    ])
   }
 
   async function curtirFoto(foto) {
