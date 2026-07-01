@@ -13,7 +13,7 @@ function saveConvidado(nome, pin) {
   localStorage.setItem('impulse_convidados', JSON.stringify(c))
 }
 
-const LIMITE_DEVICES = { maximo: 2, alto: 2 }
+const LIMITE_DEVICES = { maximo: 2, alto: 2, 'Alvarães': 4 }
 
 const inputStyle = {
   width: '100%', padding: '13px 14px',
@@ -34,7 +34,7 @@ const EXPIRY_MS = 24 * 60 * 60 * 1000 // sessão expira após 24h sem uso
 
 async function verificarSessao(nome, nivel) {
   const deviceId = getDeviceId()
-  const limite = LIMITE_DEVICES[nivel] || 1
+  const limite = LIMITE_DEVICES[nome] ?? LIMITE_DEVICES[nivel] ?? 1
 
   const { data: sessoes } = await supabase
     .from('sessoes_ativas')
