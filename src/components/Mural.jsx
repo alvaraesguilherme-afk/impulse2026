@@ -340,7 +340,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
             </div>
           )}
         </div>
-      )}
+      ) : null}
 
       {!modoRecap && uploading && (
         <div style={{ padding: '0 22px 16px' }}>
