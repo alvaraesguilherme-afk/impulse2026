@@ -114,13 +114,9 @@ export default function Home({ onNavegar }) {
   const [fraseSenha, setFraseSenha] = useState('')
   const [fraseErro, setFraseErro] = useState('')
   const [fotoDestaque, setFotoDestaque] = useState(null)
-  const [votacao, setVotacao] = useState([])
-  const [jaVotou, setJaVotou] = useState(false)
 
   const diaEvento = getDiaEvento()
   const diaFrase = getDiaFrase()
-  const hora = new Date().getHours()
-  const emVotacao = hora === 23
 
   useEffect(() => {
     supabase.from('avisos').select('*').order('created_at', { ascending: false }).then(({ data }) => {
@@ -132,38 +128,8 @@ export default function Home({ onNavegar }) {
     if (diaEvento) {
       const diaDestaque = foraDoEvento() ? diaEvento : diaEvento - 1
       if (diaEvento > 1 || foraDoEvento()) {
-        supabase.from('foto_votacao').select('*').eq('dia', diaDestaque).order('votos', { ascending: false }).limit(1).then(({ data }) => {
-          if (data && data.length > 0 && data[0].votos > 0) setFotoDestaque(data[0])
-        })
-      }
-      const votouKey = `votou_dia_${diaEvento}`
-      if (localStorage.getItem(votouKey)) setJaVotou(true)
-      if (emVotacao) {
-        supabase.from('foto_votacao').select('*').eq('dia', diaEvento).order('created_at', { ascending: true }).then(({ data }) => {
-          if (data && data.length > 0) {
-            setVotacao(data)
-          } else {
-            // Monta o pool: fotos do dia atual + fotos do dia anterior postadas após 23:00
-            const buscarPool = async () => {
-              const [{ data: fotosHoje }, { data: fotasTarde }] = await Promise.all([
-                supabase.from('mural_fotos').select('*').eq('dia', diaEvento),
-                diaEvento > 1
-                  ? supabase.from('mural_fotos').select('*').eq('dia', diaEvento - 1)
-                      .gte('created_at', new Date(INICIO.getTime() + (diaEvento - 2) * 86400000 + 23 * 3600000).toISOString())
-                  : { data: [] }
-              ])
-              const pool = [...(fotosHoje || []), ...(fotasTarde || [])]
-              if (pool.length > 0) {
-                const embaralhado = [...pool].sort(() => Math.random() - 0.5)
-                const escolhidas = embaralhado.slice(0, Math.min(8, pool.length))
-                const rows = escolhidas.map(f => ({ dia: diaEvento, foto_url: f.url, votos: 0 }))
-                await supabase.from('foto_votacao').insert(rows)
-                const { data: vData } = await supabase.from('foto_votacao').select('*').eq('dia', diaEvento).order('created_at', { ascending: true })
-                if (vData) setVotacao(vData)
-              }
-            }
-            buscarPool()
-          }
+        supabase.from('mural_fotos').select('*').eq('dia', diaDestaque).order('curtidas', { ascending: false }).limit(1).then(({ data }) => {
+          if (data && data.length > 0 && (data[0].curtidas || 0) > 0) setFotoDestaque(data[0])
         })
       }
     }
@@ -197,19 +163,6 @@ export default function Home({ onNavegar }) {
     setFraseInput('')
     setShowFraseModal(false)
   }
-
-  async function votar(fotoId) {
-    if (jaVotou) return
-    const foto = votacao.find(f => f.id === fotoId)
-    if (!foto) return
-    await syncOp('update', 'foto_votacao', { values: { votos: (foto.votos || 0) + 1 }, filters: { id: fotoId } })
-    localStorage.setItem(`votou_dia_${diaEvento}`, fotoId)
-    setJaVotou(true)
-    setVotacao(prev => prev.map(f => f.id === fotoId ? { ...f, votos: (f.votos || 0) + 1 } : f))
-  }
-
-  const totalVotos = votacao.reduce((s, f) => s + (f.votos || 0), 0)
-  const votouEm = localStorage.getItem(`votou_dia_${diaEvento}`)
 
   const modulos = [
     { id: 'apoio', icon: '🦺', nome: tx.apoio, desc: tx.escalasETimes, grad: 'linear-gradient(145deg,rgba(76,29,149,0.55),rgba(124,58,237,0.55))', foto: '/pexels-bulat843-1243575272-37704234.jpg' },
@@ -302,46 +255,14 @@ export default function Home({ onNavegar }) {
             <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(245,158,11,0.6)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
               ⭐ Foto Destaque — Dia {fotoDestaque.dia}
             </div>
+            {fotoDestaque.autor && (
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>📸 {fotoDestaque.autor}</div>
+            )}
             <div style={{ borderRadius: 20, overflow: 'hidden', border: '2px solid rgba(245,158,11,0.3)' }}>
-              <img src={fotoDestaque.foto_url} alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block' }} />
+              <img src={fotoDestaque.url} alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block' }} />
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 6, textAlign: 'center' }}>
-              {fotoDestaque.votos} voto{fotoDestaque.votos !== 1 ? 's' : ''}
-            </div>
-          </div>
-        )}
-
-        {emVotacao && votacao.length > 0 && (
-          <div style={{ margin: '24px 22px 0' }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(236,72,153,0.6)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
-              📸 Vote na Foto do Dia {diaEvento}
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--text-faint)', marginBottom: 12 }}>
-              {jaVotou ? `Você já votou! ${totalVotos} voto${totalVotos !== 1 ? 's' : ''} no total` : tx.toqueFavorita}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
-              {votacao.map((foto) => {
-                const isVotada = votouEm === String(foto.id)
-                return (
-                  <div key={foto.id} onClick={() => votar(foto.id)} style={{
-                    borderRadius: 16, overflow: 'hidden', cursor: jaVotou ? 'default' : 'pointer',
-                    border: isVotada ? '2px solid #EC4899' : '1px solid var(--border)',
-                    position: 'relative'
-                  }}>
-                    <img src={foto.foto_url} alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block', aspectRatio: '1/1', objectFit: 'cover' }} />
-                    {jaVotou && (
-                      <div style={{
-                        position: 'absolute', bottom: 0, left: 0, right: 0,
-                        background: 'linear-gradient(transparent, rgba(0,0,0,0.8))',
-                        padding: '20px 10px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-                      }}>
-                        <span style={{ fontSize: 11, color: 'var(--text)', fontWeight: 700 }}>{foto.votos || 0} voto{(foto.votos || 0) !== 1 ? 's' : ''}</span>
-                        {isVotada && <span style={{ fontSize: 10, background: '#EC4899', color: 'var(--text)', padding: '2px 8px', borderRadius: 10, fontWeight: 700 }}>{tx.seuVoto}</span>}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
+              ❤️ {fotoDestaque.curtidas} curtida{fotoDestaque.curtidas !== 1 ? 's' : ''}
             </div>
           </div>
         )}

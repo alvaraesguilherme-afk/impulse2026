@@ -36,8 +36,8 @@ const INTROS = {
   ],
   mural: [
     { icon: '📸', title: 'Feed Impulse', desc: 'Poste fotos do evento e veja os melhores momentos do staff.' },
-    { icon: '🗳️', title: 'Vote na Favorita', desc: 'Escolha a sua foto favorita do dia.' },
-    { icon: '⭐', title: 'Foto Destaque', desc: 'A mais votada do dia aparece em destaque na tela inicial.' },
+    { icon: '❤️', title: 'Curta as Fotos', desc: 'Toque no coração para curtir as fotos dos seus colegas.' },
+    { icon: '⭐', title: 'Foto Destaque', desc: 'A foto mais curtida do dia aparece em destaque na tela inicial no dia seguinte.' },
     { icon: '🙏', title: 'Só um recado...', desc: 'Saiba apenas que o Feed aguenta até 2.000 fotos.' },
     { icon: '🗑️', title: 'Moderação', desc: 'Coordenadores podem excluir fotos que não convém. Basta tocar na foto e escolher excluir.' },
   ],

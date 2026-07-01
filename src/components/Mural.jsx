@@ -64,15 +64,33 @@ const STAFF_NOMES = [
 const MOSAICO_GLOB = import.meta.glob('/src/assets/mosaico/*.{jpg,jpeg,jfif,png,webp,JPG,JPEG,JFIF,PNG,WEBP}', { eager: true })
 const MOSAICO_FOTOS = Object.values(MOSAICO_GLOB).map(m => m.default)
 
+const COLUNAS_MOSAICO = 3
 function buildMosaico(fotos) {
   if (!fotos.length) return []
-  const alvo = Math.min(Math.max(fotos.length, 36), 150)
+  const alvo = 252 // múltiplo de 3 pra fechar igualmente as colunas
+  // distMin >= alvo/3 garante que a mesma foto nunca cai na mesma linha visual
+  const distMin = Math.max(Math.ceil(alvo / COLUNAS_MOSAICO), fotos.length)
   const result = []
+  const ultimaPos = new Array(fotos.length).fill(-distMin - 1)
+
   while (result.length < alvo) {
-    const embaralhado = [...fotos].sort(() => Math.random() - 0.5)
-    result.push(...embaralhado)
+    const pos = result.length
+    let candidatos = fotos
+      .map((f, i) => ({ f, i }))
+      .filter(({ i }) => pos - ultimaPos[i] >= distMin)
+    if (candidatos.length === 0) {
+      // sem candidatos ideais: pega os 20% mais antigos para manter variedade
+      candidatos = fotos
+        .map((f, i) => ({ f, i }))
+        .sort((a, b) => ultimaPos[a.i] - ultimaPos[b.i])
+        .slice(0, Math.max(1, Math.ceil(fotos.length * 0.2)))
+    }
+    const { f, i } = candidatos[Math.floor(Math.random() * candidatos.length)]
+    result.push(f)
+    ultimaPos[i] = pos
   }
-  return result.slice(0, alvo)
+
+  return result
 }
 const MOSAICO_TILES = buildMosaico(MOSAICO_FOTOS)
 
@@ -93,6 +111,14 @@ export default function Mural({ onVoltar }) {
   const [showNomePicker, setShowNomePicker] = useState(false)
   const [pendingFile, setPendingFile] = useState(null)
   const [autorSelecionado, setAutorSelecionado] = useState(() => localStorage.getItem('mural_autor') || '')
+  const [curtidas, setCurtidas] = useState(() => {
+    const set = new Set()
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i)
+      if (k?.startsWith('curtiu_')) set.add(k.replace('curtiu_', ''))
+    }
+    return set
+  })
   const [filtroAutor, setFiltroAutor] = useState('')
   const [modoTeste, setModoTeste] = useState(false)
   const [showSenhaTeste, setShowSenhaTeste] = useState(false)
@@ -174,11 +200,20 @@ export default function Mural({ onVoltar }) {
   async function deletarFoto(foto) {
     await supabase.storage.from('mural').remove([foto.arquivo])
     await supabase.from('mural_fotos').delete().eq('id', foto.id)
-    await supabase.from('foto_votacao').delete().eq('foto_url', foto.url)
     setFotoAberta(null)
     setConfirmDelete(false)
     carregarFotos()
-    checarVotacao()
+  }
+
+  async function curtirFoto(foto) {
+    const id = String(foto.id)
+    if (curtidas.has(id)) return
+    const novas = (foto.curtidas || 0) + 1
+    await supabase.from('mural_fotos').update({ curtidas: novas }).eq('id', foto.id)
+    localStorage.setItem(`curtiu_${id}`, '1')
+    setCurtidas(prev => new Set([...prev, id]))
+    setFotos(prev => prev.map(f => f.id === foto.id ? { ...f, curtidas: novas } : f))
+    if (fotoAberta?.id === foto.id) setFotoAberta(prev => ({ ...prev, curtidas: novas }))
   }
 
   function trocarAutor() {
@@ -333,11 +368,20 @@ export default function Mural({ onVoltar }) {
               background: 'var(--bg-card)'
             }}>
               <img src={foto.url} alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block' }} />
-              <div style={{ padding: '8px 10px' }}>
-                {foto.autor && <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 2 }}>{foto.autor}</div>}
-                <div style={{ fontSize: 10, color: 'var(--text-faint)' }}>
-                  {new Date(foto.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+              <div style={{ padding: '6px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  {foto.autor && <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 1 }}>{foto.autor}</div>}
+                  <div style={{ fontSize: 10, color: 'var(--text-faint)' }}>
+                    {new Date(foto.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                  </div>
                 </div>
+                <button onClick={e => { e.stopPropagation(); curtirFoto(foto) }} style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 3, padding: '4px 2px', flexShrink: 0
+                }}>
+                  <span style={{ fontSize: 15 }}>{curtidas.has(String(foto.id)) ? '❤️' : '🤍'}</span>
+                  {(foto.curtidas || 0) > 0 && <span style={{ fontSize: 10, color: 'var(--text-faint)', fontWeight: 700 }}>{foto.curtidas}</span>}
+                </button>
               </div>
             </div>
           )
@@ -361,11 +405,23 @@ export default function Mural({ onVoltar }) {
             maxWidth: '100%', maxHeight: '70vh', borderRadius: 12, objectFit: 'contain'
           }} />
 
-          {fotoAberta.autor && (
-            <div style={{ marginTop: 12, fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>
-              📸 {fotoAberta.autor}
-            </div>
-          )}
+          <div onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 12 }}>
+            {fotoAberta.autor && (
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>
+                📸 {fotoAberta.autor}
+              </div>
+            )}
+            <button onClick={() => curtirFoto(fotoAberta)} style={{
+              marginLeft: 'auto', background: curtidas.has(String(fotoAberta.id)) ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.1)',
+              border: curtidas.has(String(fotoAberta.id)) ? '1px solid rgba(239,68,68,0.4)' : '1px solid rgba(255,255,255,0.2)',
+              borderRadius: 14, padding: '8px 16px', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 6,
+              color: 'white', fontSize: 14, fontWeight: 600, fontFamily: 'Inter, sans-serif'
+            }}>
+              <span>{curtidas.has(String(fotoAberta.id)) ? '❤️' : '🤍'}</span>
+              <span>{fotoAberta.curtidas || 0}</span>
+            </button>
+          </div>
 
           {podeDeletar && (
             <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: 12, marginTop: 12 }}>
