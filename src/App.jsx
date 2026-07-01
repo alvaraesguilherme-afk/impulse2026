@@ -373,7 +373,7 @@ export default function App() {
           {tela === 'supervisor' && <Supervisor onVoltar={voltar} nome={supervisorNome} abas={ABAS_SUPERVISOR[supervisorNome] || []} />}
           {tela === 'mural' && <Mural onVoltar={voltar} autor={sessao?.nome} />}
           {tela === 'midia' && <Midia onVoltar={voltar} sessao={sessao} />}
-          {tela === 'programacao' && <Programacao onVoltar={voltar} />}
+          {tela === 'programacao' && <Programacao onVoltar={voltar} sessao={sessao} />}
           {tela === 'config' && <Config onVoltar={voltar} tema={tema} setTema={setTema} idioma={idioma} setIdioma={setIdioma} sessao={sessao} onLogout={fazerLogout} />}
         </div>
       </div>
