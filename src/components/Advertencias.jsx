@@ -278,18 +278,6 @@ export default function Advertencias({ onVoltar, sessao }) {
           </div>
         ) : (
           <>
-            {/* Em avaliação */}
-            {aguardando.length > 0 && (
-              <div style={{ marginBottom: 24 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: '#EAB308', marginBottom: 12 }}>
-                  Em avaliação · {aguardando.length}
-                </div>
-                {aguardando.map(adv => (
-                  <CartaoAdv key={adv.id} adv={adv} onToggle={togglePago} onConfirmar={confirmarAdvertencia} onNegar={negarAdvertencia} isSupervisor={isSupervisor} />
-                ))}
-              </div>
-            )}
-
             {/* Pendentes */}
             {pendentes.length > 0 && (
               <div style={{ marginBottom: 24 }}>
@@ -297,6 +285,18 @@ export default function Advertencias({ onVoltar, sessao }) {
                   Pendentes · {pendentes.length}
                 </div>
                 {pendentes.map(adv => (
+                  <CartaoAdv key={adv.id} adv={adv} onToggle={togglePago} onConfirmar={confirmarAdvertencia} onNegar={negarAdvertencia} isSupervisor={isSupervisor} />
+                ))}
+              </div>
+            )}
+
+            {/* Em avaliação */}
+            {aguardando.length > 0 && (
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: '#EAB308', marginBottom: 12 }}>
+                  Em avaliação · {aguardando.length}
+                </div>
+                {aguardando.map(adv => (
                   <CartaoAdv key={adv.id} adv={adv} onToggle={togglePago} onConfirmar={confirmarAdvertencia} onNegar={negarAdvertencia} isSupervisor={isSupervisor} />
                 ))}
               </div>
