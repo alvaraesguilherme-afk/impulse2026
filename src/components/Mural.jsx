@@ -66,7 +66,7 @@ const MOSAICO_FOTOS = Object.values(MOSAICO_GLOB).map(m => m.default)
 const COLUNAS_MOSAICO = 3
 function buildMosaico(fotos) {
   if (!fotos.length) return []
-  const alvo = 252 // múltiplo de 3 pra fechar igualmente as colunas
+  const alvo = 180 // múltiplo de 3 pra fechar igualmente as colunas
   // distMin >= alvo/3 garante que a mesma foto nunca cai na mesma linha visual
   const distMin = Math.max(Math.ceil(alvo / COLUNAS_MOSAICO), fotos.length)
   const result = []
@@ -119,27 +119,8 @@ export default function Mural({ onVoltar, autor }) {
   const [modoTeste, setModoTeste] = useState(false)
   const inputGaleria = useRef(null)
   const inputCamera = useRef(null)
-  const parallaxRef = useRef(null)
-  const [mosaicoAltura, setMosaicoAltura] = useState(0)
 
   useEffect(() => { carregarFotos() }, [diaSel])
-
-  useEffect(() => {
-    function onScroll() {
-      if (parallaxRef.current) {
-        parallaxRef.current.style.transform = `translateY(${window.scrollY * 0.25}px)`
-      }
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
-  function medirAltura() {
-    if (parallaxRef.current) {
-      const h = parallaxRef.current.offsetHeight
-      if (h > 0) setMosaicoAltura(h)
-    }
-  }
 
   async function carregarFotos() {
     setLoading(true)
@@ -204,23 +185,22 @@ export default function Mural({ onVoltar, autor }) {
   const autoresUnicos = [...new Set(fotos.map(f => f.autor).filter(Boolean))]
 
   return (
-    <div style={{ background: 'var(--bg-tela)', minHeight: mosaicoAltura > 0 ? mosaicoAltura : '100vh', position: 'relative' }}>
+    <div style={{ background: '#05051a', minHeight: '100vh', position: 'relative' }}>
       {MOSAICO_FOTOS.length > 0 && (
-        <div ref={parallaxRef} style={{
+        <div style={{
           position: 'absolute', top: 0, left: 0, right: 0,
-          columnCount: 3, columnGap: 3,
-          zIndex: 0, willChange: 'transform'
+          columnCount: 3, columnGap: 3, zIndex: 0
         }}>
           {MOSAICO_TILES.map((src, i) => (
-            <img key={i} src={src} alt="" onLoad={medirAltura} loading={i < 9 ? 'eager' : 'lazy'} decoding="async" style={{ width: '100%', display: 'block', marginBottom: 3, breakInside: 'avoid' }} />
+            <img key={i} src={src} alt="" loading={i < 9 ? 'eager' : 'lazy'} decoding="async" style={{ width: '100%', display: 'block', marginBottom: 3, breakInside: 'avoid' }} />
           ))}
         </div>
       )}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '140%', background: 'rgba(5,5,20,0.78)', zIndex: 0 }} />
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(5,5,20,0.70)', zIndex: 0 }} />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
-        <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'rgba(8,8,20,0.65)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.25)', color: '#fff' }}>‹</button>
+        <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'rgba(8,8,20,0.88)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}>‹</button>
         <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>{tx.feedImpulse}</h2>
         {autor && (
           <div style={{
@@ -235,9 +215,8 @@ export default function Mural({ onVoltar, autor }) {
         {DIAS.map((d, i) => (
           <button key={i} onClick={() => { setDiaSel(i); setFiltroAutor('') }} style={{
             flexShrink: 0, padding: '8px 14px', borderRadius: 16,
-            border: diaSel === i ? '1px solid var(--accent-border)' : '1px solid rgba(255,255,255,0.25)',
-            background: diaSel === i ? 'var(--accent-bg)' : 'rgba(8,8,20,0.65)',
-            backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+            border: diaSel === i ? '1px solid var(--accent-border)' : '1px solid rgba(255,255,255,0.2)',
+            background: diaSel === i ? 'var(--accent-bg)' : 'rgba(8,8,20,0.88)',
             color: diaSel === i ? 'var(--accent-light)' : 'rgba(255,255,255,0.9)',
             fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2
@@ -269,7 +248,7 @@ export default function Mural({ onVoltar, autor }) {
         </div>
       ) : (
         <div style={{ padding: '0 22px 16px' }}>
-          <div style={{ padding: '12px 14px', borderRadius: 14, background: 'rgba(8,8,20,0.65)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.25)', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.9)', textAlign: 'center' }}>
+          <div style={{ padding: '12px 14px', borderRadius: 14, background: 'rgba(8,8,20,0.88)', border: '1px solid rgba(255,255,255,0.2)', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.9)', textAlign: 'center' }}>
             📷 {tx.uploadDisponivel}
           </div>
           {autor === 'Alvarães' && (
@@ -295,17 +274,15 @@ export default function Mural({ onVoltar, autor }) {
         <div style={{ display: 'flex', gap: 6, padding: '0 22px 12px', overflowX: 'auto', scrollbarWidth: 'none' }}>
           <button onClick={() => setFiltroAutor('')} style={{
             flexShrink: 0, padding: '5px 12px', borderRadius: 14, fontSize: 10, fontWeight: 700, cursor: 'pointer',
-            border: !filtroAutor ? '1px solid var(--accent-border)' : '1px solid rgba(255,255,255,0.25)',
-            background: !filtroAutor ? 'var(--accent-bg)' : 'rgba(8,8,20,0.65)',
-            backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+            border: !filtroAutor ? '1px solid var(--accent-border)' : '1px solid rgba(255,255,255,0.2)',
+            background: !filtroAutor ? 'var(--accent-bg)' : 'rgba(8,8,20,0.88)',
             color: !filtroAutor ? 'var(--accent-light)' : 'rgba(255,255,255,0.9)', fontFamily: 'Inter, sans-serif'
           }}>{tx.todos}</button>
           {autoresUnicos.map(a => (
             <button key={a} onClick={() => setFiltroAutor(a)} style={{
               flexShrink: 0, padding: '5px 12px', borderRadius: 14, fontSize: 10, fontWeight: 700, cursor: 'pointer',
-              border: filtroAutor === a ? '1px solid var(--accent-border)' : '1px solid rgba(255,255,255,0.25)',
-              background: filtroAutor === a ? 'var(--accent-bg)' : 'rgba(8,8,20,0.65)',
-              backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+              border: filtroAutor === a ? '1px solid var(--accent-border)' : '1px solid rgba(255,255,255,0.2)',
+              background: filtroAutor === a ? 'var(--accent-bg)' : 'rgba(8,8,20,0.88)',
               color: filtroAutor === a ? 'var(--accent-light)' : 'rgba(255,255,255,0.9)', fontFamily: 'Inter, sans-serif'
             }}>{a}</button>
           ))}

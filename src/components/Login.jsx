@@ -125,7 +125,7 @@ export default function Login({ onLogin, mensagem }) {
       return
     }
 
-    setTimeout(() => onLogin({ nome: nomeSel, nivel }), 400)
+    onLogin({ nome: nomeSel, nivel })
   }
 
   async function forcarLogin() {
@@ -137,7 +137,7 @@ export default function Login({ onLogin, mensagem }) {
       { nome: bloqueadoInfo.nome, device_id: deviceId, updated_at: new Date().toISOString() },
       { onConflict: 'nome,device_id' }
     )
-    setTimeout(() => onLogin({ nome: bloqueadoInfo.nome, nivel: bloqueadoInfo.nivel }), 400)
+    onLogin({ nome: bloqueadoInfo.nome, nivel: bloqueadoInfo.nivel })
   }
 
   async function cadastrar() {
