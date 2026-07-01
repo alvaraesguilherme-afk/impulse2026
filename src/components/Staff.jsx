@@ -14,16 +14,19 @@ const STAFF_AREAS = [
   { area: '📦 Logística', nomes: ['Edson Jr.'] },
 ]
 
-function BackBtn({ onVoltar, titulo }) {
+function BackBtn({ onVoltar, titulo, onAjuda }) {
   return (
     <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
       <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'var(--input-bg)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: 'none', color: 'var(--text)' }}>‹</button>
       <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700 }}>{titulo}</h2>
+      {onAjuda && (
+        <button onClick={onAjuda} style={{ marginLeft: 'auto', width: 32, height: 32, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>?</button>
+      )}
     </div>
   )
 }
 
-export default function Staff({ onVoltar }) {
+export default function Staff({ onVoltar, onAjuda }) {
   const tx = useTexto()
   const [convidados, setConvidados] = useState([])
 
@@ -35,7 +38,7 @@ export default function Staff({ onVoltar }) {
 
   return (
     <div style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
-      <BackBtn onVoltar={onVoltar} titulo={tx.staff} />
+      <BackBtn onVoltar={onVoltar} titulo={tx.staff} onAjuda={onAjuda} />
       <div style={{ padding: '24px 22px 100px' }}>
         {STAFF_AREAS.filter(s => s.nomes.length > 0).map(s => (
           <div key={s.area} style={{ marginBottom: 24 }}>

@@ -41,16 +41,19 @@ function getTurno(eq, data) {
 
 const dias = Array.from({ length: 11 }, (_, i) => new Date(INICIO.getTime() + i * 86400000))
 
-function BackBtn({ onVoltar, titulo }) {
+function BackBtn({ onVoltar, titulo, onAjuda }) {
   return (
     <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
       <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'var(--input-bg)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: 'none', color: 'var(--text)' }}>‹</button>
       <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700 }}>{titulo}</h2>
+      {onAjuda && (
+        <button onClick={onAjuda} style={{ marginLeft: 'auto', width: 32, height: 32, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>?</button>
+      )}
     </div>
   )
 }
 
-export default function Apoio({ onVoltar, sessao }) {
+export default function Apoio({ onVoltar, sessao, onAjuda }) {
   const tx = useTexto()
   const [aba, setAba] = useState('times')
   const [lider] = useState(() => LIDERES_CHAMADA.find(l => l.nome === sessao?.nome) || null)
@@ -94,7 +97,7 @@ export default function Apoio({ onVoltar, sessao }) {
 
   return (
     <div style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
-      <BackBtn onVoltar={onVoltar} titulo={tx.escalasDeServico} />
+      <BackBtn onVoltar={onVoltar} titulo={tx.escalasDeServico} onAjuda={onAjuda} />
       <div style={{ display: 'flex', gap: 8, padding: '16px 22px', overflowX: 'auto', scrollbarWidth: 'none' }}>
         {[{id:'times',label:`👥 ${tx.times}`},{id:'escalas',label:`📅 ${tx.escalas}`},LIDERES_CHAMADA.some(l => l.nome === sessao?.nome) && {id:'chamada',label:`📋 ${tx.chamada}`}].filter(Boolean).map(a => (
           <button key={a.id} onClick={() => setAba(a.id)} style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 20, border: '1px solid var(--border-strong)', background: aba === a.id ? 'var(--accent-glow)' : 'var(--bg-card)', color: aba === a.id ? 'var(--accent-light)' : 'var(--text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>

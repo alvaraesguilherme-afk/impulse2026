@@ -32,6 +32,13 @@ function foraDoEvento() {
   return diff < 0 || diff > 10
 }
 
+function isPosEventoFinal() {
+  const hj = new Date()
+  hj.setHours(0, 0, 0, 0)
+  const diff = Math.round((hj.getTime() - INICIO.getTime()) / 86400000)
+  return diff > 11  // July 27+
+}
+
 function useContador() {
   const [agora, setAgora] = useState(new Date())
   useEffect(() => {
@@ -39,7 +46,6 @@ function useContador() {
     return () => clearInterval(t)
   }, [])
   const diff = INICIO.getTime() - agora.getTime()
-  const diffFim = agora.getTime() - FIM.getTime()
   if (diff > 0) {
     const d = Math.floor(diff / 86400000)
     const h = Math.floor((diff % 86400000) / 3600000)
@@ -47,10 +53,9 @@ function useContador() {
     const s = Math.floor((diff % 60000) / 1000)
     return { fase: 'antes', dias: d, horas: h, minutos: m, segundos: s }
   }
-  if (diffFim <= 0) {
-    const diaAtual = Math.floor((agora.getTime() - INICIO.getTime()) / 86400000) + 1
-    return { fase: 'durante', diaAtual, totalDias: 11 }
-  }
+  const diasPassados = Math.floor((agora.getTime() - INICIO.getTime()) / 86400000)
+  if (diasPassados <= 10) return { fase: 'durante', diaAtual: diasPassados + 1, totalDias: 11 }
+  if (diasPassados === 11) return { fase: 'diversao' }
   return { fase: 'depois' }
 }
 
@@ -83,11 +88,20 @@ function ContadorSection() {
       </div>
     )
   }
+  if (contador.fase === 'diversao') {
+    return (
+      <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 20, padding: '20px 18px', textAlign: 'center' }}>
+        <div style={{ fontSize: 32, marginBottom: 10 }}>🎉</div>
+        <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 17, fontWeight: 700, color: 'var(--accent-light)', lineHeight: 1.4 }}>Hoje é o nosso dia de diversão!</div>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>Aproveite cada momento.</div>
+      </div>
+    )
+  }
   return (
-    <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 20, padding: '18px', textAlign: 'center' }}>
-      <div style={{ fontSize: 28, marginBottom: 8 }}>💜</div>
-      <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, color: 'var(--accent-light)' }}>{tx.saudades}</div>
-      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>{tx.saudadesMsg}</div>
+    <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 20, padding: '20px 18px', textAlign: 'center' }}>
+      <div style={{ fontSize: 32, marginBottom: 10 }}>💜</div>
+      <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 17, fontWeight: 700, color: 'var(--accent-light)', lineHeight: 1.4 }}>Esta foi a nossa escola.</div>
+      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8, lineHeight: 1.6 }}>Obrigado por servir conosco.<br />Aguardamos na escola de 2027.</div>
     </div>
   )
 }
@@ -107,6 +121,8 @@ export default function Home({ onNavegar, sessao }) {
   const podeEditarFrase = !!frase && nivelMaximo
   const fraseClicavel = podeEscreverFrase || podeEditarFrase
   const podeSupervisor = ['maximo', 'alto', 'basico'].includes(sessao?.nivel)
+  const temAcessoPleno = NIVEIS_SUPERVISOR.includes(sessao?.nivel)
+  const modoRestrito = isPosEventoFinal() && !temAcessoPleno
 
   const diaEvento = getDiaEvento()
   const diaFrase = getDiaFrase()
@@ -156,6 +172,7 @@ export default function Home({ onNavegar, sessao }) {
     { id: 'midia', icon: '📹', nome: tx.midia, desc: tx.escalasEEquipe, grad: 'linear-gradient(145deg,rgba(120,53,15,0.55),rgba(245,158,11,0.55))', foto: '/pexels-brunomassao-2095597.jpg' },
     { id: 'mural', icon: '📸', nome: tx.feedImpulse, desc: tx.fotosDoStaff, grad: 'linear-gradient(145deg,rgba(131,24,67,0.55),rgba(236,72,153,0.55))', foto: '/pexels-alejandro-aznar-155337093-16055216.jpg' },
   ]
+  const modulosExibidos = modoRestrito ? modulos.filter(m => m.id === 'mural') : modulos
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-app)', position: 'relative', overflow: 'hidden' }}>
@@ -180,7 +197,7 @@ export default function Home({ onNavegar, sessao }) {
           <ContadorSection />
         </div>
 
-        {diaEvento && (
+        {!modoRestrito && diaEvento && (
           <div onClick={abrirFraseModal} style={{
             margin: '24px 22px 0', borderRadius: 20, padding: '20px 18px',
             background: 'var(--accent-bg)', border: '1px solid var(--accent-border)',
@@ -201,7 +218,7 @@ export default function Home({ onNavegar, sessao }) {
           </div>
         )}
 
-        {avisos.length > 0 && (
+        {!modoRestrito && avisos.length > 0 && (
           <div style={{ margin: '24px 22px 0', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 16, padding: 14, display: 'flex', alignItems: 'center', gap: 12, cursor: podeSupervisor ? 'pointer' : 'default' }} onClick={() => podeSupervisor && onNavegar('supervisor')}>
             <div style={{ fontSize: 20 }}>📢</div>
             <div style={{ flex: 1 }}>
@@ -213,7 +230,7 @@ export default function Home({ onNavegar, sessao }) {
         )}
         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: 2, textTransform: 'uppercase', padding: '24px 22px 14px' }}>{tx.modulos}</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, padding: '0 22px' }}>
-          {modulos.map(m => (
+          {modulosExibidos.map(m => (
             <div key={m.id} onClick={() => { vibrar(); onNavegar(m.id) }} className="card-modulo card-glass"
               style={{
                 height: 140, borderRadius: 24, padding: 18,
@@ -236,7 +253,7 @@ export default function Home({ onNavegar, sessao }) {
           ))}
         </div>
 
-        {fotoDestaque && (
+        {!modoRestrito && fotoDestaque && (
           <div style={{ margin: '24px 22px 0' }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(245,158,11,0.6)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
               ⭐ Foto Destaque — Dia {fotoDestaque.dia}

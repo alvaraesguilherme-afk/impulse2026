@@ -99,7 +99,7 @@ function podeMuralPostar() {
   return hj >= MURAL_INICIO && hj <= MURAL_FIM
 }
 
-export default function Mural({ onVoltar, autor }) {
+export default function Mural({ onVoltar, autor, onAjuda }) {
   const tx = useTexto()
   const [diaSel, setDiaSel] = useState(getDiaAtual)
   const [fotos, setFotos] = useState([])
@@ -117,6 +117,10 @@ export default function Mural({ onVoltar, autor }) {
   })
   const [filtroAutor, setFiltroAutor] = useState('')
   const [modoTeste, setModoTeste] = useState(false)
+  const [pendingFile, setPendingFile] = useState(null)
+  const [pendingPreview, setPendingPreview] = useState(null)
+  const [pendingLegenda, setPendingLegenda] = useState('')
+  const [showLegendaModal, setShowLegendaModal] = useState(false)
   const inputGaleria = useRef(null)
   const inputCamera = useRef(null)
 
@@ -137,10 +141,34 @@ export default function Mural({ onVoltar, autor }) {
     const file = e.target.files?.[0]
     if (!file) return
     e.target.value = ''
-    uploadFoto(file, autor || 'Anônimo')
+    const previewUrl = URL.createObjectURL(file)
+    setPendingFile(file)
+    setPendingPreview(previewUrl)
+    setPendingLegenda('')
+    setShowLegendaModal(true)
   }
 
-  async function uploadFoto(file, autor) {
+  function publicarFoto() {
+    if (!pendingFile) return
+    setShowLegendaModal(false)
+    const file = pendingFile
+    const legenda = pendingLegenda.trim()
+    if (pendingPreview) URL.revokeObjectURL(pendingPreview)
+    setPendingFile(null)
+    setPendingPreview(null)
+    setPendingLegenda('')
+    uploadFoto(file, autor || 'Anônimo', legenda)
+  }
+
+  function cancelarUpload() {
+    setShowLegendaModal(false)
+    if (pendingPreview) URL.revokeObjectURL(pendingPreview)
+    setPendingFile(null)
+    setPendingPreview(null)
+    setPendingLegenda('')
+  }
+
+  async function uploadFoto(file, autorNome, legenda) {
     setUploading(true)
     try {
       const blob = await comprimirImagem(file)
@@ -148,7 +176,7 @@ export default function Mural({ onVoltar, autor }) {
       const { error } = await supabase.storage.from('mural').upload(nome, blob, { contentType: 'image/jpeg' })
       if (error) throw error
       const { data: urlData } = supabase.storage.from('mural').getPublicUrl(nome)
-      await supabase.from('mural_fotos').insert({ dia: DIAS[diaSel].num, url: urlData.publicUrl, arquivo: nome, autor })
+      await supabase.from('mural_fotos').insert({ dia: DIAS[diaSel].num, url: urlData.publicUrl, arquivo: nome, autor: autorNome, legenda: legenda || null })
       await carregarFotos()
     } catch (err) {
       console.error('Erro no upload:', err)
@@ -202,13 +230,14 @@ export default function Mural({ onVoltar, autor }) {
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
         <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'rgba(8,8,20,0.88)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}>‹</button>
         <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>{tx.feedImpulse}</h2>
-        {autor && (
-          <div style={{
-            marginLeft: 'auto', padding: '4px 10px', borderRadius: 10,
-            background: 'var(--accent-bg)', border: '1px solid var(--accent-glow)',
-            color: 'var(--accent-light)', fontSize: 10, fontWeight: 600, fontFamily: 'Inter, sans-serif'
-          }}>{autor}</div>
-        )}
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+          {autor && (
+            <div style={{ padding: '4px 10px', borderRadius: 10, background: 'var(--accent-bg)', border: '1px solid var(--accent-glow)', color: 'var(--accent-light)', fontSize: 10, fontWeight: 600, fontFamily: 'Inter, sans-serif' }}>{autor}</div>
+          )}
+          {onAjuda && (
+            <button onClick={onAjuda} style={{ width: 32, height: 32, background: 'rgba(8,8,20,0.88)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: 700 }}>?</button>
+          )}
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: 6, padding: '16px 22px', overflowX: 'auto', scrollbarWidth: 'none' }}>
@@ -270,7 +299,7 @@ export default function Mural({ onVoltar, autor }) {
         </div>
       )}
 
-      {autoresUnicos.length > 1 && (
+      {(autor || autoresUnicos.length > 1) && (
         <div style={{ display: 'flex', gap: 6, padding: '0 22px 12px', overflowX: 'auto', scrollbarWidth: 'none' }}>
           <button onClick={() => setFiltroAutor('')} style={{
             flexShrink: 0, padding: '5px 12px', borderRadius: 14, fontSize: 10, fontWeight: 700, cursor: 'pointer',
@@ -278,7 +307,15 @@ export default function Mural({ onVoltar, autor }) {
             background: !filtroAutor ? 'var(--accent-bg)' : 'rgba(8,8,20,0.88)',
             color: !filtroAutor ? 'var(--accent-light)' : 'rgba(255,255,255,0.9)', fontFamily: 'Inter, sans-serif'
           }}>{tx.todos}</button>
-          {autoresUnicos.map(a => (
+          {autor && (
+            <button onClick={() => setFiltroAutor(autor)} style={{
+              flexShrink: 0, padding: '5px 12px', borderRadius: 14, fontSize: 10, fontWeight: 700, cursor: 'pointer',
+              border: filtroAutor === autor ? '1px solid var(--accent-border)' : '1px solid rgba(255,255,255,0.2)',
+              background: filtroAutor === autor ? 'var(--accent-bg)' : 'rgba(8,8,20,0.88)',
+              color: filtroAutor === autor ? 'var(--accent-light)' : 'rgba(255,255,255,0.9)', fontFamily: 'Inter, sans-serif'
+            }}>👤 Minhas</button>
+          )}
+          {autoresUnicos.filter(a => a !== autor).map(a => (
             <button key={a} onClick={() => setFiltroAutor(a)} style={{
               flexShrink: 0, padding: '5px 12px', borderRadius: 14, fontSize: 10, fontWeight: 700, cursor: 'pointer',
               border: filtroAutor === a ? '1px solid var(--accent-border)' : '1px solid rgba(255,255,255,0.2)',
@@ -312,7 +349,8 @@ export default function Mural({ onVoltar, autor }) {
             }}>
               <img src={foto.url} alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block' }} />
               <div style={{ padding: '6px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
+                <div style={{ flex: 1, minWidth: 0, marginRight: 4 }}>
+                  {foto.legenda && <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginBottom: 2, lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{foto.legenda}</div>}
                   {foto.autor && <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 1 }}>{foto.autor}</div>}
                   <div style={{ fontSize: 10, color: 'var(--text-faint)' }}>
                     {new Date(foto.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -366,6 +404,12 @@ export default function Mural({ onVoltar, autor }) {
             </button>
           </div>
 
+          {fotoAberta.legenda && (
+            <div onClick={e => e.stopPropagation()} style={{ marginTop: 8, fontSize: 13, color: 'rgba(255,255,255,0.85)', textAlign: 'center', maxWidth: 300, lineHeight: 1.5 }}>
+              {fotoAberta.legenda}
+            </div>
+          )}
+
           {podeDeletar && (
             <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: 12, marginTop: 12 }}>
               {!confirmDelete ? (
@@ -398,6 +442,29 @@ export default function Mural({ onVoltar, autor }) {
       )}
 
       </div>
+
+      {showLegendaModal && pendingPreview && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 20px' }}>
+          <div style={{ width: '100%', maxWidth: 340, background: 'rgba(8,8,20,0.98)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 24, padding: '24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 700, color: '#fff', textAlign: 'center' }}>Nova foto</div>
+            <img src={pendingPreview} alt="" style={{ width: '100%', borderRadius: 14, maxHeight: 220, objectFit: 'cover' }} />
+            <textarea
+              value={pendingLegenda}
+              onChange={e => setPendingLegenda(e.target.value)}
+              placeholder="Adicione uma legenda... (opcional)"
+              maxLength={200}
+              rows={3}
+              style={{ width: '100%', padding: '12px 14px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 14, fontSize: 13, color: '#fff', outline: 'none', resize: 'none', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }}
+            />
+            <button onClick={publicarFoto} style={{ padding: 14, background: 'var(--gradient)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'white', fontFamily: 'Syne, sans-serif' }}>
+              Publicar
+            </button>
+            <button onClick={cancelarUpload} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: 13, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

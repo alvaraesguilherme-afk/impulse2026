@@ -25,7 +25,7 @@ function getDiaAtual() {
   return 0
 }
 
-export default function Programacao({ onVoltar, sessao }) {
+export default function Programacao({ onVoltar, sessao, onAjuda }) {
   const tx = useTexto()
   const [aba, setAba] = useState('louvor')
   const [diaSel, setDiaSel] = useState(getDiaAtual)
@@ -116,9 +116,9 @@ export default function Programacao({ onVoltar, sessao }) {
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
         <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'var(--input-bg)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: 'none', color: 'var(--text)' }}>‹</button>
         <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700 }}>{tx.programacao}</h2>
-        {Object.values(SENHAS_COORD).includes(sessao?.nome) && (
-          <div style={{ marginLeft: 'auto' }}>
-            {!coordenador ? (
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+          {Object.values(SENHAS_COORD).includes(sessao?.nome) && (
+            !coordenador ? (
               <button onClick={() => setCoordenador(sessao?.nome)} style={{
                 padding: '6px 14px', borderRadius: 20, border: '1px solid var(--border-strong)',
                 background: 'var(--bg-card)', color: 'var(--text-muted)',
@@ -130,9 +130,12 @@ export default function Programacao({ onVoltar, sessao }) {
                 background: 'var(--accent-bg)', color: 'var(--accent-light)',
                 fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
               }}>{coordenador} ✓</button>
-            )}
-          </div>
-        )}
+            )
+          )}
+          {onAjuda && (
+            <button onClick={onAjuda} style={{ width: 32, height: 32, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>?</button>
+          )}
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: 8, padding: '16px 22px', overflowX: 'auto', scrollbarWidth: 'none' }}>

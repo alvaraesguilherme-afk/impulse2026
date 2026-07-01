@@ -10,7 +10,7 @@ const CORES = [
   { id: 'verde', label: 'Verde', cor: '#16A34A' },
 ]
 
-export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, sessao, onLogout }) {
+export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, sessao, onLogout, onAjuda }) {
   const tx = useTexto()
   const [fontSize, setFontSize] = useState(() => parseInt(localStorage.getItem('impulse_fontsize')) || 100)
   const [accent, setAccentState] = useState(() => localStorage.getItem('impulse_accent') || 'roxo')
@@ -57,6 +57,9 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
         <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'var(--bg-card)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: 'none', color: 'var(--text)' }}>‹</button>
         <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700 }}>{tx.configuracoes}</h2>
+        {onAjuda && (
+          <button onClick={onAjuda} style={{ marginLeft: 'auto', width: 32, height: 32, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>?</button>
+        )}
       </div>
 
       <div style={{ padding: '24px 22px 100px' }}>

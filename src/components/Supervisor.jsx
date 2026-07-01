@@ -25,7 +25,7 @@ function getTurno(eq, data) {
 
 const dias = Array.from({ length: 11 }, (_, i) => new Date(INICIO.getTime() + i * 86400000))
 
-export default function Supervisor({ onVoltar, nome, abas }) {
+export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
   const tx = useTexto()
   const [aba, setAba] = useState(abas[0] || 'avisos')
   const [avisos, setAvisos] = useState([])
@@ -144,6 +144,9 @@ export default function Supervisor({ onVoltar, nome, abas }) {
           <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700 }}>Supervisor</h2>
           <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 1 }}>Logado como {nome}</div>
         </div>
+        {onAjuda && (
+          <button onClick={onAjuda} style={{ marginLeft: 'auto', width: 32, height: 32, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>?</button>
+        )}
       </div>
 
       {/* ABAS */}

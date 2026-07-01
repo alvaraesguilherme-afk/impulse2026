@@ -245,6 +245,11 @@ export default function App() {
     }
   }
 
+  function mostrarIntroForcar(id) {
+    if (!INTROS[id]) return
+    setIntroAtivo(id); setIntroSlide(0); setIntroSaindo(false)
+  }
+
   function avancarSlide() {
     const slides = INTROS[introAtivo] || []
     if (introSlide < slides.length - 1) {
@@ -395,13 +400,13 @@ export default function App() {
       <div style={{ marginLeft: isDesktop ? 240 : 0, minHeight: '100vh' }}>
         <div key={telaKey} className={ANIM_TELA[tela] || 'tela-enter'}>
           {tela === 'home' && <Home onNavegar={navegarPara} sessao={sessao} />}
-          {tela === 'apoio' && <Apoio onVoltar={voltar} sessao={sessao} />}
-          {tela === 'staff' && <Staff onVoltar={voltar} />}
-          {tela === 'supervisor' && <Supervisor onVoltar={voltar} nome={supervisorNome} abas={ABAS_SUPERVISOR[supervisorNome] || []} />}
-          {tela === 'mural' && <Mural onVoltar={voltar} autor={sessao?.nome} />}
-          {tela === 'midia' && <Midia onVoltar={voltar} sessao={sessao} />}
-          {tela === 'programacao' && <Programacao onVoltar={voltar} sessao={sessao} />}
-          {tela === 'config' && <Config onVoltar={voltar} tema={tema} setTema={setTema} idioma={idioma} setIdioma={setIdioma} sessao={sessao} onLogout={fazerLogout} />}
+          {tela === 'apoio' && <Apoio onVoltar={voltar} sessao={sessao} onAjuda={() => mostrarIntroForcar('apoio')} />}
+          {tela === 'staff' && <Staff onVoltar={voltar} onAjuda={() => mostrarIntroForcar('staff')} />}
+          {tela === 'supervisor' && <Supervisor onVoltar={voltar} nome={supervisorNome} abas={ABAS_SUPERVISOR[supervisorNome] || []} onAjuda={() => mostrarIntroForcar('supervisor')} />}
+          {tela === 'mural' && <Mural onVoltar={voltar} autor={sessao?.nome} onAjuda={() => mostrarIntroForcar('mural')} />}
+          {tela === 'midia' && <Midia onVoltar={voltar} sessao={sessao} onAjuda={() => mostrarIntroForcar('midia')} />}
+          {tela === 'programacao' && <Programacao onVoltar={voltar} sessao={sessao} onAjuda={() => mostrarIntroForcar('programacao')} />}
+          {tela === 'config' && <Config onVoltar={voltar} tema={tema} setTema={setTema} idioma={idioma} setIdioma={setIdioma} sessao={sessao} onLogout={fazerLogout} onAjuda={() => mostrarIntroForcar('config')} />}
         </div>
       </div>
 
