@@ -6,6 +6,7 @@ import Supervisor from './components/Supervisor'
 import Mural from './components/Mural'
 import Midia from './components/Midia'
 import Programacao from './components/Programacao'
+import Advertencias from './components/Advertencias'
 import Config from './components/Config'
 import Login from './components/Login'
 import { initSync } from './lib/offlineSync'
@@ -82,6 +83,7 @@ function NavIcon({ id, active, size = 22 }) {
     apoio: <svg {...s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
     midia: <svg {...s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>,
     staff: <svg {...s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+    advertencias: <svg {...s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
   }
   return icons[id] || null
 }
@@ -94,6 +96,7 @@ function getSidebarItems(podeSupervisor) {
     { id: 'midia', label: 'Mídia' },
     { id: 'staff', label: 'Staff' },
     { id: 'programacao', label: 'Programação' },
+    { id: 'advertencias', label: 'Advertências' },
     podeSupervisor ? null : undefined,
     podeSupervisor ? { id: 'supervisor', label: 'Supervisor' } : undefined,
     { id: 'config', label: 'Configurações' },
@@ -407,6 +410,7 @@ export default function App() {
           {tela === 'midia' && <Midia onVoltar={voltar} sessao={sessao} onAjuda={() => mostrarIntroForcar('midia')} />}
           {tela === 'programacao' && <Programacao onVoltar={voltar} sessao={sessao} onAjuda={() => mostrarIntroForcar('programacao')} />}
           {tela === 'config' && <Config onVoltar={voltar} tema={tema} setTema={setTema} idioma={idioma} setIdioma={setIdioma} sessao={sessao} onLogout={fazerLogout} onAjuda={() => mostrarIntroForcar('config')} />}
+          {tela === 'advertencias' && <Advertencias onVoltar={voltar} sessao={sessao} />}
         </div>
       </div>
 
