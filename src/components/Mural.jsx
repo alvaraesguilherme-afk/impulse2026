@@ -2,11 +2,11 @@ import { useState, useEffect, useRef } from 'react'
 import { useTexto } from '../lib/i18n'
 import { supabase } from '../lib/supabase'
 
-const INICIO = new Date(2026, 6, 15)
-const TOTAL_DIAS = 11
+const INICIO = new Date(2026, 6, 14)
+const TOTAL_DIAS = 14
 const DIAS = Array.from({ length: TOTAL_DIAS }, (_, i) => {
   const d = new Date(INICIO.getTime() + i * 86400000)
-  return { num: i + 1, data: d, label: `${d.getDate()} Jul` }
+  return { num: d.getDate(), data: d, label: `${d.getDate()} Jul` }
 })
 
 function getDiaAtual() {
