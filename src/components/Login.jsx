@@ -57,12 +57,10 @@ async function verificarSessao(nome, nivel) {
   const jaEsteDevice = frescas.some(s => s.device_id === deviceId)
 
   if (!jaEsteDevice && frescas.length >= limite) {
-    if (limite >= 2) {
-      // maximo/alto: bloqueia ao atingir 2 aparelhos simultâneos
-      return { bloqueado: true, msg: 'Esta conta já está ativa em 2 aparelhos. Faça logout em um deles primeiro.' }
-    }
-    // demais níveis: substitui sessão antiga (evita travamento por reset de localStorage)
-    await supabase.from('sessoes_ativas').delete().eq('nome', nome)
+    const msg = limite >= 2
+      ? 'Esta conta já está ativa em 2 aparelhos. Faça logout em um deles primeiro.'
+      : 'Esta conta já está ativa em outro aparelho.'
+    return { bloqueado: true, msg }
   }
 
   await supabase.from('sessoes_ativas').upsert(
