@@ -3,7 +3,8 @@ import { supabase } from '../lib/supabase'
 
 const NIVEIS_SUPERVISOR = ['maximo', 'alto', 'medio', 'basico']
 
-function CartaoAdv({ adv, onToggle, onConfirmar, onNegar, isSupervisor }) {
+function CartaoAdv({ adv, onToggle, onConfirmar, onNegar, onExcluir, isSupervisor }) {
+  const [confirmExcluir, setConfirmExcluir] = useState(false)
   const dataHora = new Date(adv.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 
   const aguardando = adv.status === 'aguardando'
@@ -48,35 +49,66 @@ function CartaoAdv({ adv, onToggle, onConfirmar, onNegar, isSupervisor }) {
           </div>
         </div>
 
-        {/* Botão pago — só para aprovadas */}
-        {!aguardando && !negada && (
-          <button onClick={() => onToggle(adv)} title={adv.pago ? 'Desfazer' : 'Marcar como paga'} style={{
-            width: 40, height: 40, borderRadius: 12, cursor: 'pointer', flexShrink: 0,
-            border: adv.pago ? '1px solid var(--border)' : '1px solid rgba(34,197,94,0.4)',
-            background: adv.pago ? 'var(--bg-card)' : 'rgba(34,197,94,0.12)',
-            color: adv.pago ? 'var(--text-faint)' : '#4ADE80',
-            fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}>
-            {adv.pago ? '↩' : '✓'}
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+          {/* Botão pago — só para aprovadas */}
+          {!aguardando && !negada && (
+            <button onClick={() => onToggle(adv)} title={adv.pago ? 'Desfazer' : 'Marcar como paga'} style={{
+              width: 40, height: 40, borderRadius: 12, cursor: 'pointer',
+              border: adv.pago ? '1px solid var(--border)' : '1px solid rgba(34,197,94,0.4)',
+              background: adv.pago ? 'var(--bg-card)' : 'rgba(34,197,94,0.12)',
+              color: adv.pago ? 'var(--text-faint)' : '#4ADE80',
+              fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>
+              {adv.pago ? '↩' : '✓'}
+            </button>
+          )}
+
+          {/* Botão excluir — só para supervisores */}
+          {isSupervisor && (
+            <button onClick={() => setConfirmExcluir(true)} title="Excluir advertência" style={{
+              width: 40, height: 40, borderRadius: 12, cursor: 'pointer',
+              border: '1px solid rgba(239,68,68,0.25)',
+              background: 'rgba(239,68,68,0.08)',
+              color: '#F87171',
+              fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>🗑️</button>
+          )}
+        </div>
       </div>
 
       {/* Botões de avaliação — só para supervisores em advertências aguardando */}
       {isSupervisor && aguardando && (
         <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
           <button onClick={() => onConfirmar(adv)} style={{
-            flex: 1, padding: '10px', borderRadius: 12, border: 'none',
+            flex: 1, padding: '10px', borderRadius: 12,
             background: 'rgba(34,197,94,0.15)', color: '#4ADE80',
             fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif',
             border: '1px solid rgba(34,197,94,0.3)'
           }}>✓ Confirmar</button>
           <button onClick={() => onNegar(adv)} style={{
-            flex: 1, padding: '10px', borderRadius: 12, border: 'none',
+            flex: 1, padding: '10px', borderRadius: 12,
             background: 'rgba(100,100,100,0.12)', color: 'var(--text-muted)',
             fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif',
             border: '1px solid var(--border)'
           }}>✕ Negar</button>
+        </div>
+      )}
+
+      {/* Confirmação de exclusão */}
+      {confirmExcluir && (
+        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+          <button onClick={() => { onExcluir(adv); setConfirmExcluir(false) }} style={{
+            flex: 1, padding: '10px', borderRadius: 12,
+            background: '#EF4444', color: 'white',
+            fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+            border: 'none'
+          }}>Excluir mesmo assim</button>
+          <button onClick={() => setConfirmExcluir(false)} style={{
+            flex: 1, padding: '10px', borderRadius: 12,
+            background: 'var(--bg-card)', color: 'var(--text-muted)',
+            fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+            border: '1px solid var(--border)'
+          }}>Cancelar</button>
         </div>
       )}
     </div>
@@ -142,6 +174,11 @@ export default function Advertencias({ onVoltar, sessao }) {
   async function negarAdvertencia(adv) {
     setAdvertencias(prev => prev.map(a => a.id === adv.id ? { ...a, status: 'negada' } : a))
     await supabase.from('advertencias').update({ status: 'negada' }).eq('id', adv.id)
+  }
+
+  async function excluirAdvertencia(adv) {
+    setAdvertencias(prev => prev.filter(a => a.id !== adv.id))
+    await supabase.from('advertencias').delete().eq('id', adv.id)
   }
 
   async function togglePago(adv) {
@@ -285,7 +322,7 @@ export default function Advertencias({ onVoltar, sessao }) {
                   Pendentes · {pendentes.length}
                 </div>
                 {pendentes.map(adv => (
-                  <CartaoAdv key={adv.id} adv={adv} onToggle={togglePago} onConfirmar={confirmarAdvertencia} onNegar={negarAdvertencia} isSupervisor={isSupervisor} />
+                  <CartaoAdv key={adv.id} adv={adv} onToggle={togglePago} onConfirmar={confirmarAdvertencia} onNegar={negarAdvertencia} onExcluir={excluirAdvertencia} isSupervisor={isSupervisor} />
                 ))}
               </div>
             )}
@@ -297,7 +334,7 @@ export default function Advertencias({ onVoltar, sessao }) {
                   Em avaliação · {aguardando.length}
                 </div>
                 {aguardando.map(adv => (
-                  <CartaoAdv key={adv.id} adv={adv} onToggle={togglePago} onConfirmar={confirmarAdvertencia} onNegar={negarAdvertencia} isSupervisor={isSupervisor} />
+                  <CartaoAdv key={adv.id} adv={adv} onToggle={togglePago} onConfirmar={confirmarAdvertencia} onNegar={negarAdvertencia} onExcluir={excluirAdvertencia} isSupervisor={isSupervisor} />
                 ))}
               </div>
             )}
@@ -309,7 +346,7 @@ export default function Advertencias({ onVoltar, sessao }) {
                   Penalidade cumprida · {pagas.length}
                 </div>
                 {pagas.map(adv => (
-                  <CartaoAdv key={adv.id} adv={adv} onToggle={togglePago} onConfirmar={confirmarAdvertencia} onNegar={negarAdvertencia} isSupervisor={isSupervisor} />
+                  <CartaoAdv key={adv.id} adv={adv} onToggle={togglePago} onConfirmar={confirmarAdvertencia} onNegar={negarAdvertencia} onExcluir={excluirAdvertencia} isSupervisor={isSupervisor} />
                 ))}
               </div>
             )}
@@ -321,7 +358,7 @@ export default function Advertencias({ onVoltar, sessao }) {
                   Não consideradas · {negadas.length}
                 </div>
                 {negadas.map(adv => (
-                  <CartaoAdv key={adv.id} adv={adv} onToggle={togglePago} onConfirmar={confirmarAdvertencia} onNegar={negarAdvertencia} isSupervisor={isSupervisor} />
+                  <CartaoAdv key={adv.id} adv={adv} onToggle={togglePago} onConfirmar={confirmarAdvertencia} onNegar={negarAdvertencia} onExcluir={excluirAdvertencia} isSupervisor={isSupervisor} />
                 ))}
               </div>
             )}
