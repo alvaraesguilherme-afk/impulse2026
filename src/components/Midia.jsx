@@ -24,7 +24,6 @@ function getDiaAtual() {
 
 const MEMBROS_FIXOS = ['Alyson', 'Caetano', 'Daniel', 'Joyce', 'Juliana']
 const MEMBROS_EXTRAS = ['Stephany', 'Victória', 'Taiwa', 'Maria Clara']
-const TODOS_MEMBROS = [...MEMBROS_FIXOS, ...MEMBROS_EXTRAS]
 
 const FUNCOES_PADRAO = ['Stories', 'Fotografia', 'Gravação de vídeo']
 const TURNOS = [

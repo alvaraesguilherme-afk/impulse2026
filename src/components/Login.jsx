@@ -169,7 +169,7 @@ export default function Login({ onLogin, mensagem }) {
 
     await supabase.from('sessoes_ativas').upsert(
       { nome, device_id: getDeviceId(), updated_at: new Date().toISOString() },
-      { onConflict: 'nome' }
+      { onConflict: 'nome,device_id' }
     )
 
     setTimeout(() => onLogin({ nome, nivel: 'convidado' }), 400)
