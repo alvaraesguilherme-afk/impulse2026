@@ -352,7 +352,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
         <div style={{ textAlign: 'center', padding: '60px 22px' }}>
           <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.85 }}>📷</div>
           <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 700, marginBottom: 6, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>{tx.nenhumaFoto}</div>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>Seja o primeiro a postar no {DIAS[diaSel].labelDia}!</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>Seja o primeiro a postar em {DIAS[diaSel].label}!</div>
         </div>
       )}
 
