@@ -286,11 +286,15 @@ export default function App() {
 
   return (
     <IdiomaContext.Provider value={idioma}>
-    <div style={{ background: 'var(--bg-app)', minHeight: '100vh', paddingBottom: (!sessao || isDesktop) ? 0 : 80 }}>
-
-      {(!sessao && !splash) ? (
+      {/* Login sempre montado — aparece via z-index, sem remount */}
+      <div style={(!sessao && !splash)
+        ? { position: 'fixed', inset: 0, zIndex: 1000, overflowY: 'auto', background: 'var(--bg-app)' }
+        : { position: 'fixed', inset: 0, zIndex: -1, opacity: 0, pointerEvents: 'none' }
+      }>
         <Login onLogin={fazerLogin} mensagem={mensagemLogin} />
-      ) : <>
+      </div>
+
+    {(sessao || splash) && <div style={{ background: 'var(--bg-app)', minHeight: '100vh', paddingBottom: isDesktop ? 0 : 80 }}>
 
       {splash && (
         <div className={`splash ${splashExit ? 'splash-exit' : ''}`}>
@@ -477,8 +481,7 @@ export default function App() {
           </div>
         </div>
       )}
-      </> }
-    </div>
+    </div>}
     </IdiomaContext.Provider>
   )
 }
