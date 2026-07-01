@@ -100,7 +100,7 @@ function podeMuralPostar() {
   return hj >= MURAL_INICIO && hj <= MURAL_FIM
 }
 
-export default function Mural({ onVoltar }) {
+export default function Mural({ onVoltar, autor }) {
   const tx = useTexto()
   const [diaSel, setDiaSel] = useState(getDiaAtual)
   const [fotos, setFotos] = useState([])
@@ -108,9 +108,6 @@ export default function Mural({ onVoltar }) {
   const [uploading, setUploading] = useState(false)
   const [fotoAberta, setFotoAberta] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [showNomePicker, setShowNomePicker] = useState(false)
-  const [pendingFile, setPendingFile] = useState(null)
-  const [autorSelecionado, setAutorSelecionado] = useState(() => localStorage.getItem('mural_autor') || '')
   const [curtidas, setCurtidas] = useState(() => {
     const set = new Set()
     for (let i = 0; i < localStorage.length; i++) {
@@ -163,22 +160,7 @@ export default function Mural({ onVoltar }) {
     const file = e.target.files?.[0]
     if (!file) return
     e.target.value = ''
-    if (autorSelecionado) {
-      uploadFoto(file, autorSelecionado)
-    } else {
-      setPendingFile(file)
-      setShowNomePicker(true)
-    }
-  }
-
-  function confirmarAutor(nome) {
-    setAutorSelecionado(nome)
-    localStorage.setItem('mural_autor', nome)
-    setShowNomePicker(false)
-    if (pendingFile) {
-      uploadFoto(pendingFile, nome)
-      setPendingFile(null)
-    }
+    uploadFoto(file, autor || 'Anônimo')
   }
 
   async function uploadFoto(file, autor) {
@@ -214,11 +196,6 @@ export default function Mural({ onVoltar }) {
     setCurtidas(prev => new Set([...prev, id]))
     setFotos(prev => prev.map(f => f.id === foto.id ? { ...f, curtidas: novas } : f))
     if (fotoAberta?.id === foto.id) setFotoAberta(prev => ({ ...prev, curtidas: novas }))
-  }
-
-  function trocarAutor() {
-    setAutorSelecionado('')
-    localStorage.removeItem('mural_autor')
   }
 
   function confirmarSenhaTeste() {
@@ -258,12 +235,12 @@ export default function Mural({ onVoltar }) {
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
         <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'rgba(8,8,20,0.65)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.25)', color: '#fff' }}>‹</button>
         <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>{tx.feedImpulse}</h2>
-        {autorSelecionado && (
-          <button onClick={trocarAutor} style={{
+        {autor && (
+          <div style={{
             marginLeft: 'auto', padding: '4px 10px', borderRadius: 10,
             background: 'var(--accent-bg)', border: '1px solid var(--accent-glow)',
-            color: 'var(--accent-light)', fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
-          }}>{autorSelecionado} ✎</button>
+            color: 'var(--accent-light)', fontSize: 10, fontWeight: 600, fontFamily: 'Inter, sans-serif'
+          }}>{autor}</div>
         )}
       </div>
 
@@ -450,28 +427,6 @@ export default function Mural({ onVoltar }) {
 
           <div style={{ marginTop: 8, fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
             Dia {DIAS[diaSel].num} · {new Date(fotoAberta.created_at).toLocaleString('pt-BR')}
-          </div>
-        </div>
-      )}
-
-      {showNomePicker && (
-        <div className="overlay-bg" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.85)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="overlay-enter" style={{ background: 'var(--overlay-bg)', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '24px 20px', width: '90%', maxWidth: 340, maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: 24, textAlign: 'center', marginBottom: 8 }}>📸</div>
-            <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 700, textAlign: 'center', marginBottom: 4 }}>Quem é você?</h2>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', marginBottom: 14 }}>{tx.selecioneNome}</p>
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', padding: '4px 0' }}>
-              {STAFF_NOMES.map(n => (
-                <button key={n} onClick={() => confirmarAutor(n)} style={{
-                  padding: '6px 12px', borderRadius: 14, border: '1px solid var(--border-strong)',
-                  background: 'var(--bg-card)', color: 'var(--text-secondary)',
-                  fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
-                }}>{n}</button>
-              ))}
-            </div>
-            <button onClick={() => { setShowNomePicker(false); setPendingFile(null) }} style={{
-              marginTop: 12, background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer'
-            }}>{tx.cancelar}</button>
           </div>
         </div>
       )}
