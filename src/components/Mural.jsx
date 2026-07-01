@@ -6,7 +6,7 @@ const INICIO = new Date(2026, 6, 14)
 const TOTAL_DIAS = 14
 const DIAS = Array.from({ length: TOTAL_DIAS }, (_, i) => {
   const d = new Date(INICIO.getTime() + i * 86400000)
-  return { num: d.getDate(), data: d, label: `${d.getDate()} Jul` }
+  return { num: d.getDate(), data: d, label: `${d.getDate()} Jul`, labelDia: `Dia ${i}` }
 })
 
 function getDiaAtual() {
@@ -268,8 +268,8 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
             fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2
           }}>
-            <span style={{ fontSize: 13, fontWeight: 800 }}>Dia {d.num}</span>
-            <span style={{ fontSize: 9, opacity: 0.85 }}>{d.label}</span>
+            <span style={{ fontSize: 13, fontWeight: 800 }}>{d.label}</span>
+            <span style={{ fontSize: 9, opacity: 0.65 }}>{d.labelDia}</span>
           </button>
         ))}
       </div>
@@ -345,14 +345,14 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
       )}
 
       <div style={{ padding: '0 22px 12px', fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>
-        {loading ? 'Carregando...' : `${fotosExibidas.length} foto${fotosExibidas.length !== 1 ? 's' : ''}${filtroAutor ? ` · ${filtroAutor}` : ` · Dia ${DIAS[diaSel].num}`}`}
+        {loading ? 'Carregando...' : `${fotosExibidas.length} foto${fotosExibidas.length !== 1 ? 's' : ''}${filtroAutor ? ` · ${filtroAutor}` : ` · ${DIAS[diaSel].labelDia}`}`}
       </div>
 
       {!loading && fotosExibidas.length === 0 && (
         <div style={{ textAlign: 'center', padding: '60px 22px' }}>
           <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.85 }}>📷</div>
           <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 700, marginBottom: 6, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>{tx.nenhumaFoto}</div>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>Seja o primeiro a postar no Dia {DIAS[diaSel].num}!</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>Seja o primeiro a postar no {DIAS[diaSel].labelDia}!</div>
         </div>
       )}
 
@@ -457,7 +457,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
             )}
 
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
-              Dia {DIAS[diaSel].num} · {new Date(fotoAberta.created_at).toLocaleString('pt-BR')}
+              {DIAS[diaSel].labelDia} · {new Date(fotoAberta.created_at).toLocaleString('pt-BR')}
             </div>
           </div>
         </div>
