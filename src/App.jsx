@@ -120,6 +120,9 @@ export default function App() {
 
   function fazerLogout() {
     localStorage.removeItem('impulse_sessao')
+    Object.keys(INTROS).forEach(id => localStorage.removeItem('impulse_intro_' + id))
+    setTela('home')
+    setNavAtiva('home')
     setSessao(null)
   }
 
