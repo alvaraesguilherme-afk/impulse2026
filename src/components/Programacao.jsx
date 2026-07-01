@@ -19,7 +19,7 @@ const TURNOS = [
   { id: 'N', label: 'Noite', icon: '🌙' },
 ]
 
-const SENHAS_COORD = { '1932': 'Alvarães', '1778': 'Eliel', '9089': 'Paula', '5050': 'Pr. Júnior', '4780': 'Pra. Stephanie' }
+const SENHAS_COORD = { '2306': 'Alvarães', '1778': 'Eliel', '9089': 'Paula', '5050': 'Pr. Júnior', '4780': 'Pra. Stephanie' }
 
 function getDiaAtual() {
   const hj = new Date()

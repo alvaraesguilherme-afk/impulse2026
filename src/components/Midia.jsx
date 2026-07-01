@@ -33,7 +33,7 @@ const TURNOS = [
   { id: 'N', label: 'Noite', icon: '🌙', temFixas: true },
 ]
 
-const SENHAS_COORD = { '0404': 'Caetano', '2121': 'Alyson', '1932': 'Alvarães', '5050': 'Pr. Júnior', '4780': 'Pra. Stephanie' }
+const SENHAS_COORD = { '0404': 'Caetano', '2121': 'Alyson', '2306': 'Alvarães', '5050': 'Pr. Júnior', '4780': 'Pra. Stephanie' }
 
 const CICLO_APOIO = ['M', 'T', 'N', 'F']
 const TURNO_NOME = { M: 'Manhã', T: 'Tarde', N: 'Noite', F: 'Folga' }

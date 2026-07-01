@@ -1,5 +1,5 @@
 export const PINOS = {
-  'Alvarães':          { pin: '1932',  nivel: 'maximo' },
+  'Alvarães':          { pin: '2306',  nivel: 'maximo' },
   'Pr. Júnior':        { pin: '5050',  nivel: 'maximo' },
   'Alyson':            { pin: '2121',  nivel: 'maximo' },
   'Pra. Stephanie':    { pin: '4780',  nivel: 'alto'   },

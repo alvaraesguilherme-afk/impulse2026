@@ -24,7 +24,7 @@ const INICIO = new Date(2026,6,15)
 const FIM = new Date(2026,6,25)
 
 const LIDERES_CHAMADA = [
-  { nome: 'Alvarães', senha: '1932', equipeId: '' },
+  { nome: 'Alvarães', senha: '2306', equipeId: '' },
   { nome: 'Jhony', senha: '7780', equipeId: 'verde' },
   { nome: 'Gustavo Massay', senha: '1121', equipeId: 'amarelo' },
   { nome: 'Walterley', senha: '3123', equipeId: 'azul' },
