@@ -368,11 +368,11 @@ export default function App() {
       <div style={{ marginLeft: isDesktop ? 240 : 0, minHeight: '100vh' }}>
         <div key={telaKey} className={ANIM_TELA[tela] || 'tela-enter'}>
           {tela === 'home' && <Home onNavegar={navegarPara} sessao={sessao} />}
-          {tela === 'apoio' && <Apoio onVoltar={voltar} />}
+          {tela === 'apoio' && <Apoio onVoltar={voltar} sessao={sessao} />}
           {tela === 'staff' && <Staff onVoltar={voltar} />}
           {tela === 'supervisor' && <Supervisor onVoltar={voltar} nome={supervisorNome} abas={ABAS_SUPERVISOR[supervisorNome] || []} />}
           {tela === 'mural' && <Mural onVoltar={voltar} autor={sessao?.nome} />}
-          {tela === 'midia' && <Midia onVoltar={voltar} />}
+          {tela === 'midia' && <Midia onVoltar={voltar} sessao={sessao} />}
           {tela === 'programacao' && <Programacao onVoltar={voltar} />}
           {tela === 'config' && <Config onVoltar={voltar} tema={tema} setTema={setTema} idioma={idioma} setIdioma={setIdioma} sessao={sessao} onLogout={fazerLogout} />}
         </div>

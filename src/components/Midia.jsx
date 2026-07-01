@@ -58,7 +58,7 @@ function checarDisponibilidade(nome, diaNum, turnoMidia) {
   return { livre: true }
 }
 
-export default function Midia({ onVoltar }) {
+export default function Midia({ onVoltar, sessao }) {
   const tx = useTexto()
   const [diaSel, setDiaSel] = useState(getDiaAtual)
   const [escalas, setEscalas] = useState([])
@@ -152,21 +152,23 @@ export default function Midia({ onVoltar }) {
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
         <button onClick={onVoltar} style={{ width: 36, height: 36, background: 'var(--input-bg)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, cursor: 'pointer', border: 'none', color: 'var(--text)' }}>‹</button>
         <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700 }}>{tx.midia}</h2>
-        <div style={{ marginLeft: 'auto' }}>
-          {!coordenador ? (
-            <button onClick={() => { setShowLogin(true); setSenhaInput(''); setSenhaErro('') }} style={{
-              padding: '6px 14px', borderRadius: 20, border: '1px solid var(--border-strong)',
-              background: 'var(--bg-card)', color: 'var(--text-muted)',
-              fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
-            }}>🔒 Coordenador</button>
-          ) : (
-            <button onClick={() => setCoordenador(null)} style={{
-              padding: '6px 14px', borderRadius: 20, border: '1px solid var(--accent-border)',
-              background: 'var(--accent-bg)', color: 'var(--accent-light)',
-              fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
-            }}>{coordenador} ✓</button>
-          )}
-        </div>
+        {!['staff', 'convidado'].includes(sessao?.nivel) && (
+          <div style={{ marginLeft: 'auto' }}>
+            {!coordenador ? (
+              <button onClick={() => { setShowLogin(true); setSenhaInput(''); setSenhaErro('') }} style={{
+                padding: '6px 14px', borderRadius: 20, border: '1px solid var(--border-strong)',
+                background: 'var(--bg-card)', color: 'var(--text-muted)',
+                fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
+              }}>🔒 Coordenador</button>
+            ) : (
+              <button onClick={() => setCoordenador(null)} style={{
+                padding: '6px 14px', borderRadius: 20, border: '1px solid var(--accent-border)',
+                background: 'var(--accent-bg)', color: 'var(--accent-light)',
+                fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
+              }}>{coordenador} ✓</button>
+            )}
+          </div>
+        )}
       </div>
 
       <div style={{ display: 'flex', gap: 6, padding: '16px 22px', overflowX: 'auto', scrollbarWidth: 'none' }}>
