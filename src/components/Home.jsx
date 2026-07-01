@@ -167,7 +167,7 @@ export default function Home({ onNavegar, sessao }) {
       <div style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 22px 0', fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>
           <span>{new Date().toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
-          <span>Escola Impulse</span>
+          <span style={{ color: 'var(--text-secondary)' }}>Oi, {sessao?.nome?.split(' ')[0]}!</span>
         </div>
         <div style={{ padding: '24px 22px 0' }}>
           <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 42, fontWeight: 800, lineHeight: 1.0, letterSpacing: -1, marginBottom: 8 }}>
