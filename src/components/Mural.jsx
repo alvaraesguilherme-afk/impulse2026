@@ -90,12 +90,6 @@ export default function Mural({ onVoltar }) {
   const [uploading, setUploading] = useState(false)
   const [fotoAberta, setFotoAberta] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [modoSelecao, setModoSelecao] = useState(false)
-  const [selecionadas, setSelecionadas] = useState([])
-  const [showSenhaSelecao, setShowSenhaSelecao] = useState(false)
-  const [senhaSelecao, setSenhaSelecao] = useState('')
-  const [senhaSelecaoErro, setSenhaSelecaoErro] = useState('')
-  const [jaTemVotacao, setJaTemVotacao] = useState(false)
   const [showNomePicker, setShowNomePicker] = useState(false)
   const [pendingFile, setPendingFile] = useState(null)
   const [autorSelecionado, setAutorSelecionado] = useState(() => localStorage.getItem('mural_autor') || '')
@@ -109,7 +103,7 @@ export default function Mural({ onVoltar }) {
   const parallaxRef = useRef(null)
   const [mosaicoAltura, setMosaicoAltura] = useState(0)
 
-  useEffect(() => { carregarFotos(); checarVotacao() }, [diaSel])
+  useEffect(() => { carregarFotos() }, [diaSel])
 
   useEffect(() => {
     function onScroll() {
@@ -175,50 +169,6 @@ export default function Mural({ onVoltar }) {
       console.error('Erro no upload:', err)
     }
     setUploading(false)
-  }
-
-  async function checarVotacao() {
-    const { data } = await supabase.from('foto_votacao').select('id').eq('dia', DIAS[diaSel].num).limit(1)
-    setJaTemVotacao(data && data.length > 0)
-  }
-
-  function iniciarSelecao() {
-    setShowSenhaSelecao(true)
-    setSenhaSelecao('')
-    setSenhaSelecaoErro('')
-  }
-
-  function confirmarSenhaSelecao() {
-    if (senhaSelecao === SENHA_COORD) {
-      setShowSenhaSelecao(false)
-      setModoSelecao(true)
-      setSelecionadas([])
-    } else {
-      setSenhaSelecaoErro(tx.senhaIncorreta)
-    }
-  }
-
-  function toggleSelecao(foto) {
-    setSelecionadas(prev => {
-      if (prev.find(f => f.id === foto.id)) return prev.filter(f => f.id !== foto.id)
-      if (prev.length >= 5) return prev
-      return [...prev, foto]
-    })
-  }
-
-  async function enviarVotacao() {
-    if (selecionadas.length === 0) return
-    await supabase.from('foto_votacao').delete().eq('dia', DIAS[diaSel].num)
-    const rows = selecionadas.map(f => ({ dia: DIAS[diaSel].num, foto_url: f.url, votos: 0 }))
-    await supabase.from('foto_votacao').insert(rows)
-    setModoSelecao(false)
-    setSelecionadas([])
-    setJaTemVotacao(true)
-  }
-
-  async function limparVotacao() {
-    await supabase.from('foto_votacao').delete().eq('dia', DIAS[diaSel].num)
-    setJaTemVotacao(false)
   }
 
   async function deletarFoto(foto) {
@@ -340,60 +290,7 @@ export default function Mural({ onVoltar }) {
         </div>
       )}
 
-      {!modoSelecao && (fotos.length > 0 || jaTemVotacao) && (
-        <div style={{ padding: '0 22px 12px' }}>
-          {jaTemVotacao ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 11, color: 'rgba(16,185,129,0.7)', fontWeight: 600 }}>✓ Votação do Dia {DIAS[diaSel].num} definida</span>
-              {fotos.length > 0 && (
-                <button onClick={iniciarSelecao} style={{
-                  marginLeft: 'auto', padding: '4px 10px', borderRadius: 10, border: '1px solid var(--border-strong)',
-                  background: 'var(--bg-card)', color: 'var(--text-muted)',
-                  fontSize: 10, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
-                }}>{tx.refazer}</button>
-              )}
-              <button onClick={limparVotacao} style={{
-                marginLeft: fotos.length > 0 ? 0 : 'auto', padding: '4px 10px', borderRadius: 10, border: '1px solid rgba(239,68,68,0.3)',
-                background: 'rgba(239,68,68,0.1)', color: '#F87171',
-                fontSize: 10, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
-              }}>Limpar</button>
-            </div>
-          ) : fotos.length > 0 ? (
-            <button onClick={iniciarSelecao} style={{
-              width: '100%', padding: '10px', borderRadius: 12,
-              border: '1px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.08)',
-              color: '#FBBF24', fontSize: 12, fontWeight: 600, cursor: 'pointer',
-              fontFamily: 'Inter, sans-serif'
-            }}>⭐ Selecionar fotos para votação</button>
-          ) : null}
-        </div>
-      )}
-
-      {modoSelecao && (
-        <div style={{ padding: '0 22px 12px' }}>
-          <div style={{
-            background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)',
-            borderRadius: 14, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-          }}>
-            <span style={{ fontSize: 12, color: '#FBBF24', fontWeight: 600 }}>{selecionadas.length}/5 selecionadas</span>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={enviarVotacao} disabled={selecionadas.length === 0} style={{
-                padding: '6px 14px', borderRadius: 10, border: 'none',
-                background: selecionadas.length > 0 ? 'linear-gradient(135deg,#F59E0B,#EF4444)' : 'var(--border-strong)',
-                color: 'white', fontSize: 11, fontWeight: 700, cursor: selecionadas.length > 0 ? 'pointer' : 'not-allowed',
-                fontFamily: 'Inter, sans-serif'
-              }}>{tx.confirmar}</button>
-              <button onClick={() => { setModoSelecao(false); setSelecionadas([]) }} style={{
-                padding: '6px 14px', borderRadius: 10, border: '1px solid var(--border-strong)',
-                background: 'var(--bg-card)', color: 'var(--text-muted)',
-                fontSize: 11, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
-              }}>{tx.cancelar}</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {autoresUnicos.length > 1 && !modoSelecao && (
+      {autoresUnicos.length > 1 && (
         <div style={{ display: 'flex', gap: 6, padding: '0 22px 12px', overflowX: 'auto', scrollbarWidth: 'none' }}>
           <button onClick={() => setFiltroAutor('')} style={{
             flexShrink: 0, padding: '5px 12px', borderRadius: 14, fontSize: 10, fontWeight: 700, cursor: 'pointer',
@@ -428,22 +325,14 @@ export default function Mural({ onVoltar }) {
 
       <div style={{ padding: '0 22px 100px', columnCount: 2, columnGap: 8 }}>
         {fotosExibidas.map(foto => {
-          const estaSelecionada = selecionadas.find(f => f.id === foto.id)
           return (
-            <div key={foto.id} onClick={() => modoSelecao ? toggleSelecao(foto) : (setFotoAberta(foto), setConfirmDelete(false))} style={{
+            <div key={foto.id} onClick={() => (setFotoAberta(foto), setConfirmDelete(false))} style={{
               breakInside: 'avoid', marginBottom: 8, borderRadius: 14, overflow: 'hidden',
               cursor: 'pointer', position: 'relative',
-              border: estaSelecionada ? '2px solid #F59E0B' : '1px solid var(--border)',
+              border: '1px solid var(--border)',
               background: 'var(--bg-card)'
             }}>
-              <img src={foto.url} alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block', opacity: modoSelecao && !estaSelecionada && selecionadas.length >= 5 ? 0.3 : 1 }} />
-              {modoSelecao && estaSelecionada && (
-                <div style={{
-                  position: 'absolute', top: 8, right: 8, width: 24, height: 24,
-                  background: '#F59E0B', borderRadius: '50%', display: 'flex',
-                  alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#000'
-                }}>{selecionadas.findIndex(f => f.id === foto.id) + 1}</div>
-              )}
+              <img src={foto.url} alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block' }} />
               <div style={{ padding: '8px 10px' }}>
                 {foto.autor && <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 2 }}>{foto.autor}</div>}
                 <div style={{ fontSize: 10, color: 'var(--text-faint)' }}>
@@ -527,26 +416,6 @@ export default function Mural({ onVoltar }) {
             <button onClick={() => { setShowNomePicker(false); setPendingFile(null) }} style={{
               marginTop: 12, background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer'
             }}>{tx.cancelar}</button>
-          </div>
-        </div>
-      )}
-
-      {showSenhaSelecao && (
-        <div className="overlay-bg" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.85)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="overlay-enter" style={{ background: 'var(--overlay-bg)', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '28px 24px', width: '90%', maxWidth: 340, textAlign: 'center' }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>⭐</div>
-            <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Foto do Dia</h2>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>Senha do coordenador geral</p>
-            <input
-              type="password" value={senhaSelecao}
-              onChange={e => { setSenhaSelecao(e.target.value); setSenhaSelecaoErro('') }}
-              onKeyDown={e => e.key === 'Enter' && confirmarSenhaSelecao()}
-              placeholder="••••" maxLength={10} autoFocus
-              style={{ width: '100%', padding: '14px 16px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 20, textAlign: 'center', letterSpacing: '.3em', outline: 'none', color: 'var(--text)', marginBottom: 12, fontFamily: 'Inter, sans-serif' }}
-            />
-            {senhaSelecaoErro && <p style={{ fontSize: 12, color: '#F87171', marginBottom: 10 }}>{senhaSelecaoErro}</p>}
-            <button onClick={confirmarSenhaSelecao} style={{ width: '100%', padding: 14, background: 'linear-gradient(135deg,#F59E0B,#EF4444)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'white', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>{tx.entrar}</button>
-            <button onClick={() => setShowSenhaSelecao(false)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer' }}>{tx.cancelar}</button>
           </div>
         </div>
       )}

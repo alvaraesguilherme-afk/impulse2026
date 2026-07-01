@@ -119,6 +119,8 @@ export default function Home({ onNavegar }) {
 
   const diaEvento = getDiaEvento()
   const diaFrase = getDiaFrase()
+  const hora = new Date().getHours()
+  const emVotacao = hora === 23
 
   useEffect(() => {
     supabase.from('avisos').select('*').order('created_at', { ascending: false }).then(({ data }) => {
@@ -134,11 +136,36 @@ export default function Home({ onNavegar }) {
           if (data && data.length > 0 && data[0].votos > 0) setFotoDestaque(data[0])
         })
       }
-      supabase.from('foto_votacao').select('*').eq('dia', diaEvento).order('created_at', { ascending: true }).then(({ data }) => {
-        if (data && data.length > 0) setVotacao(data)
-      })
       const votouKey = `votou_dia_${diaEvento}`
       if (localStorage.getItem(votouKey)) setJaVotou(true)
+      if (emVotacao) {
+        supabase.from('foto_votacao').select('*').eq('dia', diaEvento).order('created_at', { ascending: true }).then(({ data }) => {
+          if (data && data.length > 0) {
+            setVotacao(data)
+          } else {
+            // Monta o pool: fotos do dia atual + fotos do dia anterior postadas após 23:00
+            const buscarPool = async () => {
+              const [{ data: fotosHoje }, { data: fotasTarde }] = await Promise.all([
+                supabase.from('mural_fotos').select('*').eq('dia', diaEvento),
+                diaEvento > 1
+                  ? supabase.from('mural_fotos').select('*').eq('dia', diaEvento - 1)
+                      .gte('created_at', new Date(INICIO.getTime() + (diaEvento - 2) * 86400000 + 23 * 3600000).toISOString())
+                  : { data: [] }
+              ])
+              const pool = [...(fotosHoje || []), ...(fotasTarde || [])]
+              if (pool.length > 0) {
+                const embaralhado = [...pool].sort(() => Math.random() - 0.5)
+                const escolhidas = embaralhado.slice(0, Math.min(8, pool.length))
+                const rows = escolhidas.map(f => ({ dia: diaEvento, foto_url: f.url, votos: 0 }))
+                await supabase.from('foto_votacao').insert(rows)
+                const { data: vData } = await supabase.from('foto_votacao').select('*').eq('dia', diaEvento).order('created_at', { ascending: true })
+                if (vData) setVotacao(vData)
+              }
+            }
+            buscarPool()
+          }
+        })
+      }
     }
   }, [])
 
@@ -284,7 +311,7 @@ export default function Home({ onNavegar }) {
           </div>
         )}
 
-        {votacao.length > 0 && (
+        {emVotacao && votacao.length > 0 && (
           <div style={{ margin: '24px 22px 0' }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(236,72,153,0.6)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
               📸 Vote na Foto do Dia {diaEvento}
@@ -293,15 +320,15 @@ export default function Home({ onNavegar }) {
               {jaVotou ? `Você já votou! ${totalVotos} voto${totalVotos !== 1 ? 's' : ''} no total` : tx.toqueFavorita}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
-              {votacao.map((foto, i) => {
+              {votacao.map((foto) => {
                 const isVotada = votouEm === String(foto.id)
                 return (
                   <div key={foto.id} onClick={() => votar(foto.id)} style={{
                     borderRadius: 16, overflow: 'hidden', cursor: jaVotou ? 'default' : 'pointer',
                     border: isVotada ? '2px solid #EC4899' : '1px solid var(--border)',
-                    position: 'relative', gridColumn: i === 4 ? 'span 2' : undefined
+                    position: 'relative'
                   }}>
-                    <img src={foto.foto_url} alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block', aspectRatio: i === 4 ? '2/1' : '1/1', objectFit: 'cover' }} />
+                    <img src={foto.foto_url} alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block', aspectRatio: '1/1', objectFit: 'cover' }} />
                     {jaVotou && (
                       <div style={{
                         position: 'absolute', bottom: 0, left: 0, right: 0,
