@@ -86,17 +86,19 @@ function NavIcon({ id, active, size = 22 }) {
   return icons[id] || null
 }
 
-const SIDEBAR_ITEMS = [
-  { id: 'home', label: 'Início' },
-  { id: 'mural', label: 'Feed Impulse' },
-  { id: 'apoio', label: 'Apoio' },
-  { id: 'midia', label: 'Mídia' },
-  { id: 'staff', label: 'Staff' },
-  { id: 'programacao', label: 'Programação' },
-  null,
-  { id: 'supervisor', label: 'Supervisor' },
-  { id: 'config', label: 'Configurações' },
-]
+function getSidebarItems(podeSupervisor) {
+  return [
+    { id: 'home', label: 'Início' },
+    { id: 'mural', label: 'Feed Impulse' },
+    { id: 'apoio', label: 'Apoio' },
+    { id: 'midia', label: 'Mídia' },
+    { id: 'staff', label: 'Staff' },
+    { id: 'programacao', label: 'Programação' },
+    podeSupervisor ? null : undefined,
+    podeSupervisor ? { id: 'supervisor', label: 'Supervisor' } : undefined,
+    { id: 'config', label: 'Configurações' },
+  ].filter(item => item !== undefined)
+}
 
 export default function App() {
   const [splash, setSplash] = useState(true)
@@ -271,12 +273,16 @@ export default function App() {
 
   const t = { 'pt-BR': { home: 'Início', prog: 'Programação', sup: 'Supervisor', cfg: 'Config', senha: 'Digite sua senha para acessar', area: 'Área do Supervisor', entrar: 'Entrar', cancelar: 'Cancelar', senhaErro: 'Senha incorreta.' }, en: { home: 'Home', prog: 'Schedule', sup: 'Supervisor', cfg: 'Settings', senha: 'Enter your password', area: 'Supervisor Area', entrar: 'Enter', cancelar: 'Cancel', senhaErro: 'Wrong password.' } }[idioma]
 
+  const nivel = sessao?.nivel
+  const NIVEIS_SUPERVISOR = ['maximo', 'alto', 'basico']
+  const podeSupervisor = NIVEIS_SUPERVISOR.includes(nivel)
+
   const NAV = [
     { id: 'home', label: t.home },
     { id: 'programacao', label: t.prog },
-    { id: 'supervisor', label: t.sup },
+    podeSupervisor && { id: 'supervisor', label: t.sup },
     { id: 'config', label: t.cfg },
-  ]
+  ].filter(Boolean)
 
   if (!sessao && !splash) return (
     <IdiomaContext.Provider value={idioma}>
@@ -325,7 +331,7 @@ export default function App() {
             <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 5, letterSpacing: 1.5, textTransform: 'uppercase' }}>15 a 25 de julho</div>
           </div>
 
-          {SIDEBAR_ITEMS.map((item, idx) => {
+          {getSidebarItems(podeSupervisor).map((item, idx) => {
             if (!item) return (
               <div key={'sep-' + idx} style={{ height: 1, background: 'var(--border)', margin: '6px 10px 10px' }} />
             )

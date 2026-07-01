@@ -106,6 +106,7 @@ export default function Home({ onNavegar, sessao }) {
   const podeEscreverFrase = !frase && nivelSupervisor
   const podeEditarFrase = !!frase && nivelMaximo
   const fraseClicavel = podeEscreverFrase || podeEditarFrase
+  const podeSupervisor = ['maximo', 'alto', 'basico'].includes(sessao?.nivel)
 
   const diaEvento = getDiaEvento()
   const diaFrase = getDiaFrase()
@@ -201,7 +202,7 @@ export default function Home({ onNavegar, sessao }) {
         )}
 
         {avisos.length > 0 && (
-          <div style={{ margin: '24px 22px 0', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 16, padding: 14, display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => onNavegar('supervisor')}>
+          <div style={{ margin: '24px 22px 0', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 16, padding: 14, display: 'flex', alignItems: 'center', gap: 12, cursor: podeSupervisor ? 'pointer' : 'default' }} onClick={() => podeSupervisor && onNavegar('supervisor')}>
             <div style={{ fontSize: 20 }}>📢</div>
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.4 }}>{avisos[0].texto}</p>
