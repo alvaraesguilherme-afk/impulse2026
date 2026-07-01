@@ -10,6 +10,10 @@ const DIAS = Array.from({ length: TOTAL_DIAS }, (_, i) => {
   return { num: i + 1, data: d, label: `${d.getDate()} Jul` }
 })
 
+const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+const DIAS_SEMANA = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado']
+const DIAS_C = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
+
 function getDiaAtual() {
   const hj = new Date()
   hj.setHours(0, 0, 0, 0)
@@ -34,7 +38,7 @@ const SENHAS_COORD = { '0404': 'Caetano', '2121': 'Alyson', '1932': 'Alvarães',
 const CICLO_APOIO = ['M', 'T', 'N', 'F']
 const TURNO_NOME = { M: 'Manhã', T: 'Tarde', N: 'Noite', F: 'Folga' }
 const EQUIPE_MEMBRO = {
-  'Stephany': { equipeId: 'amarelo', offset: 1 },
+  'Stephany': { equipeId: 'azul', offset: 2 },
   'Maria Clara': { equipeId: 'amarelo', offset: 1 },
   'Victória': { equipeId: 'vermelho', offset: 3 },
   'Taiwa': { equipeId: 'amarelo', offset: 1 },
@@ -60,6 +64,7 @@ function checarDisponibilidade(nome, diaNum, turnoMidia) {
 
 export default function Midia({ onVoltar, sessao, onAjuda }) {
   const tx = useTexto()
+  const hj = new Date(); hj.setHours(0, 0, 0, 0)
   const [diaSel, setDiaSel] = useState(getDiaAtual)
   const [escalas, setEscalas] = useState([])
   const [loading, setLoading] = useState(false)
@@ -161,27 +166,56 @@ export default function Midia({ onVoltar, sessao, onAjuda }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 6, padding: '16px 22px', overflowX: 'auto', scrollbarWidth: 'none' }}>
-        {DIAS.map((d, i) => (
-          <button key={i} onClick={() => setDiaSel(i)} style={{
-            flexShrink: 0, padding: '8px 14px', borderRadius: 16,
-            border: diaSel === i ? '1px solid var(--accent-border)' : '1px solid var(--border-strong)',
-            background: diaSel === i ? 'var(--accent-bg)' : 'var(--bg-card)',
-            color: diaSel === i ? 'var(--accent-light)' : 'var(--text-muted)',
-            fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2
-          }}>
-            <span style={{ fontSize: 13, fontWeight: 700 }}>Dia {d.num}</span>
-            <span style={{ fontSize: 9, opacity: 0.6 }}>{d.label}</span>
-          </button>
-        ))}
+      <div style={{ padding: '12px 22px 0' }}>
+        <div onClick={() => setDiaSel(getDiaAtual())} style={{
+          background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)',
+          borderRadius: 16, padding: '14px 18px', marginBottom: 4, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+        }}>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(96,165,250,0.7)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 }}>Hoje</div>
+            <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 20, fontWeight: 800, color: '#60A5FA' }}>
+              {hj.getDate()} de {MESES[hj.getMonth()]}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+              {DIAS_SEMANA[hj.getDay()]}
+            </div>
+          </div>
+          <div style={{ fontSize: 11, color: 'rgba(96,165,250,0.6)', fontWeight: 600 }}>Ver escala</div>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, padding: '12px 22px', marginBottom: 4 }}>
+        {DIAS.map((d, i) => {
+          const isSel = diaSel === i
+          const isHoje = d.data.getTime() === hj.getTime()
+          return (
+            <div key={i} onClick={() => setDiaSel(i)} style={{
+              background: isSel ? 'var(--accent-bg)' : 'var(--bg-card)',
+              border: isSel ? '1px solid var(--accent-border)' : isHoje ? '1px solid rgba(96,165,250,0.4)' : '1px solid var(--border)',
+              borderRadius: 14, padding: '10px 4px', textAlign: 'center', cursor: 'pointer'
+            }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', marginBottom: 2 }}>{DIAS_C[d.data.getDay()]}</div>
+              <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 800, color: isSel ? 'var(--accent-light)' : isHoje ? '#60A5FA' : 'white' }}>{d.data.getDate()}</div>
+              <div style={{ fontSize: 9, color: 'var(--text-faint)', marginTop: 1 }}>Jul</div>
+            </div>
+          )
+        })}
       </div>
 
       <div style={{ padding: '0 22px 100px' }}>
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 22, fontWeight: 800, marginBottom: 2 }}>
+            {DIAS[diaSel].data.getDate()} de {MESES[DIAS[diaSel].data.getMonth()]}
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+            {DIAS_SEMANA[DIAS[diaSel].data.getDay()]}
+          </div>
+        </div>
         {loading ? (
           <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-faint)', fontSize: 13 }}>{tx.carregando}</div>
         ) : (
-          TURNOS.map(turno => {
+          TURNOS.filter(turno => !(DIAS[diaSel].num === 1 && turno.id !== 'N')).map(turno => {
             const itens = getEscalasTurno(turno.id)
             return (
               <div key={turno.id} style={{ marginBottom: 24 }}>
