@@ -1,4 +1,4 @@
-const CACHE_NAME = 'impulse2026-v1'
+const CACHE_NAME = 'impulse2026-v2'
 const STATIC_ASSETS = [
   '/',
   '/index.html',
