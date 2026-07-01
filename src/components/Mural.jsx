@@ -196,7 +196,7 @@ export default function Mural({ onVoltar, autor }) {
           ))}
         </div>
       )}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(5,5,20,0.70)', zIndex: 0 }} />
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '10000px', background: 'rgba(5,5,20,0.70)', zIndex: 0 }} />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
