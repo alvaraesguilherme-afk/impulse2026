@@ -10,6 +10,8 @@ import Config from './components/Config'
 import Login from './components/Login'
 import { initSync } from './lib/offlineSync'
 import { IdiomaContext, useTexto } from './lib/i18n'
+import { supabase } from './lib/supabase'
+import { getDeviceId } from './lib/device'
 
 const SENHAS = {
   supervisor: { '1932': 'Alvarães', '6090': 'Danilo', '0404': 'Caetano', '2121': 'Alyson', '9089': 'Paula', '1778': 'Eliel', '3321': 'Edson', '5050': 'Pr. Júnior', '4780': 'Pra. Stephanie' },
@@ -112,19 +114,48 @@ export default function App() {
   const [sessao, setSessao] = useState(() => {
     try { return JSON.parse(localStorage.getItem('impulse_sessao')) || null } catch { return null }
   })
+  const [mensagemLogin, setMensagemLogin] = useState('')
 
   function fazerLogin(s) {
     localStorage.setItem('impulse_sessao', JSON.stringify(s))
+    setMensagemLogin('')
     setSessao(s)
   }
 
-  function fazerLogout() {
+  function fazerLogout(msg) {
+    if (sessao?.nome) {
+      supabase.from('sessoes_ativas').delete().eq('nome', sessao.nome).then()
+    }
     localStorage.removeItem('impulse_sessao')
     Object.keys(INTROS).forEach(id => localStorage.removeItem('impulse_intro_' + id))
     setTela('home')
     setNavAtiva('home')
+    setMensagemLogin(msg || '')
     setSessao(null)
   }
+
+  useEffect(() => {
+    if (!sessao) return
+    const deviceId = getDeviceId()
+
+    async function validarSessao() {
+      const { data } = await supabase
+        .from('sessoes_ativas')
+        .select('device_id')
+        .eq('nome', sessao.nome)
+        .maybeSingle()
+      if (data && data.device_id !== deviceId) {
+        fazerLogout('Sua sessão foi encerrada em outro dispositivo.')
+      }
+    }
+
+    function aoVoltarFoco() {
+      if (document.visibilityState === 'visible') validarSessao()
+    }
+
+    document.addEventListener('visibilitychange', aoVoltarFoco)
+    return () => document.removeEventListener('visibilitychange', aoVoltarFoco)
+  }, [sessao])
 
   useEffect(() => {
     const handleResize = () => setIsDesktop(window.innerWidth >= 768)
@@ -245,7 +276,7 @@ export default function App() {
 
   if (!sessao && !splash) return (
     <IdiomaContext.Provider value={idioma}>
-      <Login onLogin={fazerLogin} />
+      <Login onLogin={fazerLogin} mensagem={mensagemLogin} />
     </IdiomaContext.Provider>
   )
 

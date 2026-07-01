@@ -1,10 +1,19 @@
 import { useState, useEffect } from 'react'
 import { PINOS, NOMES } from '../lib/pinos'
 import { supabase } from '../lib/supabase'
+import { getDeviceId } from '../lib/device'
 
 function getConvidadosLocal() {
   try { return JSON.parse(localStorage.getItem('impulse_convidados')) || {} } catch { return {} }
 }
+
+function saveConvidado(nome, pin) {
+  const c = getConvidadosLocal()
+  c[nome] = pin
+  localStorage.setItem('impulse_convidados', JSON.stringify(c))
+}
+
+const PODE_MULTI_DEVICE = ['maximo', 'alto']
 
 const inputStyle = {
   width: '100%', padding: '13px 14px',
@@ -21,17 +30,36 @@ const pinStyle = {
   fontFamily: 'Inter, sans-serif'
 }
 
-export default function Login({ onLogin }) {
+async function verificarSessao(nome, nivel) {
+  const deviceId = getDeviceId()
+  const podeMulti = PODE_MULTI_DEVICE.includes(nivel)
+
+  const { data } = await supabase
+    .from('sessoes_ativas')
+    .select('device_id')
+    .eq('nome', nome)
+    .maybeSingle()
+
+  if (data && data.device_id !== deviceId) {
+    if (!podeMulti) return { bloqueado: true }
+  }
+
+  await supabase.from('sessoes_ativas').upsert(
+    { nome, device_id: deviceId, updated_at: new Date().toISOString() },
+    { onConflict: 'nome' }
+  )
+  return { bloqueado: false }
+}
+
+export default function Login({ onLogin, mensagem }) {
   const [modo, setModo] = useState('login')
   const [entrando, setEntrando] = useState(false)
   const [erro, setErro] = useState('')
   const [convidados, setConvidados] = useState(getConvidadosLocal)
 
-  // login
   const [nomeSel, setNomeSel] = useState('')
   const [pin, setPin] = useState('')
 
-  // cadastro
   const [cadNome, setCadNome] = useState('')
   const [cadPin, setCadPin] = useState('')
   const [cadPin2, setCadPin2] = useState('')
@@ -52,26 +80,31 @@ export default function Login({ onLogin }) {
     setCadNome(''); setCadPin(''); setCadPin2('')
   }
 
-  function entrar() {
+  async function entrar() {
     if (!nomeSel) { setErro('Selecione seu nome.'); return }
     if (!pin) { setErro('Digite seu PIN.'); return }
 
+    let nivel
     const dadosPinos = PINOS[nomeSel]
     if (dadosPinos) {
       if (pin !== dadosPinos.pin) { setErro('PIN incorreto.'); return }
-      setEntrando(true)
-      setTimeout(() => onLogin({ nome: nomeSel, nivel: dadosPinos.nivel }), 400)
-      return
-    }
-
-    if (convidados[nomeSel] !== undefined) {
+      nivel = dadosPinos.nivel
+    } else if (convidados[nomeSel] !== undefined) {
       if (pin !== convidados[nomeSel]) { setErro('PIN incorreto.'); return }
-      setEntrando(true)
-      setTimeout(() => onLogin({ nome: nomeSel, nivel: 'convidado' }), 400)
+      nivel = 'convidado'
+    } else {
+      setErro('Nome não encontrado.'); return
+    }
+
+    setEntrando(true)
+    const { bloqueado } = await verificarSessao(nomeSel, nivel)
+    if (bloqueado) {
+      setEntrando(false)
+      setErro('Esta conta já está ativa em outro aparelho.')
       return
     }
 
-    setErro('Nome não encontrado.')
+    setTimeout(() => onLogin({ nome: nomeSel, nivel }), 400)
   }
 
   async function cadastrar() {
@@ -100,6 +133,12 @@ export default function Login({ onLogin }) {
     const novo = { ...convidados, [nome]: cadPin }
     localStorage.setItem('impulse_convidados', JSON.stringify(novo))
     setConvidados(novo)
+
+    await supabase.from('sessoes_ativas').upsert(
+      { nome, device_id: getDeviceId(), updated_at: new Date().toISOString() },
+      { onConflict: 'nome' }
+    )
+
     setTimeout(() => onLogin({ nome, nivel: 'convidado' }), 400)
   }
 
@@ -125,6 +164,12 @@ export default function Login({ onLogin }) {
           </div>
           <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>15 a 25 de julho · Rancho Império</div>
         </div>
+
+        {mensagem && (
+          <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 14, padding: '12px 16px', marginBottom: 14, fontSize: 13, color: '#F87171', textAlign: 'center' }}>
+            {mensagem}
+          </div>
+        )}
 
         <div style={{ display: 'flex', background: 'var(--bg-card)', border: '1px solid var(--border-strong)', borderRadius: 16, padding: 4, marginBottom: 14 }}>
           {[['login', 'Entrar'], ['cadastro', 'Cadastrar']].map(([m, label]) => (
@@ -182,7 +227,7 @@ export default function Login({ onLogin }) {
                 fontSize: 15, fontWeight: 700, cursor: entrando ? 'default' : 'pointer',
                 color: 'white', fontFamily: 'Syne, sans-serif', opacity: entrando ? 0.6 : 1
               }}>
-                {entrando ? 'Entrando...' : 'Entrar'}
+                {entrando ? 'Verificando...' : 'Entrar'}
               </button>
             </>
           ) : (
@@ -200,8 +245,7 @@ export default function Login({ onLogin }) {
                   type="text" value={cadNome}
                   onChange={e => { setCadNome(e.target.value); setErro('') }}
                   placeholder="Como você quer ser chamado"
-                  maxLength={30}
-                  style={inputStyle}
+                  maxLength={30} style={inputStyle}
                 />
               </div>
 
