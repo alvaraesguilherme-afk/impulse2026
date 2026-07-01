@@ -13,7 +13,7 @@ function saveConvidado(nome, pin) {
   localStorage.setItem('impulse_convidados', JSON.stringify(c))
 }
 
-const PODE_MULTI_DEVICE = ['maximo', 'alto']
+const LIMITE_DEVICES = { maximo: 2, alto: 2 }
 
 const inputStyle = {
   width: '100%', padding: '13px 14px',
@@ -32,23 +32,28 @@ const pinStyle = {
 
 async function verificarSessao(nome, nivel) {
   const deviceId = getDeviceId()
-  const podeMulti = PODE_MULTI_DEVICE.includes(nivel)
+  const limite = LIMITE_DEVICES[nivel] || 1
 
-  const { data } = await supabase
+  const { data: sessoes } = await supabase
     .from('sessoes_ativas')
     .select('device_id')
     .eq('nome', nome)
-    .maybeSingle()
 
-  if (data && data.device_id !== deviceId) {
-    if (!podeMulti) return { bloqueado: true }
+  const lista = sessoes || []
+  const jaEsteDevice = lista.some(s => s.device_id === deviceId)
+
+  if (!jaEsteDevice && lista.length >= limite) {
+    const msg = limite >= 2
+      ? 'Esta conta já está ativa em 2 aparelhos. Faça logout em um deles primeiro.'
+      : 'Esta conta já está ativa em outro aparelho.'
+    return { bloqueado: true, msg }
   }
 
   await supabase.from('sessoes_ativas').upsert(
     { nome, device_id: deviceId, updated_at: new Date().toISOString() },
-    { onConflict: 'nome' }
+    { onConflict: 'nome,device_id' }
   )
-  return { bloqueado: false }
+  return { bloqueado: false, msg: '' }
 }
 
 export default function Login({ onLogin, mensagem }) {
@@ -97,10 +102,10 @@ export default function Login({ onLogin, mensagem }) {
     }
 
     setEntrando(true)
-    const { bloqueado } = await verificarSessao(nomeSel, nivel)
+    const { bloqueado, msg } = await verificarSessao(nomeSel, nivel)
     if (bloqueado) {
       setEntrando(false)
-      setErro('Esta conta já está ativa em outro aparelho.')
+      setErro(msg)
       return
     }
 

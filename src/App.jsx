@@ -124,7 +124,10 @@ export default function App() {
 
   function fazerLogout(msg) {
     if (sessao?.nome) {
-      supabase.from('sessoes_ativas').delete().eq('nome', sessao.nome).then()
+      supabase.from('sessoes_ativas').delete()
+        .eq('nome', sessao.nome)
+        .eq('device_id', getDeviceId())
+        .then()
     }
     localStorage.removeItem('impulse_sessao')
     Object.keys(INTROS).forEach(id => localStorage.removeItem('impulse_intro_' + id))
@@ -143,8 +146,9 @@ export default function App() {
         .from('sessoes_ativas')
         .select('device_id')
         .eq('nome', sessao.nome)
+        .eq('device_id', deviceId)
         .maybeSingle()
-      if (data && data.device_id !== deviceId) {
+      if (!data) {
         fazerLogout('Sua sessão foi encerrada em outro dispositivo.')
       }
     }
