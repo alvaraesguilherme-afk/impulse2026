@@ -10,8 +10,6 @@ const CORES = [
   { id: 'verde', label: 'Verde', cor: '#16A34A' },
 ]
 
-const SENHA_ADMIN = '1932'
-
 export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, sessao, onLogout }) {
   const tx = useTexto()
   const [fontSize, setFontSize] = useState(() => parseInt(localStorage.getItem('impulse_fontsize')) || 100)
@@ -20,9 +18,6 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
   const [bugTexto, setBugTexto] = useState('')
   const [bugEnviado, setBugEnviado] = useState(false)
   const [showRelatos, setShowRelatos] = useState(false)
-  const [relatoSenha, setRelatoSenha] = useState('')
-  const [relatoErro, setRelatoErro] = useState('')
-  const [relatoLogado, setRelatoLogado] = useState(false)
   const [relatos, setRelatos] = useState([])
 
   function setAccent(cor) {
@@ -52,20 +47,9 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
   }
 
   async function abrirRelatos() {
+    const { data } = await supabase.from('bug_reports').select('*').order('created_at', { ascending: false })
+    setRelatos(data || [])
     setShowRelatos(true)
-    setRelatoSenha('')
-    setRelatoErro('')
-    setRelatoLogado(false)
-  }
-
-  async function loginRelatos() {
-    if (relatoSenha === SENHA_ADMIN) {
-      setRelatoLogado(true)
-      const { data } = await supabase.from('bug_reports').select('*').order('created_at', { ascending: false })
-      setRelatos(data || [])
-    } else {
-      setRelatoErro(tx.senhaIncorreta)
-    }
   }
 
   return (
@@ -192,11 +176,13 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 600 }}>{tx.relatarProblema}</div>
             </div>
-            <button onClick={abrirRelatos} style={{
-              padding: '4px 10px', borderRadius: 10, border: '1px solid var(--border)',
-              background: 'var(--bg-card)', color: 'var(--text-faint)',
-              fontSize: 10, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
-            }}>🔒</button>
+            {sessao?.nome === 'Alvarães' && (
+              <button onClick={abrirRelatos} style={{
+                padding: '4px 10px', borderRadius: 10, border: '1px solid var(--border)',
+                background: 'var(--bg-card)', color: 'var(--text-faint)',
+                fontSize: 10, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
+              }}>🔒</button>
+            )}
           </div>
           {bugEnviado ? (
             <div style={{ padding: '14px', borderRadius: 12, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', textAlign: 'center' }}>
@@ -262,35 +248,21 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
         )}
       </div>
 
-      {/* MODAL RELATOS (só admin) */}
+      {/* MODAL RELATOS (só Alvarães) */}
       {showRelatos && (
         <div className="overlay-bg" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.85)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div className="overlay-enter" style={{ background: 'var(--overlay-bg)', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '24px 20px', width: '90%', maxWidth: 360, maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
-            {!relatoLogado ? (
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 32, marginBottom: 12 }}>🐛</div>
-                <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 700, marginBottom: 6 }}>{tx.relatos}</h2>
-                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>{tx.digiteSenha}</p>
-                <input type="password" value={relatoSenha} onChange={e => { setRelatoSenha(e.target.value); setRelatoErro('') }} onKeyDown={e => e.key === 'Enter' && loginRelatos()} placeholder="••••" maxLength={10} autoFocus style={{ width: '100%', padding: '14px 16px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 20, textAlign: 'center', letterSpacing: '.3em', outline: 'none', color: 'var(--text)', marginBottom: 12, fontFamily: 'Inter, sans-serif' }} />
-                {relatoErro && <p style={{ fontSize: 12, color: '#F87171', marginBottom: 10 }}>{relatoErro}</p>}
-                <button onClick={loginRelatos} style={{ width: '100%', padding: 14, background: 'var(--gradient)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'white', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>{tx.entrar}</button>
-                <button onClick={() => setShowRelatos(false)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer' }}>{tx.cancelar}</button>
-              </div>
-            ) : (
-              <>
-                <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 700, marginBottom: 14, textAlign: 'center' }}>🐛 {tx.relatos}</h2>
-                <div style={{ flex: 1, overflowY: 'auto' }}>
-                  {relatos.length === 0 && <div style={{ textAlign: 'center', color: 'var(--text-faint)', fontSize: 13, padding: 20 }}>{tx.nenhumRelato}</div>}
-                  {relatos.map(r => (
-                    <div key={r.id} style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', borderRadius: 14, padding: '12px 14px', marginBottom: 8 }}>
-                      <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{r.texto}</div>
-                      <div style={{ fontSize: 10, color: 'var(--text-faint)', marginTop: 6 }}>{new Date(r.created_at).toLocaleString('pt-BR')}</div>
-                    </div>
-                  ))}
+            <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 700, marginBottom: 14, textAlign: 'center' }}>🐛 {tx.relatos}</h2>
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              {relatos.length === 0 && <div style={{ textAlign: 'center', color: 'var(--text-faint)', fontSize: 13, padding: 20 }}>{tx.nenhumRelato}</div>}
+              {relatos.map(r => (
+                <div key={r.id} style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', borderRadius: 14, padding: '12px 14px', marginBottom: 8 }}>
+                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{r.texto}</div>
+                  <div style={{ fontSize: 10, color: 'var(--text-faint)', marginTop: 6 }}>{new Date(r.created_at).toLocaleString('pt-BR')}</div>
                 </div>
-                <button onClick={() => setShowRelatos(false)} style={{ marginTop: 12, padding: 12, borderRadius: 12, border: '1px solid var(--border-strong)', background: 'var(--bg-card)', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>{tx.cancelar}</button>
-              </>
-            )}
+              ))}
+            </div>
+            <button onClick={() => setShowRelatos(false)} style={{ marginTop: 12, padding: 12, borderRadius: 12, border: '1px solid var(--border-strong)', background: 'var(--bg-card)', color: 'var(--text-muted)', fontSize: 13, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>{tx.cancelar}</button>
           </div>
         </div>
       )}

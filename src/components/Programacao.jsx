@@ -32,9 +32,6 @@ export default function Programacao({ onVoltar, sessao }) {
   const [dados, setDados] = useState([])
   const [loading, setLoading] = useState(false)
   const [coordenador, setCoordenador] = useState(null)
-  const [showLogin, setShowLogin] = useState(false)
-  const [senhaInput, setSenhaInput] = useState('')
-  const [senhaErro, setSenhaErro] = useState('')
   const [editando, setEditando] = useState(null)
   const [formSelecionado, setFormSelecionado] = useState('')
   const [formTema, setFormTema] = useState('')
@@ -54,12 +51,6 @@ export default function Programacao({ onVoltar, sessao }) {
   async function carregarCadastros() {
     const { data } = await supabase.from('programacao_cadastro').select('*').order('nome')
     setCadastros(data || [])
-  }
-
-  function verificarSenha() {
-    const nome = SENHAS_COORD[senhaInput]
-    if (nome) { setCoordenador(nome); setShowLogin(false) }
-    else setSenhaErro(tx.senhaIncorreta)
   }
 
   function getDado(turnoId, tipo) {
@@ -128,7 +119,7 @@ export default function Programacao({ onVoltar, sessao }) {
         {Object.values(SENHAS_COORD).includes(sessao?.nome) && (
           <div style={{ marginLeft: 'auto' }}>
             {!coordenador ? (
-              <button onClick={() => { setShowLogin(true); setSenhaInput(''); setSenhaErro('') }} style={{
+              <button onClick={() => setCoordenador(sessao?.nome)} style={{
                 padding: '6px 14px', borderRadius: 20, border: '1px solid var(--border-strong)',
                 background: 'var(--bg-card)', color: 'var(--text-muted)',
                 fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
@@ -404,25 +395,6 @@ export default function Programacao({ onVoltar, sessao }) {
         </>
       )}
 
-      {showLogin && (
-        <div className="overlay-bg" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.85)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="overlay-enter" style={{ background: 'var(--overlay-bg)', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '28px 24px', width: '90%', maxWidth: 340, textAlign: 'center' }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>📅</div>
-            <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Coordenador</h2>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>Digite sua senha para editar a programação</p>
-            <input
-              type="password" value={senhaInput}
-              onChange={e => { setSenhaInput(e.target.value); setSenhaErro('') }}
-              onKeyDown={e => e.key === 'Enter' && verificarSenha()}
-              placeholder="••••" maxLength={10} autoFocus
-              style={{ width: '100%', padding: '14px 16px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 20, textAlign: 'center', letterSpacing: '.3em', outline: 'none', color: 'var(--text)', marginBottom: 12, fontFamily: 'Inter, sans-serif' }}
-            />
-            {senhaErro && <p style={{ fontSize: 12, color: '#F87171', marginBottom: 10 }}>{senhaErro}</p>}
-            <button onClick={verificarSenha} style={{ width: '100%', padding: 14, background: 'var(--gradient)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'white', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>{tx.entrar}</button>
-            <button onClick={() => setShowLogin(false)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer' }}>{tx.cancelar}</button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

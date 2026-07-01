@@ -139,6 +139,25 @@ export default function App() {
     setSessao(null)
   }
 
+  // Valida sessão do localStorage no carregamento inicial (cold start)
+  useEffect(() => {
+    if (!sessao) return
+    const nome = sessao.nome
+    const deviceId = getDeviceId()
+    supabase.from('sessoes_ativas')
+      .select('device_id')
+      .eq('nome', nome)
+      .eq('device_id', deviceId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data) {
+          localStorage.removeItem('impulse_sessao')
+          setMensagemLogin('Sessão expirada. Faça login novamente.')
+          setSessao(null)
+        }
+      })
+  }, []) // eslint-disable-line
+
   useEffect(() => {
     if (!sessao) return
     const deviceId = getDeviceId()

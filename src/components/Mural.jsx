@@ -46,7 +46,6 @@ function comprimirImagem(file, maxKB = 500) {
   })
 }
 
-const SENHA_COORD = '1932'
 const MURAL_INICIO = new Date(2026, 6, 14)
 const MURAL_FIM = new Date(2026, 6, 27)
 
@@ -118,9 +117,6 @@ export default function Mural({ onVoltar, autor }) {
   })
   const [filtroAutor, setFiltroAutor] = useState('')
   const [modoTeste, setModoTeste] = useState(false)
-  const [showSenhaTeste, setShowSenhaTeste] = useState(false)
-  const [senhaTeste, setSenhaTeste] = useState('')
-  const [senhaTesteErro, setSenhaTesteErro] = useState('')
   const inputGaleria = useRef(null)
   const inputCamera = useRef(null)
   const parallaxRef = useRef(null)
@@ -198,17 +194,8 @@ export default function Mural({ onVoltar, autor }) {
     if (fotoAberta?.id === foto.id) setFotoAberta(prev => ({ ...prev, curtidas: novas }))
   }
 
-  function confirmarSenhaTeste() {
-    if (senhaTeste === SENHA_COORD) {
-      setModoTeste(true)
-      setShowSenhaTeste(false)
-    } else {
-      setSenhaTesteErro(tx.senhaIncorreta)
-    }
-  }
-
   const SUPERVISORES = ['Alvarães', 'Danilo', 'Caetano', 'Alyson', 'Paula', 'Eliel', 'Edson', 'Pr. Júnior', 'Pra. Stephanie']
-  const podeDeletar = fotoAberta && (fotoAberta.autor === autorSelecionado || SUPERVISORES.includes(autorSelecionado))
+  const podeDeletar = fotoAberta && (fotoAberta.autor === autor || SUPERVISORES.includes(autor))
 
   const fotosExibidas = filtroAutor
     ? fotos.filter(f => f.autor === filtroAutor)
@@ -285,11 +272,13 @@ export default function Mural({ onVoltar, autor }) {
           <div style={{ padding: '12px 14px', borderRadius: 14, background: 'rgba(8,8,20,0.65)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.25)', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.9)', textAlign: 'center' }}>
             📷 {tx.uploadDisponivel}
           </div>
-          <div style={{ textAlign: 'center', marginTop: 8 }}>
-            <button onClick={() => { setShowSenhaTeste(true); setSenhaTeste(''); setSenhaTesteErro('') }} style={{
-              background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 10, cursor: 'pointer', textDecoration: 'underline'
-            }}>🔓 Coordenador</button>
-          </div>
+          {autor === 'Alvarães' && (
+            <div style={{ textAlign: 'center', marginTop: 8 }}>
+              <button onClick={() => setModoTeste(true)} style={{
+                background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 10, cursor: 'pointer', textDecoration: 'underline'
+              }}>🔓 Liberar postagem</button>
+            </div>
+          )}
         </div>
       )}
 
@@ -431,25 +420,6 @@ export default function Mural({ onVoltar, autor }) {
         </div>
       )}
 
-      {showSenhaTeste && (
-        <div className="overlay-bg" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.85)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="overlay-enter" style={{ background: 'var(--overlay-bg)', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '28px 24px', width: '90%', maxWidth: 340, textAlign: 'center' }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>🔓</div>
-            <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Liberar postagem de teste</h2>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>Senha do coordenador geral</p>
-            <input
-              type="password" value={senhaTeste}
-              onChange={e => { setSenhaTeste(e.target.value); setSenhaTesteErro('') }}
-              onKeyDown={e => e.key === 'Enter' && confirmarSenhaTeste()}
-              placeholder="••••" maxLength={10} autoFocus
-              style={{ width: '100%', padding: '14px 16px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 20, textAlign: 'center', letterSpacing: '.3em', outline: 'none', color: 'var(--text)', marginBottom: 12, fontFamily: 'Inter, sans-serif' }}
-            />
-            {senhaTesteErro && <p style={{ fontSize: 12, color: '#F87171', marginBottom: 10 }}>{senhaTesteErro}</p>}
-            <button onClick={confirmarSenhaTeste} style={{ width: '100%', padding: 14, background: 'var(--gradient)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'white', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>{tx.entrar}</button>
-            <button onClick={() => setShowSenhaTeste(false)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer' }}>{tx.cancelar}</button>
-          </div>
-        </div>
-      )}
       </div>
     </div>
   )

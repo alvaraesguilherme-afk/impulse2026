@@ -64,9 +64,6 @@ export default function Midia({ onVoltar, sessao }) {
   const [escalas, setEscalas] = useState([])
   const [loading, setLoading] = useState(false)
   const [coordenador, setCoordenador] = useState(null)
-  const [showLogin, setShowLogin] = useState(false)
-  const [senhaInput, setSenhaInput] = useState('')
-  const [senhaErro, setSenhaErro] = useState('')
   const [addingTo, setAddingTo] = useState(null)
   const [novaFuncao, setNovaFuncao] = useState('')
   const [funcaoSelecionada, setFuncaoSelecionada] = useState('')
@@ -82,16 +79,6 @@ export default function Midia({ onVoltar, sessao }) {
       .order('created_at', { ascending: true })
     setEscalas(data || [])
     setLoading(false)
-  }
-
-  function verificarSenha() {
-    const nome = SENHAS_COORD[senhaInput]
-    if (nome) {
-      setCoordenador(nome)
-      setShowLogin(false)
-    } else {
-      setSenhaErro(tx.senhaIncorreta)
-    }
   }
 
   async function atribuirPessoa(turno, funcao, pessoa) {
@@ -155,7 +142,7 @@ export default function Midia({ onVoltar, sessao }) {
         {Object.values(SENHAS_COORD).includes(sessao?.nome) && (
           <div style={{ marginLeft: 'auto' }}>
             {!coordenador ? (
-              <button onClick={() => { setShowLogin(true); setSenhaInput(''); setSenhaErro('') }} style={{
+              <button onClick={() => setCoordenador(sessao?.nome)} style={{
                 padding: '6px 14px', borderRadius: 20, border: '1px solid var(--border-strong)',
                 background: 'var(--bg-card)', color: 'var(--text-muted)',
                 fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
@@ -374,25 +361,6 @@ export default function Midia({ onVoltar, sessao }) {
         </div>
       </div>
 
-      {showLogin && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.85)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#1a1a2e', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '28px 24px', width: '90%', maxWidth: 340, textAlign: 'center' }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>🎥</div>
-            <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Coordenador de Mídia</h2>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>Digite sua senha para editar escalas</p>
-            <input
-              type="password" value={senhaInput}
-              onChange={e => { setSenhaInput(e.target.value); setSenhaErro('') }}
-              onKeyDown={e => e.key === 'Enter' && verificarSenha()}
-              placeholder="••••" maxLength={10} autoFocus
-              style={{ width: '100%', padding: '14px 16px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 20, textAlign: 'center', letterSpacing: '.3em', outline: 'none', color: 'var(--text)', marginBottom: 12, fontFamily: 'Inter, sans-serif' }}
-            />
-            {senhaErro && <p style={{ fontSize: 12, color: '#F87171', marginBottom: 10 }}>{senhaErro}</p>}
-            <button onClick={verificarSenha} style={{ width: '100%', padding: 14, background: 'var(--gradient)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'var(--text)', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>{tx.entrar}</button>
-            <button onClick={() => setShowLogin(false)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer' }}>{tx.cancelar}</button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

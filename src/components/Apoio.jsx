@@ -53,10 +53,7 @@ function BackBtn({ onVoltar, titulo }) {
 export default function Apoio({ onVoltar, sessao }) {
   const tx = useTexto()
   const [aba, setAba] = useState('times')
-  const [lider, setLider] = useState(null)
-  const [showLogin, setShowLogin] = useState(false)
-  const [senhaInput, setSenhaInput] = useState('')
-  const [senhaErro, setSenhaErro] = useState('')
+  const [lider] = useState(() => LIDERES_CHAMADA.find(l => l.nome === sessao?.nome) || null)
   const [diaSel, setDiaSel] = useState('')
   const [turnoSel, setTurnoSel] = useState('')
   const [chamadaData, setChamadaData] = useState({})
@@ -67,17 +64,6 @@ export default function Apoio({ onVoltar, sessao }) {
     if (diff >= 0 && diff <= 10) return dias[diff]
     return dias[0]
   })
-
-  function abrirChamada() {
-    if (lider) { setAba('chamada'); return }
-    setShowLogin(true); setSenhaInput(''); setSenhaErro('')
-  }
-
-  function verificarSenha() {
-    const encontrado = LIDERES_CHAMADA.find(l => l.senha === senhaInput)
-    if (encontrado) { setLider(encontrado); setShowLogin(false); setAba('chamada') }
-    else setSenhaErro(tx.senhaIncorreta)
-  }
 
   async function carregarChamada(ts, turno) {
     if (!ts || !turno) return
@@ -110,8 +96,8 @@ export default function Apoio({ onVoltar, sessao }) {
     <div style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
       <BackBtn onVoltar={onVoltar} titulo={tx.escalasDeServico} />
       <div style={{ display: 'flex', gap: 8, padding: '16px 22px', overflowX: 'auto', scrollbarWidth: 'none' }}>
-        {[{id:'times',label:`👥 ${tx.times}`},{id:'escalas',label:`📅 ${tx.escalas}`},LIDERES_CHAMADA.some(l => l.nome === sessao?.nome) && {id:'chamada',label:`📋 ${tx.chamada} 🔒`}].filter(Boolean).map(a => (
-          <button key={a.id} onClick={() => a.id === 'chamada' ? abrirChamada() : setAba(a.id)} style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 20, border: '1px solid var(--border-strong)', background: aba === a.id ? 'var(--accent-glow)' : 'var(--bg-card)', color: aba === a.id ? 'var(--accent-light)' : 'var(--text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+        {[{id:'times',label:`👥 ${tx.times}`},{id:'escalas',label:`📅 ${tx.escalas}`},LIDERES_CHAMADA.some(l => l.nome === sessao?.nome) && {id:'chamada',label:`📋 ${tx.chamada}`}].filter(Boolean).map(a => (
+          <button key={a.id} onClick={() => setAba(a.id)} style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 20, border: '1px solid var(--border-strong)', background: aba === a.id ? 'var(--accent-glow)' : 'var(--bg-card)', color: aba === a.id ? 'var(--accent-light)' : 'var(--text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
             {a.label}
           </button>
         ))}
@@ -254,19 +240,6 @@ export default function Apoio({ onVoltar, sessao }) {
           </>
         )}
       </div>
-      {showLogin && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.85)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#1a1a2e', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '28px 24px', width: '90%', maxWidth: 340, textAlign: 'center' }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
-            <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Chamada — Apoio</h2>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>Digite sua senha de líder</p>
-            <input type="password" value={senhaInput} onChange={e => { setSenhaInput(e.target.value); setSenhaErro('') }} onKeyDown={e => e.key === 'Enter' && verificarSenha()} placeholder="••••" maxLength={10} style={{ width: '100%', padding: '14px 16px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 20, textAlign: 'center', letterSpacing: '.3em', outline: 'none', color: 'var(--text)', marginBottom: 12, fontFamily: 'Inter, sans-serif' }} />
-            {senhaErro && <p style={{ fontSize: 12, color: '#F87171', marginBottom: 10 }}>{senhaErro}</p>}
-            <button onClick={verificarSenha} style={{ width: '100%', padding: 14, background: 'var(--gradient)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'var(--text)', marginBottom: 10 }}>{tx.entrar}</button>
-            <button onClick={() => setShowLogin(false)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer' }}>{tx.cancelar}</button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
