@@ -7,20 +7,7 @@ import { vibrar } from '../lib/haptics'
 const INICIO = new Date(2026, 6, 15)
 const FIM = new Date(2026, 6, 25, 23, 59, 59)
 
-const AUTORES_FRASE = {
-  '1932': 'Alvarães',
-  '6090': 'Danilo',
-  '0404': 'Caetano',
-  '5050': 'Pr. Júnior',
-  '4780': 'Pra. Stephanie',
-  '2121': 'Alyson',
-  '9089': 'Paula',
-  '6689': 'Francisco',
-  '1121': 'Gustavo Massay',
-  '3123': 'Walterley',
-}
-const SENHA_EDITAR = '1932'
-const SENHAS_EXCLUIR_FRASE = ['1932', '2121', '5050']
+const NIVEIS_SUPERVISOR = ['maximo', 'alto', 'medio', 'basico']
 
 function getDiaEvento() {
   const hj = new Date()
@@ -105,15 +92,20 @@ function ContadorSection() {
   )
 }
 
-export default function Home({ onNavegar }) {
+export default function Home({ onNavegar, sessao }) {
   const tx = useTexto()
   const [avisos, setAvisos] = useState([])
   const [frase, setFrase] = useState(null)
   const [showFraseModal, setShowFraseModal] = useState(false)
   const [fraseInput, setFraseInput] = useState('')
-  const [fraseSenha, setFraseSenha] = useState('')
   const [fraseErro, setFraseErro] = useState('')
   const [fotoDestaque, setFotoDestaque] = useState(null)
+
+  const nivelSupervisor = NIVEIS_SUPERVISOR.includes(sessao?.nivel)
+  const nivelMaximo = sessao?.nivel === 'maximo'
+  const podeEscreverFrase = !frase && nivelSupervisor
+  const podeEditarFrase = !!frase && nivelMaximo
+  const fraseClicavel = podeEscreverFrase || podeEditarFrase
 
   const diaEvento = getDiaEvento()
   const diaFrase = getDiaFrase()
@@ -136,28 +128,21 @@ export default function Home({ onNavegar }) {
   }, [])
 
   function abrirFraseModal() {
+    if (!fraseClicavel) return
     setShowFraseModal(true)
     setFraseInput(frase?.frase || '')
-    setFraseSenha('')
     setFraseErro('')
   }
 
   async function salvarFrase() {
-    if (!fraseSenha) { setFraseErro('Digite a senha.'); return }
-    if (frase?.frase) {
-      if (fraseSenha !== SENHA_EDITAR) { setFraseErro(tx.apenasCoordenador); return }
-    } else {
-      if (!AUTORES_FRASE[fraseSenha]) { setFraseErro(tx.senhaIncorreta); return }
-    }
-    const autor = AUTORES_FRASE[fraseSenha]
     if (!fraseInput.trim()) { setFraseErro('Digite a frase.'); return }
+    const autor = sessao?.nome || 'Supervisor'
     await syncOp('upsert', 'frase_do_dia', { dia: diaFrase, frase: fraseInput.trim(), autor }, { onConflict: 'dia' })
     setFrase({ dia: diaFrase, frase: fraseInput.trim(), autor })
     setShowFraseModal(false)
   }
 
   async function excluirFrase() {
-    if (!SENHAS_EXCLUIR_FRASE.includes(fraseSenha)) { setFraseErro('Senha sem permissão para excluir.'); return }
     await syncOp('delete', 'frase_do_dia', { dia: diaFrase })
     setFrase(null)
     setFraseInput('')
@@ -198,7 +183,7 @@ export default function Home({ onNavegar }) {
           <div onClick={abrirFraseModal} style={{
             margin: '24px 22px 0', borderRadius: 20, padding: '20px 18px',
             background: 'var(--accent-bg)', border: '1px solid var(--accent-border)',
-            cursor: 'pointer'
+            cursor: fraseClicavel ? 'pointer' : 'default'
           }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-light)', opacity: 0.7, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
               ✦ Frase do Dia
@@ -275,26 +260,19 @@ export default function Home({ onNavegar }) {
           <div style={{ background: '#1a1a2e', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '28px 24px', width: '90%', maxWidth: 340, textAlign: 'center' }}>
             <div style={{ fontSize: 32, marginBottom: 12 }}>✦</div>
             <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>
-              {frase?.frase ? 'Editar frase do dia' : 'Frase do dia'}
+              {podeEditarFrase ? 'Editar frase do dia' : 'Frase do dia'}
             </h2>
             <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
-              {frase?.frase ? 'Apenas o coordenador geral pode alterar' : 'Defina a frase de hoje'}
+              {podeEditarFrase ? `Editando como ${sessao?.nome}` : `Definindo como ${sessao?.nome}`}
             </p>
             <textarea
               value={fraseInput} onChange={e => setFraseInput(e.target.value)}
               placeholder="Digite a frase..." rows={3}
               style={{ width: '100%', padding: '12px 14px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 14, color: 'var(--text)', outline: 'none', marginBottom: 12, fontFamily: 'Inter, sans-serif', resize: 'none' }}
             />
-            <input
-              type="password" value={fraseSenha}
-              onChange={e => { setFraseSenha(e.target.value); setFraseErro('') }}
-              onKeyDown={e => e.key === 'Enter' && salvarFrase()}
-              placeholder="Sua senha" maxLength={10}
-              style={{ width: '100%', padding: '14px 16px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 16, textAlign: 'center', letterSpacing: '.2em', outline: 'none', color: 'var(--text)', marginBottom: 12, fontFamily: 'Inter, sans-serif' }}
-            />
             {fraseErro && <p style={{ fontSize: 12, color: '#F87171', marginBottom: 10 }}>{fraseErro}</p>}
             <button onClick={salvarFrase} style={{ width: '100%', padding: 14, background: 'var(--gradient)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'var(--text)', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>Salvar</button>
-            {frase?.frase && (
+            {podeEditarFrase && (
               <button onClick={excluirFrase} style={{ width: '100%', padding: 14, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', color: '#F87171', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>Excluir frase</button>
             )}
             <button onClick={() => setShowFraseModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>

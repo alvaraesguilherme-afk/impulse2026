@@ -7,6 +7,7 @@ import Mural from './components/Mural'
 import Midia from './components/Midia'
 import Programacao from './components/Programacao'
 import Config from './components/Config'
+import Login from './components/Login'
 import { initSync } from './lib/offlineSync'
 import { IdiomaContext, useTexto } from './lib/i18n'
 
@@ -108,6 +109,19 @@ export default function App() {
   const [idioma, setIdiomaState] = useState(() => localStorage.getItem('impulse_idioma') || 'pt-BR')
   const [tema, setTemaState] = useState(() => localStorage.getItem('tema') || 'dark')
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768)
+  const [sessao, setSessao] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('impulse_sessao')) || null } catch { return null }
+  })
+
+  function fazerLogin(s) {
+    localStorage.setItem('impulse_sessao', JSON.stringify(s))
+    setSessao(s)
+  }
+
+  function fazerLogout() {
+    localStorage.removeItem('impulse_sessao')
+    setSessao(null)
+  }
 
   useEffect(() => {
     const handleResize = () => setIsDesktop(window.innerWidth >= 768)
@@ -181,7 +195,17 @@ export default function App() {
 
   function navegarPara(id) {
     if (tela === 'home') homeScrollRef.current = window.scrollY
-    if (id === 'supervisor') { abrirOverlay('supervisor'); return }
+    if (id === 'supervisor') {
+      const nivel = sessao?.nivel
+      if (['maximo', 'alto', 'basico'].includes(nivel)) {
+        setSupervisorNome(sessao.nome)
+        if (id !== tela) window.history.pushState(null, '')
+        setTela('supervisor'); setNavAtiva('supervisor'); setTelaKey(k => k + 1); mostrarIntroSe('supervisor')
+      } else {
+        abrirOverlay('supervisor')
+      }
+      return
+    }
     if (id !== tela) window.history.pushState(null, '')
     setTela(id); setNavAtiva(id); setTelaKey(k => k + 1)
     mostrarIntroSe(id)
@@ -215,6 +239,12 @@ export default function App() {
     { id: 'supervisor', label: t.sup },
     { id: 'config', label: t.cfg },
   ]
+
+  if (!sessao && !splash) return (
+    <IdiomaContext.Provider value={idioma}>
+      <Login onLogin={fazerLogin} />
+    </IdiomaContext.Provider>
+  )
 
   return (
     <IdiomaContext.Provider value={idioma}>
@@ -293,14 +323,14 @@ export default function App() {
       {/* CONTEÚDO PRINCIPAL */}
       <div style={{ marginLeft: isDesktop ? 240 : 0, minHeight: '100vh' }}>
         <div key={telaKey} className={ANIM_TELA[tela] || 'tela-enter'}>
-          {tela === 'home' && <Home onNavegar={navegarPara} />}
+          {tela === 'home' && <Home onNavegar={navegarPara} sessao={sessao} />}
           {tela === 'apoio' && <Apoio onVoltar={voltar} />}
           {tela === 'staff' && <Staff onVoltar={voltar} />}
           {tela === 'supervisor' && <Supervisor onVoltar={voltar} nome={supervisorNome} abas={ABAS_SUPERVISOR[supervisorNome] || []} />}
-          {tela === 'mural' && <Mural onVoltar={voltar} />}
+          {tela === 'mural' && <Mural onVoltar={voltar} autor={sessao?.nome} />}
           {tela === 'midia' && <Midia onVoltar={voltar} />}
           {tela === 'programacao' && <Programacao onVoltar={voltar} />}
-          {tela === 'config' && <Config onVoltar={voltar} tema={tema} setTema={setTema} idioma={idioma} setIdioma={setIdioma} />}
+          {tela === 'config' && <Config onVoltar={voltar} tema={tema} setTema={setTema} idioma={idioma} setIdioma={setIdioma} sessao={sessao} onLogout={fazerLogout} />}
         </div>
       </div>
 

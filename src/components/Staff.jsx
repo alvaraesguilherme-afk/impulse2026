@@ -1,4 +1,6 @@
+import { useState, useEffect } from 'react'
 import { useTexto } from '../lib/i18n'
+import { supabase } from '../lib/supabase'
 const STAFF_AREAS = [
   { area: '⛪ Liderança Pastoral', nomes: ['Pr. Júnior Bandeira', 'Pra. Stephanie Bandeira'] },
   { area: '🙌 Apoio', nomes: ['Alvarães','Clara Cunha','Emanuel','Francisco','Gabriel Gomes','Gustavo Massay','Hellen Borges','Hugo Lacroix','Isabely Matos','Jerônimo','Jhony','Joel Marcos','Letícia','Linda','Lívia Andréa','Lorena','Ludmyla','Maria Clara','Maria Júlia','Mariana Gabrielle','Matheus Almeida','Maurício','Nicoly','Rafael Chaves','Rennan','Ryan Guedes','Stephany','Taiwa','Victória','Walterley'] },
@@ -23,6 +25,14 @@ function BackBtn({ onVoltar, titulo }) {
 
 export default function Staff({ onVoltar }) {
   const tx = useTexto()
+  const [convidados, setConvidados] = useState([])
+
+  useEffect(() => {
+    supabase.from('convidados').select('nome').order('nome').then(({ data }) => {
+      if (data) setConvidados(data.map(d => d.nome))
+    })
+  }, [])
+
   return (
     <div style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
       <BackBtn onVoltar={onVoltar} titulo={tx.staff} />
@@ -37,6 +47,17 @@ export default function Staff({ onVoltar }) {
             </div>
           </div>
         ))}
+
+        {convidados.length > 0 && (
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>👤 Convidados</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {convidados.map(n => (
+                <span key={n} style={{ fontSize: 12, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.25)', borderRadius: 20, padding: '6px 14px', color: '#C4B5FD', fontWeight: 500 }}>{n}</span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

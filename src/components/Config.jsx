@@ -12,7 +12,7 @@ const CORES = [
 
 const SENHA_ADMIN = '1932'
 
-export default function Config({ onVoltar, tema, setTema, idioma, setIdioma }) {
+export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, sessao, onLogout }) {
   const tx = useTexto()
   const [fontSize, setFontSize] = useState(() => parseInt(localStorage.getItem('impulse_fontsize')) || 100)
   const [accent, setAccentState] = useState(() => localStorage.getItem('impulse_accent') || 'roxo')
@@ -237,6 +237,29 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma }) {
             </div>
           </div>
         </div>
+
+        {/* SESSÃO */}
+        {sessao && (
+          <div style={{ marginTop: 28, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '18px' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Sessão</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700 }}>{sessao.nome}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Logado neste dispositivo</div>
+              </div>
+              <button
+                onClick={onLogout}
+                style={{
+                  padding: '8px 16px', borderRadius: 12,
+                  border: '1px solid rgba(239,68,68,0.35)',
+                  background: 'rgba(239,68,68,0.08)',
+                  color: '#F87171', fontSize: 13, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'Syne, sans-serif'
+                }}
+              >Sair</button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* MODAL RELATOS (só admin) */}
