@@ -105,8 +105,8 @@ export default function App() {
   const [splashExit, setSplashExit] = useState(false)
 
   useEffect(() => {
-    const t1 = setTimeout(() => setSplashExit(true), 900)
-    const t2 = setTimeout(() => setSplash(false), 1500)
+    const t1 = setTimeout(() => setSplashExit(true), 1400)
+    const t2 = setTimeout(() => setSplash(false), 2000)
     return () => { clearTimeout(t1); clearTimeout(t2) }
   }, [])
 
