@@ -1,4 +1,5 @@
-const CACHE_NAME = 'impulse2026-v3'
+const CACHE_NAME = 'impulse2026-v4'
+const FONTS_CACHE = 'impulse2026-fonts-v1'
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -25,6 +26,22 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url)
+
+  // Fontes Google: cache-first — sem requisição de rede em visitas repetidas
+  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+    e.respondWith(
+      caches.open(FONTS_CACHE).then(cache =>
+        cache.match(e.request).then(cached => {
+          if (cached) return cached
+          return fetch(e.request).then(res => {
+            cache.put(e.request, res.clone())
+            return res
+          })
+        })
+      )
+    )
+    return
+  }
 
   if (url.origin !== location.origin) {
     e.respondWith(
