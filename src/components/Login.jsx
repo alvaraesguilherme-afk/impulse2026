@@ -74,6 +74,7 @@ export default function Login({ onLogin, mensagem }) {
   const [modo, setModo] = useState('login')
   const [entrando, setEntrando] = useState(false)
   const [erro, setErro] = useState('')
+  const [bloqueadoInfo, setBloqueadoInfo] = useState(null)
   const [convidados, setConvidados] = useState(getConvidadosLocal)
 
   const [nomeSel, setNomeSel] = useState('')
@@ -120,10 +121,23 @@ export default function Login({ onLogin, mensagem }) {
     if (bloqueado) {
       setEntrando(false)
       setErro(msg)
+      setBloqueadoInfo({ nome: nomeSel, nivel })
       return
     }
 
     setTimeout(() => onLogin({ nome: nomeSel, nivel }), 400)
+  }
+
+  async function forcarLogin() {
+    if (!bloqueadoInfo) return
+    setEntrando(true)
+    const deviceId = getDeviceId()
+    await supabase.from('sessoes_ativas').delete().eq('nome', bloqueadoInfo.nome)
+    await supabase.from('sessoes_ativas').upsert(
+      { nome: bloqueadoInfo.nome, device_id: deviceId, updated_at: new Date().toISOString() },
+      { onConflict: 'nome,device_id' }
+    )
+    setTimeout(() => onLogin({ nome: bloqueadoInfo.nome, nivel: bloqueadoInfo.nivel }), 400)
   }
 
   async function cadastrar() {
@@ -217,7 +231,7 @@ export default function Login({ onLogin, mensagem }) {
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>Seu nome</div>
                 <select
                   value={nomeSel}
-                  onChange={e => { setNomeSel(e.target.value); setErro('') }}
+                  onChange={e => { setNomeSel(e.target.value); setErro(''); setBloqueadoInfo(null) }}
                   style={{ ...inputStyle, color: nomeSel ? 'var(--text)' : 'var(--text-faint)', appearance: 'none', cursor: 'pointer' }}
                 >
                   <option value="">Selecione seu nome...</option>
@@ -231,14 +245,25 @@ export default function Login({ onLogin, mensagem }) {
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>PIN pessoal</div>
                 <input
                   type="password" value={pin}
-                  onChange={e => { setPin(e.target.value); setErro('') }}
+                  onChange={e => { setPin(e.target.value); setErro(''); setBloqueadoInfo(null) }}
                   onKeyDown={e => e.key === 'Enter' && entrar()}
                   placeholder="••••" maxLength={6} inputMode="numeric"
                   style={pinStyle}
                 />
               </div>
 
-              {erro && <div style={{ fontSize: 12, color: '#F87171', textAlign: 'center', marginBottom: 14 }}>{erro}</div>}
+              {erro && <div style={{ fontSize: 12, color: '#F87171', textAlign: 'center', marginBottom: 10 }}>{erro}</div>}
+
+              {bloqueadoInfo && (
+                <button onClick={forcarLogin} disabled={entrando} style={{
+                  width: '100%', padding: 12, borderRadius: 14, marginBottom: 14,
+                  border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)',
+                  color: '#F87171', fontSize: 13, fontWeight: 700,
+                  cursor: entrando ? 'default' : 'pointer', fontFamily: 'Syne, sans-serif'
+                }}>
+                  {entrando ? 'Entrando...' : 'Sou eu, entrar mesmo assim'}
+                </button>
+              )}
 
               <button onClick={entrar} disabled={entrando} style={{
                 width: '100%', padding: 15, border: 'none', borderRadius: 14,
