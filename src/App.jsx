@@ -284,15 +284,13 @@ export default function App() {
     { id: 'config', label: t.cfg },
   ].filter(Boolean)
 
-  if (!sessao && !splash) return (
-    <IdiomaContext.Provider value={idioma}>
-      <Login onLogin={fazerLogin} mensagem={mensagemLogin} />
-    </IdiomaContext.Provider>
-  )
-
   return (
     <IdiomaContext.Provider value={idioma}>
-    <div style={{ background: 'var(--bg-app)', minHeight: '100vh', paddingBottom: isDesktop ? 0 : 80 }}>
+    <div style={{ background: 'var(--bg-app)', minHeight: '100vh', paddingBottom: (!sessao || isDesktop) ? 0 : 80 }}>
+
+      {(!sessao && !splash) ? (
+        <Login onLogin={fazerLogin} mensagem={mensagemLogin} />
+      ) : <>
 
       {splash && (
         <div className={`splash ${splashExit ? 'splash-exit' : ''}`}>
@@ -479,6 +477,7 @@ export default function App() {
           </div>
         </div>
       )}
+      </> }
     </div>
     </IdiomaContext.Provider>
   )
