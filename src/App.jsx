@@ -294,7 +294,7 @@ export default function App() {
         <Login onLogin={fazerLogin} mensagem={mensagemLogin} />
       </div>
 
-    {(sessao || splash) && <div style={{ background: 'var(--bg-app)', minHeight: '100vh', paddingBottom: isDesktop ? 0 : 80 }}>
+    <div style={{ background: 'var(--bg-app)', minHeight: '100vh', paddingBottom: isDesktop ? 0 : 80, display: (sessao || splash) ? undefined : 'none' }}>
 
       {splash && (
         <div className={`splash ${splashExit ? 'splash-exit' : ''}`}>
@@ -481,7 +481,7 @@ export default function App() {
           </div>
         </div>
       )}
-    </div>}
+    </div>
     </IdiomaContext.Provider>
   )
 }
