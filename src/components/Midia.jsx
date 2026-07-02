@@ -23,7 +23,7 @@ function getDiaAtual() {
 }
 
 const MEMBROS_FIXOS = ['Alyson', 'Caetano', 'Daniel', 'Joyce', 'Juliana']
-const MEMBROS_EXTRAS = ['Stephany', 'Victória', 'Taiwa', 'Maria Clara']
+const MEMBROS_EXTRAS = ['Stephany', 'Victória', 'Maria Clara']
 
 const FUNCOES_PADRAO = ['Stories', 'Fotografia', 'Gravação de vídeo']
 const TURNOS = [
@@ -39,8 +39,7 @@ const TURNO_NOME = { M: 'Manhã', T: 'Tarde', N: 'Noite', F: 'Folga' }
 const EQUIPE_MEMBRO = {
   'Stephany': { equipeId: 'azul', offset: 2 },
   'Maria Clara': { equipeId: 'verde', offset: 0 },
-  'Victória': { equipeId: 'vermelho', offset: 3 },
-  'Taiwa': { equipeId: 'amarelo', offset: 1 },
+  'Victória': { equipeId: 'amarelo', offset: 1 },
 }
 
 function getTurnoApoio(nome, diaNum) {

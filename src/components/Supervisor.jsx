@@ -5,10 +5,10 @@ import { syncOp } from '../lib/offlineSync'
 import { PINOS } from '../lib/pinos'
 
 const EQUIPES = [
-  { id: 'verde', nome: 'Equipe Verde', lideres: 'Jhony e Linda', membros: ['Emanuel','Hellen Borges','Isabely Matos','Joel Marcos','Jeronimo','Livia Andrea'], offset: 0, cor: 'var(--accent-light)', emoji: '🟢' },
-  { id: 'amarelo', nome: 'Equipe Amarelo', lideres: 'Gustavo e Taiwa', membros: ['Hugo Lacroix','Lorena','Maria Clara','Matheus Almeida','Stephany'], offset: 1, cor: '#FCD34D', emoji: '🟡' },
-  { id: 'azul', nome: 'Equipe Azul', lideres: 'Walterley e Maria Julia', membros: ['Ludymila','Mariana Gabrielle','Mauricio','Rafael','Ryan Guedes'], offset: 2, cor: '#60A5FA', emoji: '🔵' },
-  { id: 'vermelho', nome: 'Equipe Vermelho', lideres: 'Francisco e Clara Cunha', membros: ['Gabriel Mendes','Leticia Nascimento','Nicoly','Rennan','Vic'], offset: 3, cor: '#F87171', emoji: '🔴' },
+  { id: 'verde', nome: 'Equipe Verde', lideres: 'Jhony e Linda', membros: ['Emanuel','Hellen Borges','Joel Marcos','Jeronimo','Maria Clara'], offset: 0, cor: '#4ADE80', emoji: '♣' },
+  { id: 'amarelo', nome: 'Equipe Amarelo', lideres: 'Gustavo Massay e Victória', membros: ['Hugo Lacroix','Leticia Nascimento','Lorena','Maria Clara','Matheus Almeida','Stephany'], offset: 1, cor: '#FCD34D', emoji: '♦' },
+  { id: 'azul', nome: 'Equipe Azul', lideres: 'Walterley e Maria Julia', membros: ['Ludymila','Mariana Gabrielle','Mauricio','Rafael','Ryan Guedes'], offset: 2, cor: '#60A5FA', emoji: '♠' },
+  { id: 'vermelho', nome: 'Equipe Vermelho', lideres: 'Francisco e Clara Cunha', membros: ['Gabriel Mendes','Livia Andrea','Nicoly','Rennan'], offset: 3, cor: '#F87171', emoji: '♥' },
 ]
 const CICLO = ['M','T','N','F']
 const TURNO_LABEL = { M:'Manhã', T:'Tarde', N:'Noite', F:'Folga' }

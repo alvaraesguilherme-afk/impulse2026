@@ -59,7 +59,7 @@ const STAFF_NOMES = [
   'Jhony','Joel Marcos','Joyce','Juliana','Letícia','Linda','Lívia Andréa',
   'Lorena','Ludmyla','Maria Clara','Maria Júlia','Mariana Gabrielle',
   'Matheus Almeida','Maurício','Nicoly','Paula','Rafael Chaves','Rennan',
-  'Ryan Guedes','Samuel Lopes','Stephany','Taiwa','Victória','Walterley'
+  'Ryan Guedes','Samuel Lopes','Stephany','Victória','Walterley'
 ]
 
 const MOSAICO_GLOB = import.meta.glob('/src/assets/mosaico/*.{jpg,jpeg,jfif,png,webp,JPG,JPEG,JFIF,PNG,WEBP}', { eager: true })
