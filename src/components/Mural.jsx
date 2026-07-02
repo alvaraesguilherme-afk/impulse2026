@@ -143,7 +143,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
     setLoading(true)
     let query = supabase.from('mural_fotos').select('*')
     if (recap) {
-      query = query.order('curtidas', { ascending: false }).limit(30)
+      query = query.order('curtidas', { ascending: false }).limit(100)
     } else if (todos && autorFiltro) {
       query = query.eq('autor', autorFiltro).order('created_at', { ascending: false })
     } else {
@@ -303,7 +303,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2
           }}>
             <span style={{ fontSize: 13, fontWeight: 800 }}>🏆 Recap</span>
-            <span style={{ fontSize: 9, opacity: 0.8 }}>Top 30</span>
+            <span style={{ fontSize: 9, opacity: 0.8 }}>Top 100</span>
           </button>
         )}
       </div>
@@ -382,7 +382,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
         <div style={{ padding: '0 16px 100px' }}>
           <div style={{ textAlign: 'center', padding: '18px 0 28px' }}>
             <div style={{ fontSize: 44, marginBottom: 10 }}>🏆</div>
-            <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 21, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Top 30 do Impulso 2026</div>
+            <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 21, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Top 100 do Impulso 2026</div>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', letterSpacing: 0.4 }}>as fotos mais curtidas do evento</div>
           </div>
 
