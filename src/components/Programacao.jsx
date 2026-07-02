@@ -43,6 +43,7 @@ export default function Programacao({ onVoltar, sessao, onAjuda }) {
   const [cadastros, setCadastros] = useState([])
   const [cadNome, setCadNome] = useState('')
   const [cadMembros, setCadMembros] = useState('')
+  const [cadErro, setCadErro] = useState('')
 
   useEffect(() => { carregar(); carregarCadastros() }, [diaSel])
 
@@ -97,8 +98,12 @@ export default function Programacao({ onVoltar, sessao, onAjuda }) {
   async function adicionarCadastro(tipo) {
     if (tipo === 'ministro' && !cadNome.trim()) return
     if (tipo === 'louvor' && !cadNome.trim() && !cadMembros.trim()) return
+    const nome = cadNome.trim() || 'Equipe sem nome'
+    const duplicado = cadastros.some(c => c.tipo === tipo && c.nome.toLowerCase() === nome.toLowerCase())
+    if (duplicado) { setCadErro(`"${nome}" já está cadastrado.`); return }
+    setCadErro('')
     await syncOp('insert', 'programacao_cadastro', {
-      tipo, nome: cadNome.trim() || 'Equipe sem nome', membros: tipo === 'louvor' ? (cadMembros.trim() || null) : null
+      tipo, nome, membros: tipo === 'louvor' ? (cadMembros.trim() || null) : null
     })
     setCadNome('')
     setCadMembros('')
@@ -199,7 +204,7 @@ export default function Programacao({ onVoltar, sessao, onAjuda }) {
                 }}>
                   <input
                     value={cadNome}
-                    onChange={e => setCadNome(e.target.value)}
+                    onChange={e => { setCadNome(e.target.value); setCadErro('') }}
                     placeholder={tipo === 'louvor' ? tx.nomeDaEquipe : tx.nomeDoMinistro}
                     style={{
                       width: '100%', padding: '10px 14px', background: 'var(--input-bg)',
@@ -220,6 +225,9 @@ export default function Programacao({ onVoltar, sessao, onAjuda }) {
                         fontFamily: 'Inter, sans-serif'
                       }}
                     />
+                  )}
+                  {cadErro && (
+                    <div style={{ fontSize: 12, color: '#F87171', marginBottom: 8, textAlign: 'center' }}>{cadErro}</div>
                   )}
                   <button onClick={() => adicionarCadastro(tipo)} style={{
                     width: '100%', padding: 12, borderRadius: 12, border: 'none',
