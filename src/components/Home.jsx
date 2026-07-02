@@ -212,6 +212,11 @@ export default function Home({ onNavegar, sessao }) {
                 <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 600, lineHeight: 1.5, color: 'var(--text)' }}>
                   "{frase.frase}"
                 </div>
+                {sessao?.nome === 'Alvarães' && frase.autor && (
+                  <div style={{ fontSize: 10, color: 'var(--accent-light)', opacity: 0.6, marginTop: 8, fontWeight: 600 }}>
+                    por {frase.autor}
+                  </div>
+                )}
               </>
             ) : (
               <div style={{ fontSize: 13, color: 'var(--text-faint)', fontStyle: 'italic' }}>{tx.toquePraDefinir}</div>
