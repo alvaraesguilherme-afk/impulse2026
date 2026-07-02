@@ -233,7 +233,8 @@ export default function Midia({ onVoltar, sessao, onAjuda }) {
 
                   return (
                     <div key={item.id || `fixed-${idx}`} style={{
-                      background: 'var(--bg-card)', border: '1px solid var(--border)',
+                      background: item.pessoa === sessao?.nome ? 'rgba(250,204,21,0.04)' : 'var(--bg-card)',
+                      border: item.pessoa === sessao?.nome ? '1.5px solid rgba(250,204,21,0.5)' : '1px solid var(--border)',
                       borderRadius: 16, padding: '12px 14px', marginBottom: 8,
                       display: 'flex', alignItems: 'center', gap: 12
                     }}>
