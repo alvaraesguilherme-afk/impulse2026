@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useTexto } from '../lib/i18n'
 
@@ -10,15 +10,26 @@ const CORES = [
   { id: 'verde', label: 'Verde', cor: '#16A34A' },
 ]
 
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+
 export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, sessao, onLogout, onAjuda }) {
   const tx = useTexto()
   const [fontSize, setFontSize] = useState(() => parseInt(localStorage.getItem('impulse_fontsize')) || 100)
   const [accent, setAccentState] = useState(() => localStorage.getItem('impulse_accent') || 'roxo')
+  const [muralOrdem, setMuralOrdemState] = useState(() => localStorage.getItem('impulse_mural_ordem') || 'recentes')
   const [cacheMsg, setCacheMsg] = useState('')
   const [bugTexto, setBugTexto] = useState('')
   const [bugEnviado, setBugEnviado] = useState(false)
   const [showRelatos, setShowRelatos] = useState(false)
   const [relatos, setRelatos] = useState([])
+  const [deferredPrompt, setDeferredPrompt] = useState(null)
+  const jaInstalado = window.matchMedia('(display-mode: standalone)').matches || !!navigator.standalone
+
+  useEffect(() => {
+    const handler = e => { e.preventDefault(); setDeferredPrompt(e) }
+    window.addEventListener('beforeinstallprompt', handler)
+    return () => window.removeEventListener('beforeinstallprompt', handler)
+  }, [])
 
   function setAccent(cor) {
     setAccentState(cor)
@@ -44,6 +55,18 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
     setBugTexto('')
     setBugEnviado(true)
     setTimeout(() => setBugEnviado(false), 3000)
+  }
+
+  function setMuralOrdem(v) {
+    setMuralOrdemState(v)
+    localStorage.setItem('impulse_mural_ordem', v)
+  }
+
+  async function instalarApp() {
+    if (!deferredPrompt) return
+    deferredPrompt.prompt()
+    const { outcome } = await deferredPrompt.userChoice
+    if (outcome === 'accepted') setDeferredPrompt(null)
   }
 
   async function abrirRelatos() {
@@ -132,6 +155,27 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
           </div>
         </div>
 
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '16px 18px', marginBottom: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+            <div style={{ fontSize: 22 }}>🖼️</div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>Ordenação do Mural</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Como as fotos aparecem por padrão</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {[{ id: 'recentes', label: '🕐 Mais recentes' }, { id: 'curtidas', label: '❤️ Mais curtidas' }].map(op => (
+              <button key={op.id} onClick={() => setMuralOrdem(op.id)} style={{
+                flex: 1, padding: '10px', borderRadius: 12, cursor: 'pointer',
+                border: muralOrdem === op.id ? '1px solid var(--accent-border)' : '1px solid var(--border-strong)',
+                background: muralOrdem === op.id ? 'var(--accent-bg)' : 'var(--input-bg)',
+                color: muralOrdem === op.id ? 'var(--accent-light)' : 'var(--text-muted)',
+                fontSize: 12, fontWeight: 600, fontFamily: 'Inter, sans-serif'
+              }}>{op.label}</button>
+            ))}
+          </div>
+        </div>
+
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '16px 18px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
             <div style={{ fontSize: 22 }}>🌐</div>
@@ -151,6 +195,38 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
             ))}
           </div>
         </div>
+
+        {/* INSTALAR */}
+        {!jaInstalado && (
+          <>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12, marginTop: 28 }}>Instalar app</div>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '16px 18px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                <div style={{ fontSize: 22 }}>📲</div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>Instalar na tela inicial</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Acesse sem precisar abrir o navegador</div>
+                </div>
+              </div>
+              {deferredPrompt ? (
+                <button onClick={instalarApp} style={{ width: '100%', padding: '12px', borderRadius: 12, border: 'none', background: 'var(--gradient)', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>
+                  Instalar agora
+                </button>
+              ) : isIOS ? (
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 2 }}>
+                  <div>1. Toque em <strong style={{ color: 'var(--text)' }}>Compartilhar ⬆️</strong> no Safari</div>
+                  <div>2. Role e toque em <strong style={{ color: 'var(--text)' }}>Adicionar à Tela de Início</strong></div>
+                  <div>3. Toque em <strong style={{ color: 'var(--text)' }}>Adicionar</strong> no canto superior direito</div>
+                </div>
+              ) : (
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 2 }}>
+                  <div>1. Toque nos <strong style={{ color: 'var(--text)' }}>três pontos ⋮</strong> do navegador</div>
+                  <div>2. Toque em <strong style={{ color: 'var(--text)' }}>Adicionar à tela inicial</strong></div>
+                </div>
+              )}
+            </div>
+          </>
+        )}
 
         {/* DADOS */}
         <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12, marginTop: 28 }}>{tx.dados}</div>

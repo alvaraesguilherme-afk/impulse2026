@@ -120,6 +120,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
   const [filtroAutor, setFiltroAutor] = useState('')
   const [todosOsDias, setTodosOsDias] = useState(false)
   const [modoRecap, setModoRecap] = useState(false)
+  const [ordem] = useState(() => localStorage.getItem('impulse_mural_ordem') || 'recentes')
   const [modoTeste, setModoTeste] = useState(false)
   const [pendingFile, setPendingFile] = useState(null)
   const [pendingPreview, setPendingPreview] = useState(null)
@@ -128,7 +129,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
   const inputGaleria = useRef(null)
   const inputCamera = useRef(null)
 
-  useEffect(() => { carregarFotos(diaSel, todosOsDias, filtroAutor, modoRecap) }, [diaSel, todosOsDias, filtroAutor, modoRecap])
+  useEffect(() => { carregarFotos(diaSel, todosOsDias, filtroAutor, modoRecap) }, [diaSel, todosOsDias, filtroAutor, modoRecap, ordem])
 
   useEffect(() => {
     if (fotoAberta) {
@@ -147,7 +148,8 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
     } else if (todos && autorFiltro) {
       query = query.eq('autor', autorFiltro).order('created_at', { ascending: false })
     } else {
-      query = query.eq('dia', DIAS[diaIdx].num).order('created_at', { ascending: false })
+      const col = ordem === 'curtidas' ? 'curtidas' : 'created_at'
+      query = query.eq('dia', DIAS[diaIdx].num).order(col, { ascending: false })
     }
     const { data } = await query
     setFotos(data || [])
@@ -209,6 +211,22 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
       supabase.storage.from('mural').remove([foto.arquivo]),
       supabase.from('mural_fotos').delete().eq('id', foto.id)
     ])
+  }
+
+  async function baixarFoto(url) {
+    try {
+      const res = await fetch(url)
+      const blob = await res.blob()
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = `impulse2026.jpg`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(a.href)
+    } catch {
+      window.open(url, '_blank')
+    }
   }
 
   async function curtirFoto(foto) {
@@ -491,7 +509,12 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
       {fotoAberta && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 400, display: 'flex', flexDirection: 'column' }}>
           {/* Cabeçalho fixo — botão fechar sempre visível */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '14px 16px 0', flexShrink: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, padding: '14px 16px 0', flexShrink: 0 }}>
+            <button onClick={() => baixarFoto(fotoAberta.url)} style={{
+              width: 36, height: 36, background: 'rgba(255,255,255,0.1)', borderRadius: 12,
+              border: 'none', color: 'white', fontSize: 17, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>⬇️</button>
             <button onClick={() => { setFotoAberta(null); setConfirmDelete(false) }} style={{
               width: 36, height: 36, background: 'rgba(255,255,255,0.1)', borderRadius: 12,
               border: 'none', color: 'white', fontSize: 18, cursor: 'pointer',
