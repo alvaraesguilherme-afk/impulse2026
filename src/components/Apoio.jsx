@@ -95,6 +95,12 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
 
   const equipesFiltradas = lider?.equipeId === '' ? EQUIPES : EQUIPES.filter(e => e.id === lider?.equipeId)
 
+  function isMinhaEquipe(eq) {
+    if (!sessao?.nome) return false
+    const lideres = eq.lideres.split(' e ').map(l => l.trim())
+    return eq.membros.includes(sessao.nome) || lideres.includes(sessao.nome)
+  }
+
   return (
     <div style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
       <BackBtn onVoltar={onVoltar} titulo={tx.escalasDeServico} onAjuda={onAjuda} />
@@ -156,7 +162,7 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
                 const equipe = EQUIPES.find(eq => getTurno(eq, diaEscala) === turnoId)
                 if (!equipe) return null
                 return (
-                  <div key={turnoId} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: 18, marginBottom: 12 }}>
+                  <div key={turnoId} style={{ background: isMinhaEquipe(equipe) ? 'rgba(250,204,21,0.04)' : 'var(--bg-card)', border: isMinhaEquipe(equipe) ? '1.5px solid rgba(250,204,21,0.5)' : '1px solid var(--border)', borderRadius: 20, padding: 18, marginBottom: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ fontSize: 18 }}>{TURNO_ICON[turnoId]}</span>
@@ -177,7 +183,7 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
               })}
 
               {EQUIPES.filter(eq => getTurno(eq, diaEscala) === 'F').map(eq => (
-                <div key={eq.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, marginBottom: 8 }}>
+                <div key={eq.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: isMinhaEquipe(eq) ? 'rgba(250,204,21,0.04)' : 'var(--bg-card)', border: isMinhaEquipe(eq) ? '1.5px solid rgba(250,204,21,0.5)' : '1px solid var(--border)', borderRadius: 14, marginBottom: 8 }}>
                   <span style={{ fontSize: 14 }}>{eq.emoji}</span>
                   <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{eq.nome}</span>
                   <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-faint)', fontWeight: 600 }}>😴 Folga</span>
