@@ -12,6 +12,7 @@ export const PINOS = {
   'Eliel':             { pin: '1778',  nivel: 'basico' },
   'Edson':             { pin: '3321',  nivel: 'basico' },
   'Paula':             { pin: '9089',  nivel: 'basico' },
+  'Ana Luiza':         { pin: '52916', nivel: 'staff'  },
   'Clara Cunha':       { pin: '47823', nivel: 'staff'  },
   'Daniel':            { pin: '19654', nivel: 'staff'  },
   'Emanuel':           { pin: '35617', nivel: 'staff'  },

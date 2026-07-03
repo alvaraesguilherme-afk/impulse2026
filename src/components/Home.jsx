@@ -113,6 +113,7 @@ export default function Home({ onNavegar, sessao }) {
   const [showFraseModal, setShowFraseModal] = useState(false)
   const [fraseInput, setFraseInput] = useState('')
   const [fraseErro, setFraseErro] = useState('')
+  const [salvandoFrase, setSalvandoFrase] = useState(false)
   const [fotoDestaque, setFotoDestaque] = useState(null)
 
   const nivelSupervisor = NIVEIS_SUPERVISOR.includes(sessao?.nivel)
@@ -153,16 +154,22 @@ export default function Home({ onNavegar, sessao }) {
 
   async function salvarFrase() {
     if (!fraseInput.trim()) { setFraseErro('Digite a frase.'); return }
+    if (salvandoFrase) return
+    setSalvandoFrase(true)
     const autor = sessao?.nome || 'Supervisor'
     await syncOp('upsert', 'frase_do_dia', { dia: diaFrase, frase: fraseInput.trim(), autor }, { onConflict: 'dia' })
     setFrase({ dia: diaFrase, frase: fraseInput.trim(), autor })
+    setSalvandoFrase(false)
     setShowFraseModal(false)
   }
 
   async function excluirFrase() {
+    if (salvandoFrase) return
+    setSalvandoFrase(true)
     await syncOp('delete', 'frase_do_dia', { dia: diaFrase })
     setFrase(null)
     setFraseInput('')
+    setSalvandoFrase(false)
     setShowFraseModal(false)
   }
 
@@ -295,11 +302,11 @@ export default function Home({ onNavegar, sessao }) {
               style={{ width: '100%', padding: '12px 14px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 14, color: 'var(--text)', outline: 'none', marginBottom: 12, fontFamily: 'Inter, sans-serif', resize: 'none' }}
             />
             {fraseErro && <p style={{ fontSize: 12, color: '#F87171', marginBottom: 10 }}>{fraseErro}</p>}
-            <button onClick={salvarFrase} style={{ width: '100%', padding: 14, background: 'var(--gradient)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'var(--text)', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>Salvar</button>
+            <button onClick={salvarFrase} disabled={salvandoFrase} style={{ width: '100%', padding: 14, background: 'var(--gradient)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: salvandoFrase ? 'not-allowed' : 'pointer', opacity: salvandoFrase ? 0.6 : 1, color: 'var(--text)', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>{salvandoFrase ? 'Salvando...' : 'Salvar'}</button>
             {podeEditarFrase && (
-              <button onClick={excluirFrase} style={{ width: '100%', padding: 14, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', color: '#F87171', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>Excluir frase</button>
+              <button onClick={excluirFrase} disabled={salvandoFrase} style={{ width: '100%', padding: 14, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: salvandoFrase ? 'not-allowed' : 'pointer', opacity: salvandoFrase ? 0.6 : 1, color: '#F87171', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>Excluir frase</button>
             )}
-            <button onClick={() => setShowFraseModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
+            <button onClick={() => setShowFraseModal(false)} disabled={salvandoFrase} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: salvandoFrase ? 'not-allowed' : 'pointer' }}>Cancelar</button>
           </div>
         </div>
       )}
