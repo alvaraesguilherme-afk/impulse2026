@@ -23,7 +23,7 @@ function getDiaAtual() {
 }
 
 const MEMBROS_FIXOS = ['Alyson', 'Caetano', 'Daniel', 'Joyce', 'Juliana']
-const MEMBROS_EXTRAS = ['Stephany', 'Victória', 'Maria Clara']
+const MEMBROS_EXTRAS = ['Sthefany', 'Victória', 'Maria Clara']
 
 const FUNCOES_PADRAO = ['Stories', 'Fotografia', 'Gravação de vídeo']
 const TURNOS = [
@@ -37,7 +37,7 @@ const SENHAS_COORD = { '0404': 'Caetano', '2121': 'Alyson', '2306': 'Alvarães',
 const CICLO_APOIO = ['M', 'T', 'N', 'F']
 const TURNO_NOME = { M: 'Manhã', T: 'Tarde', N: 'Noite', F: 'Folga' }
 const EQUIPE_MEMBRO = {
-  'Stephany': { equipeId: 'azul', offset: 2 },
+  'Sthefany': { equipeId: 'azul', offset: 2 },
   'Maria Clara': { equipeId: 'verde', offset: 0 },
   'Victória': { equipeId: 'amarelo', offset: 1 },
 }
