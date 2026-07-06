@@ -40,6 +40,8 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
   const [chamadaData, setChamadaData] = useState({})
   const [faltas, setFaltas] = useState({})
   const [erroSalvar, setErroSalvar] = useState(false)
+  const [publicandoAviso, setPublicandoAviso] = useState(false)
+  const [erroAviso, setErroAviso] = useState(false)
   const [convidados, setConvidados] = useState([])
   const [loadingConvidados, setLoadingConvidados] = useState(false)
 
@@ -62,13 +64,20 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
   }
 
   async function publicarAviso() {
-    if (!avisoTexto.trim()) return
+    if (!avisoTexto.trim() || publicandoAviso) return
+    setPublicandoAviso(true)
+    setErroAviso(false)
     const hj = new Date()
     const hora = hj.getHours() + ':' + String(hj.getMinutes()).padStart(2, '0')
     const ok = await syncOp('insert', 'avisos', { texto: avisoTexto.trim(), data: hj.getDate() + '/07', hora })
-    if (ok) notificar({ tipo: 'aviso' })
-    setAvisoTexto('')
-    carregarAvisos()
+    if (ok) {
+      notificar({ tipo: 'aviso' })
+      setAvisoTexto('')
+      carregarAvisos()
+    } else {
+      setErroAviso(true)
+    }
+    setPublicandoAviso(false)
   }
 
   async function deletarAviso(id) {
@@ -181,8 +190,13 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
           <>
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: 18, marginBottom: 16 }}>
               <textarea value={avisoTexto} onChange={e => setAvisoTexto(e.target.value)} placeholder="Digite o aviso para todos verem..." style={{ width: '100%', padding: 12, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, fontSize: 14, resize: 'none', outline: 'none', color: 'var(--text)', fontFamily: 'Inter, sans-serif', minHeight: 100 }} />
-              <button onClick={publicarAviso} style={{ width: '100%', marginTop: 12, padding: 14, background: 'var(--gradient)', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: 'pointer', color: 'var(--text)', fontFamily: 'Syne, sans-serif' }}>
-                📢 Publicar aviso
+              {erroAviso && (
+                <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 12, padding: '10px 14px', marginTop: 10, fontSize: 12, color: '#F87171' }}>
+                  ⚠️ Não foi possível publicar agora. Verifique sua internet e tente de novo.
+                </div>
+              )}
+              <button onClick={publicarAviso} disabled={publicandoAviso} style={{ width: '100%', marginTop: 12, padding: 14, background: publicandoAviso ? 'var(--input-bg)' : 'var(--gradient)', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: publicandoAviso ? 'default' : 'pointer', color: publicandoAviso ? 'var(--text-faint)' : 'var(--text)', fontFamily: 'Syne, sans-serif' }}>
+                {publicandoAviso ? 'Publicando...' : '📢 Publicar aviso'}
               </button>
             </div>
             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Publicados</div>
