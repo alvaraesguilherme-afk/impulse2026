@@ -4,6 +4,7 @@ import { syncOp } from '../lib/offlineSync'
 import { useTexto } from '../lib/i18n'
 import { vibrar } from '../lib/haptics'
 import { notificar } from '../lib/push'
+import { rotuloRelativo, horasDesde } from '../lib/tempo'
 
 const INICIO = new Date(2026, 6, 15)
 const FIM = new Date(2026, 6, 25, 23, 59, 59)
@@ -204,12 +205,13 @@ export default function Home({ onNavegar, sessao }) {
           </div>
           <div style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 500, marginBottom: 24 }}>15 a 25 de julho · Rancho Império</div>
 
-          {!modoRestrito && avisos.length > 0 && (
+          {!modoRestrito && avisos.length > 0 && horasDesde(avisos[0].created_at) < 24 && (
             <div style={{ marginBottom: 24, background: 'rgba(239,68,68,0.14)', border: '2px solid rgba(239,68,68,0.6)', boxShadow: '0 0 16px rgba(239,68,68,0.2)', borderRadius: 16, padding: 14, display: 'flex', alignItems: 'center', gap: 12, cursor: podeSupervisor ? 'pointer' : 'default' }} onClick={() => podeSupervisor && onNavegar('supervisor')}>
               <div style={{ fontSize: 20 }}>📢</div>
               <div style={{ flex: 1 }}>
                 <p style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.4 }}>{avisos[0].texto}</p>
-                <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{avisos[0].data} às {avisos[0].hora}</span>
+                <span style={{ fontSize: 10, fontWeight: 800, color: '#F87171' }}>{rotuloRelativo(avisos[0].created_at)}</span>
+                <span style={{ fontSize: 10, color: 'var(--text-muted)' }}> · {avisos[0].hora}</span>
               </div>
               <div style={{ fontSize: 18, color: 'var(--text-faint)' }}>›</div>
             </div>

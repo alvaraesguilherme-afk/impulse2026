@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { syncOp } from '../lib/offlineSync'
 import { PINOS } from '../lib/pinos'
 import { EQUIPES } from '../lib/equipes'
+import { rotuloRelativo } from '../lib/tempo'
 import { notificar } from '../lib/push'
 const CICLO = ['M','T','N','F']
 const TURNO_LABEL = { M:'Manhã', T:'Tarde', N:'Noite', F:'Folga' }
@@ -205,7 +206,7 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
               <div key={a.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: 18, marginBottom: 10 }}>
                 <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 10, lineHeight: 1.5 }}>{a.texto}</div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>{a.data} às {a.hora}</span>
+                  <span style={{ fontSize: 11, color: 'var(--text-faint)' }}><strong style={{ color: '#F87171' }}>{rotuloRelativo(a.created_at)}</strong> · {a.hora}</span>
                   <button onClick={() => deletarAviso(a.id)} style={{ padding: '6px 14px', background: 'rgba(239,68,68,0.2)', color: '#F87171', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>🗑 Remover</button>
                 </div>
               </div>
