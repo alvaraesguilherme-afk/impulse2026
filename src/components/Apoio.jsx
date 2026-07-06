@@ -97,9 +97,14 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
   }
 
   const minhaEquipeId = lider ? lider.equipeId : (EQUIPES.find(eq => isMinhaEquipe(eq))?.id ?? null)
+  // Cada equipe tem 2 lideres (ex: "Jhony e Linda"); LIDERES_CHAMADA so lista 1 por equipe
+  // (o que tem acesso a chamada). Pra mensagens, os 2 lideres podem escrever.
+  const equipeComoCoLider = EQUIPES.find(eq => eq.lideres.split(' e ').map(l => l.trim()).includes(sessao?.nome))
+  const podeEnviarMensagem = !!lider || !!equipeComoCoLider
   const [mensagens, setMensagens] = useState([])
   const [msgTexto, setMsgTexto] = useState('')
   const [enviandoMsg, setEnviandoMsg] = useState(false)
+  const [equipeDestino, setEquipeDestino] = useState('')
 
   async function carregarMensagens() {
     let q = supabase.from('mensagens_equipe').select('*').order('created_at', { ascending: false })
@@ -111,10 +116,11 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
   useEffect(() => { if (aba === 'mensagens') carregarMensagens() }, [aba])
 
   async function enviarMensagem() {
-    if (!msgTexto.trim() || !lider) return
+    if (!msgTexto.trim() || !podeEnviarMensagem) return
+    const alvo = lider?.equipeId === '' ? equipeDestino : (lider?.equipeId ?? equipeComoCoLider?.id)
     setEnviandoMsg(true)
-    const ok = await syncOp('insert', 'mensagens_equipe', { equipe_id: lider.equipeId, autor: sessao.nome, texto: msgTexto.trim() })
-    if (ok) notificar({ tipo: 'equipe', equipeId: lider.equipeId })
+    const ok = await syncOp('insert', 'mensagens_equipe', { equipe_id: alvo, autor: sessao.nome, texto: msgTexto.trim() })
+    if (ok) notificar({ tipo: 'equipe', equipeId: alvo })
     setMsgTexto('')
     setEnviandoMsg(false)
     carregarMensagens()
@@ -269,11 +275,24 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
         )}
         {aba === 'mensagens' && (
           <>
-            {lider && (
+            {podeEnviarMensagem && (
               <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '16px 18px', marginBottom: 16 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
-                  {lider.equipeId === '' ? 'Mandar mensagem para todo o Apoio' : 'Mandar mensagem para sua equipe'}
+                  {lider?.equipeId === '' ? 'Mandar mensagem' : 'Mandar mensagem para sua equipe'}
                 </div>
+                {lider?.equipeId === '' && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+                    {[...EQUIPES.map(eq => ({ id: eq.id, label: `${eq.emoji} ${eq.nome}` })), { id: '', label: '📢 Todas as equipes' }].map(op => (
+                      <button key={op.id || 'todas'} onClick={() => setEquipeDestino(op.id)} style={{
+                        padding: '6px 12px', borderRadius: 20, cursor: 'pointer', whiteSpace: 'nowrap',
+                        border: equipeDestino === op.id ? '1px solid var(--accent-border)' : '1px solid var(--border-strong)',
+                        background: equipeDestino === op.id ? 'var(--accent-bg)' : 'var(--input-bg)',
+                        color: equipeDestino === op.id ? 'var(--accent-light)' : 'var(--text-muted)',
+                        fontSize: 12, fontWeight: 600, fontFamily: 'Inter, sans-serif'
+                      }}>{op.label}</button>
+                    ))}
+                  </div>
+                )}
                 <textarea
                   value={msgTexto}
                   onChange={e => setMsgTexto(e.target.value)}

@@ -204,6 +204,17 @@ export default function Home({ onNavegar, sessao }) {
           </div>
           <div style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 500, marginBottom: 24 }}>15 a 25 de julho · Rancho Império</div>
 
+          {!modoRestrito && avisos.length > 0 && (
+            <div style={{ marginBottom: 24, background: 'rgba(239,68,68,0.14)', border: '2px solid rgba(239,68,68,0.6)', boxShadow: '0 0 16px rgba(239,68,68,0.2)', borderRadius: 16, padding: 14, display: 'flex', alignItems: 'center', gap: 12, cursor: podeSupervisor ? 'pointer' : 'default' }} onClick={() => podeSupervisor && onNavegar('supervisor')}>
+              <div style={{ fontSize: 20 }}>📢</div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.4 }}>{avisos[0].texto}</p>
+                <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{avisos[0].data} às {avisos[0].hora}</span>
+              </div>
+              <div style={{ fontSize: 18, color: 'var(--text-faint)' }}>›</div>
+            </div>
+          )}
+
           <ContadorSection />
         </div>
 
@@ -233,16 +244,6 @@ export default function Home({ onNavegar, sessao }) {
           </div>
         )}
 
-        {!modoRestrito && avisos.length > 0 && (
-          <div style={{ margin: '24px 22px 0', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 16, padding: 14, display: 'flex', alignItems: 'center', gap: 12, cursor: podeSupervisor ? 'pointer' : 'default' }} onClick={() => podeSupervisor && onNavegar('supervisor')}>
-            <div style={{ fontSize: 20 }}>📢</div>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.4 }}>{avisos[0].texto}</p>
-              <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{avisos[0].data} às {avisos[0].hora}</span>
-            </div>
-            <div style={{ fontSize: 18, color: 'var(--text-faint)' }}>›</div>
-          </div>
-        )}
         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: 2, textTransform: 'uppercase', padding: '24px 22px 14px' }}>{tx.modulos}</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, padding: '0 22px' }}>
           {modulosExibidos.map(m => (
