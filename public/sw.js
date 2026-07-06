@@ -1,4 +1,4 @@
-const CACHE_NAME = 'impulse2026-v5'
+const CACHE_NAME = 'impulse2026-v6'
 const FONTS_CACHE = 'impulse2026-fonts-v1'
 const STATIC_ASSETS = [
   '/',
@@ -26,6 +26,11 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url)
+
+  // Chamadas de API (ex: /api/send-push) e qualquer requisicao que nao seja GET
+  // nunca devem passar pelo cache — deixa ir direto pra rede e falhar de verdade
+  // se a rede estiver fora, em vez de mascarar o erro devolvendo uma pagina em cache.
+  if (url.pathname.startsWith('/api/') || e.request.method !== 'GET') return
 
   // Fontes Google: cache-first — sem requisição de rede em visitas repetidas
   if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
