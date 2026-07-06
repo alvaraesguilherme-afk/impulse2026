@@ -22,9 +22,14 @@ export function suportaNotificacoes() {
   return 'serviceWorker' in navigator && 'PushManager' in window
 }
 
-export function getStatusNotificacoes() {
+export async function getStatusNotificacoes() {
   if (!suportaNotificacoes()) return 'unsupported'
-  return Notification.permission // 'default' | 'granted' | 'denied'
+  if (Notification.permission === 'denied') return 'denied'
+  if (Notification.permission !== 'granted') return 'default'
+  // Permissão concedida não significa inscrito — checar se existe inscrição de push ativa de verdade
+  const registration = await navigator.serviceWorker.ready
+  const sub = await registration.pushManager.getSubscription()
+  return sub ? 'granted' : 'default'
 }
 
 export async function ativarNotificacoes(sessao) {

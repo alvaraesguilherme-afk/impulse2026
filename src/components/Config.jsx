@@ -27,19 +27,18 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
   const [carregandoNotif, setCarregandoNotif] = useState(false)
   const [erroNotif, setErroNotif] = useState('')
 
-  useEffect(() => { setStatusNotif(getStatusNotificacoes()) }, [])
+  useEffect(() => { getStatusNotificacoes().then(setStatusNotif) }, [])
 
   async function alternarNotificacoes() {
     setErroNotif('')
     setCarregandoNotif(true)
     if (statusNotif === 'granted') {
       await desativarNotificacoes()
-      setStatusNotif(getStatusNotificacoes())
     } else {
       const resultado = await ativarNotificacoes(sessao)
       if (!resultado.ok) setErroNotif(resultado.erro)
-      setStatusNotif(getStatusNotificacoes())
     }
+    setStatusNotif(await getStatusNotificacoes())
     setCarregandoNotif(false)
   }
 
