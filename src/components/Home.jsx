@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { syncOp } from '../lib/offlineSync'
 import { useTexto } from '../lib/i18n'
 import { vibrar } from '../lib/haptics'
+import { notificar } from '../lib/push'
 
 const INICIO = new Date(2026, 6, 15)
 const FIM = new Date(2026, 6, 25, 23, 59, 59)
@@ -157,7 +158,8 @@ export default function Home({ onNavegar, sessao }) {
     if (salvandoFrase) return
     setSalvandoFrase(true)
     const autor = sessao?.nome || 'Supervisor'
-    await syncOp('upsert', 'frase_do_dia', { dia: diaFrase, frase: fraseInput.trim(), autor }, { onConflict: 'dia' })
+    const ok = await syncOp('upsert', 'frase_do_dia', { dia: diaFrase, frase: fraseInput.trim(), autor }, { onConflict: 'dia' })
+    if (ok) notificar({ tipo: 'frase', dia: diaFrase })
     setFrase({ dia: diaFrase, frase: fraseInput.trim(), autor })
     setSalvandoFrase(false)
     setShowFraseModal(false)

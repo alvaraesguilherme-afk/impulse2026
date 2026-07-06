@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { syncOp } from '../lib/offlineSync'
 import { PINOS } from '../lib/pinos'
 import { EQUIPES } from '../lib/equipes'
+import { notificar } from '../lib/push'
 const CICLO = ['M','T','N','F']
 const TURNO_LABEL = { M:'Manhã', T:'Tarde', N:'Noite', F:'Folga' }
 const DIAS_C = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
@@ -64,7 +65,8 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
     if (!avisoTexto.trim()) return
     const hj = new Date()
     const hora = hj.getHours() + ':' + String(hj.getMinutes()).padStart(2, '0')
-    await syncOp('insert', 'avisos', { texto: avisoTexto.trim(), data: hj.getDate() + '/07', hora })
+    const ok = await syncOp('insert', 'avisos', { texto: avisoTexto.trim(), data: hj.getDate() + '/07', hora })
+    if (ok) notificar({ tipo: 'aviso' })
     setAvisoTexto('')
     carregarAvisos()
   }

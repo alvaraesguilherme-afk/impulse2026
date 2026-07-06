@@ -152,8 +152,8 @@ export default function App() {
       .eq('nome', nome)
       .eq('device_id', deviceId)
       .maybeSingle()
-      .then(({ data }) => {
-        if (!data) {
+      .then(({ data, error }) => {
+        if (!data && !error) {
           localStorage.removeItem('impulse_sessao')
           setMensagemLogin('Sessão expirada. Faça login novamente.')
           setSessao(null)
@@ -166,12 +166,15 @@ export default function App() {
     const deviceId = getDeviceId()
 
     async function validarSessao() {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('sessoes_ativas')
         .select('device_id')
         .eq('nome', sessao.nome)
         .eq('device_id', deviceId)
         .maybeSingle()
+      if (error) {
+        return // falha de rede/consulta: não desloga, tenta de novo na próxima
+      }
       if (!data) {
         fazerLogout('Sua sessão foi encerrada em outro dispositivo.')
       } else {

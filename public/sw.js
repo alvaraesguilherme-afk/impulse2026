@@ -1,4 +1,4 @@
-const CACHE_NAME = 'impulse2026-v4'
+const CACHE_NAME = 'impulse2026-v5'
 const FONTS_CACHE = 'impulse2026-fonts-v1'
 const STATIC_ASSETS = [
   '/',
@@ -58,5 +58,31 @@ self.addEventListener('fetch', e => {
         return res
       })
       .catch(() => caches.match(e.request).then(r => r || caches.match('/')))
+  )
+})
+
+self.addEventListener('push', e => {
+  let data = {}
+  try { data = e.data ? e.data.json() : {} } catch { data = {} }
+
+  const options = {
+    body: data.body || '',
+    icon: '/icon-512.png',
+    badge: '/icon-512.png',
+    tag: data.tipo || 'impulse-generic',
+    data: { url: data.url || '/' },
+  }
+
+  e.waitUntil(self.registration.showNotification(data.title || 'Impulse 2026', options))
+})
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close()
+  const url = e.notification.data?.url || '/'
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const c of list) if ('focus' in c) return c.focus()
+      if (clients.openWindow) return clients.openWindow(url)
+    })
   )
 })

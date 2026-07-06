@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTexto } from '../lib/i18n'
 import { supabase } from '../lib/supabase'
 import { syncOp } from '../lib/offlineSync'
 import { EQUIPES } from '../lib/equipes'
+import { notificar } from '../lib/push'
 
 const CICLO = ['M','T','N','F']
 const TURNO_KEY = { M:'manha', T:'tarde', N:'noite', F:'folga' }
@@ -95,11 +96,35 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
     return eq.membros.includes(sessao.nome) || lideres.includes(sessao.nome)
   }
 
+  const minhaEquipeId = lider ? lider.equipeId : (EQUIPES.find(eq => isMinhaEquipe(eq))?.id ?? null)
+  const [mensagens, setMensagens] = useState([])
+  const [msgTexto, setMsgTexto] = useState('')
+  const [enviandoMsg, setEnviandoMsg] = useState(false)
+
+  async function carregarMensagens() {
+    let q = supabase.from('mensagens_equipe').select('*').order('created_at', { ascending: false })
+    if (minhaEquipeId !== '') q = q.eq('equipe_id', minhaEquipeId)
+    const { data } = await q
+    setMensagens(data || [])
+  }
+
+  useEffect(() => { if (aba === 'mensagens') carregarMensagens() }, [aba])
+
+  async function enviarMensagem() {
+    if (!msgTexto.trim() || !lider) return
+    setEnviandoMsg(true)
+    const ok = await syncOp('insert', 'mensagens_equipe', { equipe_id: lider.equipeId, autor: sessao.nome, texto: msgTexto.trim() })
+    if (ok) notificar({ tipo: 'equipe', equipeId: lider.equipeId })
+    setMsgTexto('')
+    setEnviandoMsg(false)
+    carregarMensagens()
+  }
+
   return (
     <div style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
       <BackBtn onVoltar={onVoltar} titulo={tx.escalasDeServico} onAjuda={onAjuda} />
       <div style={{ display: 'flex', gap: 8, padding: '16px 22px', overflowX: 'auto', scrollbarWidth: 'none' }}>
-        {[{id:'times',label:`👥 ${tx.times}`},{id:'escalas',label:`📅 ${tx.escalas}`},LIDERES_CHAMADA.some(l => l.nome === sessao?.nome) && {id:'chamada',label:`📋 ${tx.chamada}`}].filter(Boolean).map(a => (
+        {[{id:'times',label:`👥 ${tx.times}`},{id:'escalas',label:`📅 ${tx.escalas}`},LIDERES_CHAMADA.some(l => l.nome === sessao?.nome) && {id:'chamada',label:`📋 ${tx.chamada}`},minhaEquipeId !== null && {id:'mensagens',label:'💬 Mensagens'}].filter(Boolean).map(a => (
           <button key={a.id} onClick={() => setAba(a.id)} style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 20, border: '1px solid var(--border-strong)', background: aba === a.id ? 'var(--accent-glow)' : 'var(--bg-card)', color: aba === a.id ? 'var(--accent-light)' : 'var(--text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
             {a.label}
           </button>
@@ -240,6 +265,43 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
               )
             })}
             {(!diaSel || !turnoSel) && <p style={{ fontSize: 13, color: 'var(--text-faint)', textAlign: 'center', padding: 20 }}>{tx.selecioneDiaTurno}</p>}
+          </>
+        )}
+        {aba === 'mensagens' && (
+          <>
+            {lider && (
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '16px 18px', marginBottom: 16 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
+                  {lider.equipeId === '' ? 'Mandar mensagem para todo o Apoio' : 'Mandar mensagem para sua equipe'}
+                </div>
+                <textarea
+                  value={msgTexto}
+                  onChange={e => setMsgTexto(e.target.value)}
+                  placeholder="Escreva um recado..."
+                  rows={3}
+                  style={{ width: '100%', padding: '12px 14px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 12, fontSize: 13, color: 'var(--text)', outline: 'none', marginBottom: 8, fontFamily: 'Inter, sans-serif', resize: 'none' }}
+                />
+                <button
+                  onClick={enviarMensagem}
+                  disabled={!msgTexto.trim() || enviandoMsg}
+                  style={{
+                    width: '100%', padding: 12, borderRadius: 12, border: 'none',
+                    background: msgTexto.trim() ? 'var(--gradient)' : 'var(--input-bg)',
+                    color: msgTexto.trim() ? 'white' : 'var(--text-faint)',
+                    fontSize: 13, fontWeight: 700, cursor: msgTexto.trim() ? 'pointer' : 'not-allowed', fontFamily: 'Inter, sans-serif'
+                  }}
+                >{enviandoMsg ? 'Enviando...' : 'Enviar'}</button>
+              </div>
+            )}
+            {mensagens.length === 0 && (
+              <p style={{ fontSize: 13, color: 'var(--text-faint)', textAlign: 'center', padding: 20 }}>Nenhuma mensagem ainda.</p>
+            )}
+            {mensagens.map(m => (
+              <div key={m.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: '12px 14px', marginBottom: 8 }}>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{m.texto}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 6 }}>{m.autor} · {new Date(m.created_at).toLocaleString('pt-BR')}</div>
+              </div>
+            ))}
           </>
         )}
       </div>

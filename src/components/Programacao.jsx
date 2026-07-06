@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useTexto } from '../lib/i18n'
 import { supabase } from '../lib/supabase'
 import { syncOp } from '../lib/offlineSync'
+import { notificar } from '../lib/push'
 
 const INICIO = new Date(2026, 6, 15)
 const TOTAL_DIAS = 11
@@ -84,7 +85,8 @@ export default function Programacao({ onVoltar, sessao, onAjuda }) {
       membros: tipo === 'louvor' ? (cadastro?.membros || null) : null,
       tema: tipo === 'ministro' ? (formTema.trim() || null) : null,
     }
-    await syncOp('upsert', 'programacao', payload, { onConflict: 'dia,turno,tipo' })
+    const ok = await syncOp('upsert', 'programacao', payload, { onConflict: 'dia,turno,tipo' })
+    if (ok) notificar({ tipo: 'programacao', dia: payload.dia, turno: payload.turno, tipoProg: payload.tipo })
     setEditando(null)
     carregar()
   }
@@ -115,9 +117,11 @@ export default function Programacao({ onVoltar, sessao, onAjuda }) {
     carregarCadastros()
   }
 
+  const podeVerPreletores = sessao?.nivel === 'maximo' || sessao?.nome === 'Paula'
+
   const ABAS = [
     { id: 'louvor', label: '🎵 Louvor' },
-    { id: 'ministro', label: '🎤 Preletores' },
+    ...(podeVerPreletores ? [{ id: 'ministro', label: '🎤 Preletores' }] : []),
     ...(coordenador ? [{ id: 'cadastro', label: '⚙️ Cadastro' }] : []),
   ]
 

@@ -1,6 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useTexto } from '../lib/i18n'
+import { getStatusNotificacoes, ativarNotificacoes, desativarNotificacoes, suportaNotificacoes } from '../lib/push'
+
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+const jaInstalado = window.matchMedia('(display-mode: standalone)').matches || !!navigator.standalone
 
 const CORES = [
   { id: 'roxo', label: 'Roxo', cor: '#7C3AED' },
@@ -19,6 +23,25 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
   const [bugEnviado, setBugEnviado] = useState(false)
   const [showRelatos, setShowRelatos] = useState(false)
   const [relatos, setRelatos] = useState([])
+  const [statusNotif, setStatusNotif] = useState('unsupported')
+  const [carregandoNotif, setCarregandoNotif] = useState(false)
+  const [erroNotif, setErroNotif] = useState('')
+
+  useEffect(() => { setStatusNotif(getStatusNotificacoes()) }, [])
+
+  async function alternarNotificacoes() {
+    setErroNotif('')
+    setCarregandoNotif(true)
+    if (statusNotif === 'granted') {
+      await desativarNotificacoes()
+      setStatusNotif(getStatusNotificacoes())
+    } else {
+      const resultado = await ativarNotificacoes(sessao)
+      if (!resultado.ok) setErroNotif(resultado.erro)
+      setStatusNotif(getStatusNotificacoes())
+    }
+    setCarregandoNotif(false)
+  }
 
   function setAccent(cor) {
     setAccentState(cor)
@@ -151,6 +174,38 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
             ))}
           </div>
         </div>
+
+        {/* NOTIFICAÇÕES */}
+        {suportaNotificacoes() && (
+          <>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12, marginTop: 28 }}>Notificações</div>
+
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '16px 18px', marginBottom: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ fontSize: 22 }}>🔔</div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600 }}>Notificações push</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                      {statusNotif === 'granted' ? 'Ativadas neste dispositivo' : statusNotif === 'denied' ? 'Bloqueadas — libere nas configurações do navegador' : 'Avisos, frase do dia e programação'}
+                    </div>
+                  </div>
+                </div>
+                {statusNotif !== 'denied' && (
+                  <div className={`toggle-track ${statusNotif === 'granted' ? 'active' : ''}`} onClick={carregandoNotif ? undefined : alternarNotificacoes} style={{ opacity: carregandoNotif ? 0.5 : 1, cursor: carregandoNotif ? 'default' : 'pointer' }}>
+                    <div className="toggle-thumb" />
+                  </div>
+                )}
+              </div>
+              {erroNotif && <div style={{ fontSize: 12, color: '#F87171', marginTop: 10 }}>{erroNotif}</div>}
+              {isIOS && !jaInstalado && (
+                <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 10, lineHeight: 1.4 }}>
+                  No iPhone, notificações só funcionam depois de adicionar o app à Tela de Início (Safari → Compartilhar → Adicionar à Tela de Início).
+                </div>
+              )}
+            </div>
+          </>
+        )}
 
         {/* DADOS */}
         <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12, marginTop: 28 }}>{tx.dados}</div>
