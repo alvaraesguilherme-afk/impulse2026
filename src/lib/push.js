@@ -32,6 +32,18 @@ export async function getStatusNotificacoes() {
   return sub ? 'granted' : 'default'
 }
 
+async function salvarInscricao(sub, sessao) {
+  const { endpoint, keys } = sub.toJSON()
+  await syncOp('upsert', 'push_subscriptions', {
+    endpoint,
+    p256dh: keys.p256dh,
+    auth: keys.auth,
+    nome: sessao?.nome ?? null,
+    equipe_id: detectarEquipe(sessao?.nome),
+    device_id: getDeviceId(),
+  }, { onConflict: 'endpoint' })
+}
+
 export async function ativarNotificacoes(sessao) {
   if (!suportaNotificacoes()) return { ok: false, erro: 'Notificações não suportadas neste navegador.' }
 
@@ -47,17 +59,22 @@ export async function ativarNotificacoes(sessao) {
     })
   }
 
-  const { endpoint, keys } = sub.toJSON()
-  await syncOp('upsert', 'push_subscriptions', {
-    endpoint,
-    p256dh: keys.p256dh,
-    auth: keys.auth,
-    nome: sessao?.nome ?? null,
-    equipe_id: detectarEquipe(sessao?.nome),
-    device_id: getDeviceId(),
-  }, { onConflict: 'endpoint' })
-
+  await salvarInscricao(sub, sessao)
   return { ok: true }
+}
+
+// Re-associa a inscricao ja existente com quem esta logado agora neste
+// aparelho — necessario porque o mesmo navegador/aparelho pode ser
+// usado por pessoas diferentes ao longo do tempo, e a permissao do
+// navegador (uma vez concedida) nao pede de novo, entao sem isso o
+// registro ficaria preso no nome/equipe de quem ativou primeiro.
+export async function sincronizarInscricao(sessao) {
+  if (!suportaNotificacoes()) return
+  if (Notification.permission !== 'granted') return
+  const registration = await navigator.serviceWorker.ready
+  const sub = await registration.pushManager.getSubscription()
+  if (!sub) return
+  await salvarInscricao(sub, sessao)
 }
 
 export function notificar(payload) {

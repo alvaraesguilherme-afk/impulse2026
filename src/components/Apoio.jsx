@@ -126,6 +126,11 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
     carregarMensagens()
   }
 
+  async function excluirMensagem(id) {
+    await syncOp('delete', 'mensagens_equipe', { id })
+    carregarMensagens()
+  }
+
   return (
     <div style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
       <BackBtn onVoltar={onVoltar} titulo={tx.escalasDeServico} onAjuda={onAjuda} />
@@ -317,7 +322,12 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
             )}
             {mensagens.map(m => (
               <div key={m.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: '12px 14px', marginBottom: 8 }}>
-                <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{m.texto}</div>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{m.texto}</div>
+                  {podeEnviarMensagem && (
+                    <button onClick={() => excluirMensagem(m.id)} style={{ flexShrink: 0, padding: '4px 8px', borderRadius: 10, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.1)', color: '#F87171', fontSize: 11, cursor: 'pointer' }}>🗑</button>
+                  )}
+                </div>
                 <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 6 }}>{m.autor} · {new Date(m.created_at).toLocaleString('pt-BR')}</div>
               </div>
             ))}

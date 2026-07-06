@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useTexto } from '../lib/i18n'
-import { getStatusNotificacoes, ativarNotificacoes, desativarNotificacoes, suportaNotificacoes } from '../lib/push'
+import { getStatusNotificacoes, ativarNotificacoes, desativarNotificacoes, suportaNotificacoes, sincronizarInscricao } from '../lib/push'
 
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
 const jaInstalado = window.matchMedia('(display-mode: standalone)').matches || !!navigator.standalone
@@ -27,7 +27,14 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
   const [carregandoNotif, setCarregandoNotif] = useState(false)
   const [erroNotif, setErroNotif] = useState('')
 
-  useEffect(() => { getStatusNotificacoes().then(setStatusNotif) }, [])
+  useEffect(() => {
+    getStatusNotificacoes().then(status => {
+      setStatusNotif(status)
+      // Reassocia a inscricao existente com quem esta logado agora,
+      // caso o mesmo aparelho tenha sido usado por outra pessoa antes.
+      if (status === 'granted') sincronizarInscricao(sessao)
+    })
+  }, [])
 
   async function alternarNotificacoes() {
     setErroNotif('')
