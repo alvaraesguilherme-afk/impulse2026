@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useTexto } from '../lib/i18n'
 import { supabase } from '../lib/supabase'
+import { syncOp } from '../lib/offlineSync'
 
 const INICIO = new Date(2026, 6, 14)
 const TOTAL_DIAS = 14
@@ -107,6 +108,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
   const [fotos, setFotos] = useState([])
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [erroUpload, setErroUpload] = useState(false)
   const [fotoAberta, setFotoAberta] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [curtidas, setCurtidas] = useState(() => {
@@ -189,6 +191,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
 
   async function uploadFoto(file, autorNome, legenda) {
     setUploading(true)
+    setErroUpload(false)
     try {
       const blob = await comprimirImagem(file)
       const nome = `dia${DIAS[diaSel].num}_${Date.now()}.jpg`
@@ -199,6 +202,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
       await carregarFotos()
     } catch (err) {
       console.error('Erro no upload:', err)
+      setErroUpload(true)
     }
     setUploading(false)
   }
@@ -207,10 +211,8 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
     setFotoAberta(null)
     setConfirmDelete(false)
     setFotos(prev => prev.filter(f => f.id !== foto.id))
-    await Promise.all([
-      supabase.storage.from('mural').remove([foto.arquivo]),
-      supabase.from('mural_fotos').delete().eq('id', foto.id)
-    ])
+    supabase.storage.from('mural').remove([foto.arquivo])
+    await syncOp('delete', 'mural_fotos', { id: foto.id })
   }
 
   async function baixarFoto(url) {
@@ -235,7 +237,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
     const novas = jaCurtiu
       ? Math.max(0, (foto.curtidas || 0) - 1)
       : (foto.curtidas || 0) + 1
-    await supabase.from('mural_fotos').update({ curtidas: novas }).eq('id', foto.id)
+    await syncOp('update', 'mural_fotos', { values: { curtidas: novas }, filters: { id: foto.id } })
     if (jaCurtiu) {
       localStorage.removeItem(`curtiu_${id}`)
       setCurtidas(prev => { const s = new Set(prev); s.delete(id); return s })
@@ -365,6 +367,14 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
           <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-glow)', borderRadius: 14, padding: '12px', fontSize: 13, color: 'var(--accent-light)', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             <div style={{ width: 16, height: 16, border: '2px solid #C4B5FD', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
             Enviando foto...
+          </div>
+        </div>
+      )}
+
+      {!modoRecap && erroUpload && (
+        <div style={{ padding: '0 22px 16px' }}>
+          <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 14, padding: '12px', fontSize: 13, color: '#F87171', textAlign: 'center' }}>
+            ⚠️ Não foi possível enviar a foto. Verifique sua internet e tente de novo.
           </div>
         </div>
       )}

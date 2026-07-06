@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { syncOp } from '../lib/offlineSync'
 
 const NIVEIS_SUPERVISOR = ['maximo', 'alto', 'medio', 'basico']
 
@@ -143,24 +144,21 @@ export default function Advertencias({ onVoltar, sessao }) {
   async function salvarNovoAluno() {
     const nome = novoNome.trim()
     if (!nome) return
-    const { data, error } = await supabase.from('alunos').insert({ nome }).select().single()
-    if (!error && data) {
-      setAlunos(prev => [...prev, data].sort((a, b) => a.nome.localeCompare(b.nome)))
-      setAlunoSel(nome)
-    }
+    // id temporario so pra key/exibicao local; reconciliado com o id real
+    // na proxima vez que a tela recarregar os dados do servidor
+    setAlunos(prev => [...prev, { id: `tmp_${Date.now()}`, nome }].sort((a, b) => a.nome.localeCompare(b.nome)))
+    setAlunoSel(nome)
     setNovoNome('')
     setShowInput(false)
+    await syncOp('insert', 'alunos', { nome })
   }
 
   async function registrarAdvertencia() {
     if (!alunoSel || salvando) return
     setSalvando(true)
-    const { data, error } = await supabase
-      .from('advertencias')
-      .insert({ aluno: alunoSel, motivo: motivo.trim() || null, pago: false, status: 'aguardando' })
-      .select()
-      .single()
-    if (!error && data) setAdvertencias(prev => [data, ...prev])
+    const novaAdv = { id: `tmp_${Date.now()}`, aluno: alunoSel, motivo: motivo.trim() || null, pago: false, status: 'aguardando', created_at: new Date().toISOString() }
+    setAdvertencias(prev => [novaAdv, ...prev])
+    await syncOp('insert', 'advertencias', { aluno: alunoSel, motivo: motivo.trim() || null, pago: false, status: 'aguardando' })
     setAlunoSel(null)
     setMotivo('')
     setSalvando(false)
@@ -168,23 +166,23 @@ export default function Advertencias({ onVoltar, sessao }) {
 
   async function confirmarAdvertencia(adv) {
     setAdvertencias(prev => prev.map(a => a.id === adv.id ? { ...a, status: 'confirmada' } : a))
-    await supabase.from('advertencias').update({ status: 'confirmada' }).eq('id', adv.id)
+    await syncOp('update', 'advertencias', { values: { status: 'confirmada' }, filters: { id: adv.id } })
   }
 
   async function negarAdvertencia(adv) {
     setAdvertencias(prev => prev.map(a => a.id === adv.id ? { ...a, status: 'negada' } : a))
-    await supabase.from('advertencias').update({ status: 'negada' }).eq('id', adv.id)
+    await syncOp('update', 'advertencias', { values: { status: 'negada' }, filters: { id: adv.id } })
   }
 
   async function excluirAdvertencia(adv) {
     setAdvertencias(prev => prev.filter(a => a.id !== adv.id))
-    await supabase.from('advertencias').delete().eq('id', adv.id)
+    await syncOp('delete', 'advertencias', { id: adv.id })
   }
 
   async function togglePago(adv) {
     const novoPago = !adv.pago
     setAdvertencias(prev => prev.map(a => a.id === adv.id ? { ...a, pago: novoPago } : a))
-    await supabase.from('advertencias').update({ pago: novoPago }).eq('id', adv.id)
+    await syncOp('update', 'advertencias', { values: { pago: novoPago }, filters: { id: adv.id } })
   }
 
   const aguardando = advertencias.filter(a => a.status === 'aguardando')
