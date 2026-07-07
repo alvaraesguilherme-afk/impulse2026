@@ -6,6 +6,7 @@ import { PINOS } from '../lib/pinos'
 import { EQUIPES } from '../lib/equipes'
 import { rotuloRelativo } from '../lib/tempo'
 import { notificar } from '../lib/push'
+import { useAbaDirecao } from '../lib/useAbaDirecao'
 const CICLO = ['M','T','N','F']
 const TURNO_LABEL = { M:'Manhã', T:'Tarde', N:'Noite', F:'Folga' }
 const DIAS_C = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
@@ -20,6 +21,7 @@ const NIVEL_COR = {
   staff:  { bg: 'var(--bg-card)', border: 'var(--border)', text: 'var(--text-secondary)', label: 'Staff' },
 }
 const ORDEM_NIVEL = ['maximo', 'alto', 'medio', 'basico', 'staff']
+const ORDEM_ABAS = ['avisos', 'chamada', 'faltas', 'senhas']
 
 function getTurno(eq, data) {
   const diff = Math.round((data.getTime() - INICIO.getTime()) / 86400000)
@@ -33,7 +35,7 @@ const dias = Array.from({ length: 11 }, (_, i) => new Date(INICIO.getTime() + i 
 
 export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
   const tx = useTexto()
-  const [aba, setAba] = useState(abas[0] || 'avisos')
+  const [aba, setAba, direcaoAba, abaSaindo] = useAbaDirecao(abas[0] || 'avisos', ORDEM_ABAS)
   const [avisos, setAvisos] = useState([])
   const [avisoTexto, setAvisoTexto] = useState('')
   const [diaSel, setDiaSel] = useState('')
@@ -184,11 +186,11 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
         ))}
       </div>
 
-      <div style={{ padding: '0 22px 100px' }}>
+      <div style={{ padding: '0 22px 100px', position: 'relative', overflow: 'hidden' }}>
 
         {/* AVISOS */}
-        {aba === 'avisos' && (
-          <div className="tela-enter">
+        {(aba === 'avisos' || abaSaindo === 'avisos') && (
+          <div className={aba === 'avisos' ? `tab-entra-${direcaoAba.current}` : `tab-sai-${direcaoAba.current}`} style={aba === 'avisos' ? undefined : { position: 'absolute', inset: 0 }}>
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: 18, marginBottom: 16 }}>
               <textarea value={avisoTexto} onChange={e => setAvisoTexto(e.target.value)} placeholder="Digite o aviso para todos verem..." style={{ width: '100%', padding: 12, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, fontSize: 14, resize: 'none', outline: 'none', color: 'var(--text)', fontFamily: 'Inter, sans-serif', minHeight: 100 }} />
               {erroAviso && (
@@ -215,8 +217,8 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
         )}
 
         {/* CHAMADA */}
-        {aba === 'chamada' && (
-          <div className="tela-enter">
+        {(aba === 'chamada' || abaSaindo === 'chamada') && (
+          <div className={aba === 'chamada' ? `tab-entra-${direcaoAba.current}` : `tab-sai-${direcaoAba.current}`} style={aba === 'chamada' ? undefined : { position: 'absolute', inset: 0 }}>
             {erroSalvar && (
               <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 14, padding: '12px 16px', marginBottom: 16, fontSize: 12, color: '#F87171' }}>
                 ⚠️ Não foi possível salvar agora. Verifique sua internet — a marcação ficará pendente até sincronizar.
@@ -266,8 +268,8 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
         )}
 
         {/* FALTAS */}
-        {aba === 'faltas' && (
-          <div className="tela-enter">
+        {(aba === 'faltas' || abaSaindo === 'faltas') && (
+          <div className={aba === 'faltas' ? `tab-entra-${direcaoAba.current}` : `tab-sai-${direcaoAba.current}`} style={aba === 'faltas' ? undefined : { position: 'absolute', inset: 0 }}>
             {EQUIPES.every(eq => !faltas[eq.id]?.length) && (
               <div style={{ textAlign: 'center', color: 'var(--text-faint)', fontSize: 13, padding: 40 }}>
                 <div style={{ fontSize: 36, marginBottom: 12 }}>🎉</div>
@@ -312,8 +314,8 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
           </div>
         )}
         {/* SENHAS */}
-        {aba === 'senhas' && (
-          <div className="tela-enter">
+        {(aba === 'senhas' || abaSaindo === 'senhas') && (
+          <div className={aba === 'senhas' ? `tab-entra-${direcaoAba.current}` : `tab-sai-${direcaoAba.current}`} style={aba === 'senhas' ? undefined : { position: 'absolute', inset: 0 }}>
             {ORDEM_NIVEL.map(nivel => {
               const membros = Object.entries(PINOS)
                 .filter(([, d]) => d.nivel === nivel)

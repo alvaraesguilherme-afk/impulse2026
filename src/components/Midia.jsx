@@ -4,6 +4,9 @@ import { supabase } from '../lib/supabase'
 import { syncOp } from '../lib/offlineSync'
 import { notificar } from '../lib/push'
 import { MEMBROS_FIXOS, MEMBROS_EXTRAS } from '../lib/midia'
+import { useAbaDirecao } from '../lib/useAbaDirecao'
+
+const ORDEM_ABAS = ['escalas', 'mensagens']
 
 const INICIO = new Date(2026, 6, 15)
 const TOTAL_DIAS = 11
@@ -69,7 +72,7 @@ export default function Midia({ onVoltar, sessao, onAjuda }) {
   const [addingTo, setAddingTo] = useState(null)
   const [novaFuncao, setNovaFuncao] = useState('')
   const [funcaoSelecionada, setFuncaoSelecionada] = useState('')
-  const [aba, setAba] = useState('escalas')
+  const [aba, setAba, direcaoAba, abaSaindo] = useAbaDirecao('escalas', ORDEM_ABAS)
   const [mensagens, setMensagens] = useState([])
   const [msgTexto, setMsgTexto] = useState('')
   const [enviandoMsg, setEnviandoMsg] = useState(false)
@@ -200,8 +203,9 @@ export default function Midia({ onVoltar, sessao, onAjuda }) {
         ))}
       </div>
 
-      {aba === 'escalas' && (
-      <div className="tela-enter">
+      <div style={{ position: 'relative', overflow: 'hidden' }}>
+      {(aba === 'escalas' || abaSaindo === 'escalas') && (
+      <div className={aba === 'escalas' ? `tab-entra-${direcaoAba.current}` : `tab-sai-${direcaoAba.current}`} style={aba === 'escalas' ? undefined : { position: 'absolute', inset: 0 }}>
       <div style={{ padding: '12px 22px 0' }}>
         <div onClick={() => setDiaSel(getDiaAtual())} style={{
           background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)',
@@ -437,8 +441,8 @@ export default function Midia({ onVoltar, sessao, onAjuda }) {
       </div>
       )}
 
-      {aba === 'mensagens' && (
-        <div className="tela-enter" style={{ padding: '0 22px 100px' }}>
+      {(aba === 'mensagens' || abaSaindo === 'mensagens') && (
+        <div className={aba === 'mensagens' ? `tab-entra-${direcaoAba.current}` : `tab-sai-${direcaoAba.current}`} style={{ padding: '0 22px 100px', ...(aba === 'mensagens' ? {} : { position: 'absolute', inset: 0 }) }}>
           {podeEnviarMensagem && (
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '16px 18px', marginBottom: 16 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
@@ -479,6 +483,7 @@ export default function Midia({ onVoltar, sessao, onAjuda }) {
           ))}
         </div>
       )}
+      </div>
 
     </div>
   )

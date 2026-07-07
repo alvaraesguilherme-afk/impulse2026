@@ -3,6 +3,9 @@ import { useTexto } from '../lib/i18n'
 import { supabase } from '../lib/supabase'
 import { syncOp } from '../lib/offlineSync'
 import { notificar } from '../lib/push'
+import { useAbaDirecao } from '../lib/useAbaDirecao'
+
+const ORDEM_ABAS = ['louvor', 'ministro', 'cadastro']
 
 const INICIO = new Date(2026, 6, 15)
 const TOTAL_DIAS = 11
@@ -33,7 +36,7 @@ function getDiaAtual() {
 export default function Programacao({ onVoltar, sessao, onAjuda }) {
   const tx = useTexto()
   const hj = new Date(); hj.setHours(0, 0, 0, 0)
-  const [aba, setAba] = useState('louvor')
+  const [aba, setAba, direcaoAba, abaSaindo] = useAbaDirecao('louvor', ORDEM_ABAS)
   const [diaSel, setDiaSel] = useState(getDiaAtual)
   const [dados, setDados] = useState([])
   const [loading, setLoading] = useState(false)
@@ -165,8 +168,9 @@ export default function Programacao({ onVoltar, sessao, onAjuda }) {
         ))}
       </div>
 
-      {aba === 'cadastro' && coordenador && (
-        <div className="tela-enter" style={{ padding: '0 22px 100px' }}>
+      <div style={{ position: 'relative', overflow: 'hidden' }}>
+      {(aba === 'cadastro' || abaSaindo === 'cadastro') && coordenador && (
+        <div className={aba === 'cadastro' ? `tab-entra-${direcaoAba.current}` : `tab-sai-${direcaoAba.current}`} style={{ padding: '0 22px 100px', ...(aba === 'cadastro' ? {} : { position: 'absolute', inset: 0 }) }}>
           {['louvor', 'ministro'].map(tipo => {
             const lista = getCadastrosPorTipo(tipo)
             return (
@@ -245,8 +249,8 @@ export default function Programacao({ onVoltar, sessao, onAjuda }) {
         </div>
       )}
 
-      {(aba === 'louvor' || aba === 'ministro') && (
-        <div className="tela-enter">
+      {(aba === 'louvor' || aba === 'ministro' || abaSaindo === 'louvor' || abaSaindo === 'ministro') && (
+        <div className={(aba === 'louvor' || aba === 'ministro') ? `tab-entra-${direcaoAba.current}` : `tab-sai-${direcaoAba.current}`} style={(aba === 'louvor' || aba === 'ministro') ? undefined : { position: 'absolute', inset: 0 }}>
           <div style={{ padding: '0 22px 12px' }}>
             <div onClick={() => { setDiaSel(getDiaAtual()); setEditando(null) }} style={{
               background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)',
@@ -438,6 +442,7 @@ export default function Programacao({ onVoltar, sessao, onAjuda }) {
           </div>
         </div>
       )}
+      </div>
 
     </div>
   )

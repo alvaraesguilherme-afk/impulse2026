@@ -4,6 +4,9 @@ import { supabase } from '../lib/supabase'
 import { syncOp } from '../lib/offlineSync'
 import { EQUIPES } from '../lib/equipes'
 import { notificar } from '../lib/push'
+import { useAbaDirecao } from '../lib/useAbaDirecao'
+
+const ORDEM_ABAS = ['times', 'escalas', 'chamada', 'mensagens']
 
 const CICLO = ['M','T','N','F']
 const TURNO_KEY = { M:'manha', T:'tarde', N:'noite', F:'folga' }
@@ -50,7 +53,7 @@ function BackBtn({ onVoltar, titulo, onAjuda }) {
 
 export default function Apoio({ onVoltar, sessao, onAjuda }) {
   const tx = useTexto()
-  const [aba, setAba] = useState('times')
+  const [aba, setAba, direcaoAba, abaSaindo] = useAbaDirecao('times', ORDEM_ABAS)
   const [lider] = useState(() => LIDERES_CHAMADA.find(l => l.nome === sessao?.nome) || null)
   const [diaSel, setDiaSel] = useState('')
   const [turnoSel, setTurnoSel] = useState('')
@@ -141,24 +144,28 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
           </button>
         ))}
       </div>
-      <div style={{ padding: '0 22px 100px' }}>
-        {aba === 'times' && EQUIPES.map(eq => (
-          <div key={eq.id} className="tela-enter" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: 18, marginBottom: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-              <div style={{ width: 44, height: 44, borderRadius: 14, background: eq.grad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{eq.emoji}</div>
-              <div>
-                <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 15, fontWeight: 700, color: eq.cor }}>{eq.nome}</div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>👑 {eq.lideres}</div>
+      <div style={{ padding: '0 22px 100px', position: 'relative', overflow: 'hidden' }}>
+        {(aba === 'times' || abaSaindo === 'times') && (
+          <div className={aba === 'times' ? `tab-entra-${direcaoAba.current}` : `tab-sai-${direcaoAba.current}`} style={aba === 'times' ? undefined : { position: 'absolute', inset: 0 }}>
+            {EQUIPES.map(eq => (
+              <div key={eq.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: 18, marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 14, background: eq.grad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{eq.emoji}</div>
+                  <div>
+                    <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 15, fontWeight: 700, color: eq.cor }}>{eq.nome}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>👑 {eq.lideres}</div>
+                  </div>
+                </div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8 }}>{tx.membros}</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {eq.membros.map(m => <span key={m} style={{ fontSize: 11, background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 20, padding: '4px 10px', color: 'var(--text-secondary)' }}>{m}</span>)}
+                </div>
               </div>
-            </div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8 }}>{tx.membros}</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {eq.membros.map(m => <span key={m} style={{ fontSize: 11, background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 20, padding: '4px 10px', color: 'var(--text-secondary)' }}>{m}</span>)}
-            </div>
+            ))}
           </div>
-        ))}
-        {aba === 'escalas' && (
-            <div className="tela-enter">
+        )}
+        {(aba === 'escalas' || abaSaindo === 'escalas') && (
+            <div className={aba === 'escalas' ? `tab-entra-${direcaoAba.current}` : `tab-sai-${direcaoAba.current}`} style={aba === 'escalas' ? undefined : { position: 'absolute', inset: 0 }}>
               <div onClick={() => setDiaEscala(hj >= INICIO && hj <= FIM ? hj : dias[0])} style={{
                 background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)',
                 borderRadius: 16, padding: '14px 18px', marginBottom: 16, cursor: 'pointer',
@@ -225,8 +232,8 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
               )}
             </div>
         )}
-        {aba === 'chamada' && lider && (
-          <div className="tela-enter">
+        {(aba === 'chamada' || abaSaindo === 'chamada') && lider && (
+          <div className={aba === 'chamada' ? `tab-entra-${direcaoAba.current}` : `tab-sai-${direcaoAba.current}`} style={aba === 'chamada' ? undefined : { position: 'absolute', inset: 0 }}>
             {erroSalvar && (
               <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 14, padding: '12px 16px', marginBottom: 16, fontSize: 12, color: '#F87171' }}>
                 ⚠️ Não foi possível salvar agora. Verifique sua internet — a marcação ficará pendente até sincronizar.
@@ -278,8 +285,8 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
             {(!diaSel || !turnoSel) && <p style={{ fontSize: 13, color: 'var(--text-faint)', textAlign: 'center', padding: 20 }}>{tx.selecioneDiaTurno}</p>}
           </div>
         )}
-        {aba === 'mensagens' && (
-          <div className="tela-enter">
+        {(aba === 'mensagens' || abaSaindo === 'mensagens') && (
+          <div className={aba === 'mensagens' ? `tab-entra-${direcaoAba.current}` : `tab-sai-${direcaoAba.current}`} style={aba === 'mensagens' ? undefined : { position: 'absolute', inset: 0 }}>
             {podeEnviarMensagem && (
               <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '16px 18px', marginBottom: 16 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
