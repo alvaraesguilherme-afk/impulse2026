@@ -6,7 +6,7 @@ import { PINOS } from '../lib/pinos'
 import { EQUIPES } from '../lib/equipes'
 import { rotuloRelativo } from '../lib/tempo'
 import { notificar } from '../lib/push'
-import { useAbaDirecao } from '../lib/useAbaDirecao'
+import { useAbaDirecao, abaAdjacente, useSwipeHandlers } from '../lib/useAbaDirecao'
 const CICLO = ['M','T','N','F']
 const TURNO_LABEL = { M:'Manhã', T:'Tarde', N:'Noite', F:'Folga' }
 const DIAS_C = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
@@ -36,6 +36,10 @@ const dias = Array.from({ length: 11 }, (_, i) => new Date(INICIO.getTime() + i 
 export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
   const tx = useTexto()
   const [aba, setAba, direcaoAba, abaSaindo] = useAbaDirecao(abas[0] || 'avisos', ORDEM_ABAS)
+  const swipeHandlers = useSwipeHandlers(
+    () => { const p = abaAdjacente(abas, aba, 1); if (p) setAba(p) },
+    () => { const p = abaAdjacente(abas, aba, -1); if (p) setAba(p) }
+  )
   const [avisos, setAvisos] = useState([])
   const [avisoTexto, setAvisoTexto] = useState('')
   const [diaSel, setDiaSel] = useState('')
@@ -178,15 +182,15 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
       </div>
 
       {/* ABAS */}
-      <div style={{ display: 'flex', gap: 8, padding: '16px 22px', overflowX: 'auto', scrollbarWidth: 'none' }}>
+      <div style={{ display: 'flex', gap: 4, padding: 4, margin: '16px 22px 0', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16 }}>
         {abas.map(a => (
-          <button key={a} onClick={() => setAba(a)} style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 20, border: '1px solid var(--border-strong)', background: aba === a ? 'var(--accent-glow)' : 'var(--bg-card)', color: aba === a ? 'var(--accent-light)' : 'var(--text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+          <button key={a} onClick={() => setAba(a)} style={{ flex: 1, minWidth: 0, padding: '8px 3px', borderRadius: 12, border: 'none', background: aba === a ? 'var(--accent-glow)' : 'transparent', color: aba === a ? 'var(--accent-light)' : 'var(--text-muted)', fontSize: 10.5, fontWeight: 700, lineHeight: 1.2, cursor: 'pointer', textAlign: 'center' }}>
             {ABA_LABELS[a]}
           </button>
         ))}
       </div>
 
-      <div style={{ padding: '0 22px 100px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ padding: '0 22px 100px', position: 'relative', overflow: 'hidden' }} {...swipeHandlers}>
 
         {/* AVISOS */}
         {(aba === 'avisos' || abaSaindo === 'avisos') && (

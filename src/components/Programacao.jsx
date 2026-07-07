@@ -3,7 +3,7 @@ import { useTexto } from '../lib/i18n'
 import { supabase } from '../lib/supabase'
 import { syncOp } from '../lib/offlineSync'
 import { notificar } from '../lib/push'
-import { useAbaDirecao } from '../lib/useAbaDirecao'
+import { useAbaDirecao, abaAdjacente, useSwipeHandlers } from '../lib/useAbaDirecao'
 
 const ORDEM_ABAS = ['louvor', 'ministro', 'cadastro']
 
@@ -127,6 +127,11 @@ export default function Programacao({ onVoltar, sessao, onAjuda }) {
     ...(podeVerPreletores ? [{ id: 'ministro', label: '🎤 Preletores' }] : []),
     ...(coordenador ? [{ id: 'cadastro', label: '⚙️ Cadastro' }] : []),
   ]
+  const abasVisiveis = ABAS.map(a => a.id)
+  const swipeHandlers = useSwipeHandlers(
+    () => { const p = abaAdjacente(abasVisiveis, aba, 1); if (p) setAba(p) },
+    () => { const p = abaAdjacente(abasVisiveis, aba, -1); if (p) setAba(p) }
+  )
 
   return (
     <div style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
@@ -155,20 +160,20 @@ export default function Programacao({ onVoltar, sessao, onAjuda }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, padding: '16px 22px', overflowX: 'auto', scrollbarWidth: 'none' }}>
+      <div style={{ display: 'flex', gap: 4, padding: 4, margin: '16px 22px 0', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16 }}>
         {ABAS.map(a => (
           <button key={a.id} onClick={() => { setAba(a.id); setEditando(null) }} style={{
-            flexShrink: 0, padding: '8px 16px', borderRadius: 20,
-            border: '1px solid var(--border-strong)',
-            background: aba === a.id ? 'var(--accent-glow)' : 'var(--bg-card)',
+            flex: 1, minWidth: 0, padding: '8px 3px', borderRadius: 12,
+            border: 'none',
+            background: aba === a.id ? 'var(--accent-glow)' : 'transparent',
             color: aba === a.id ? 'var(--accent-light)' : 'var(--text-muted)',
-            fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap',
+            fontSize: 10.5, fontWeight: 700, lineHeight: 1.2, cursor: 'pointer', textAlign: 'center',
             fontFamily: 'Inter, sans-serif'
           }}>{a.label}</button>
         ))}
       </div>
 
-      <div style={{ position: 'relative', overflow: 'hidden' }}>
+      <div style={{ position: 'relative', overflow: 'hidden' }} {...swipeHandlers}>
       {(aba === 'cadastro' || abaSaindo === 'cadastro') && coordenador && (
         <div className={aba === 'cadastro' ? `tab-entra-${direcaoAba.current}` : `tab-sai-${direcaoAba.current}`} style={{ padding: '0 22px 100px', ...(aba === 'cadastro' ? {} : { position: 'absolute', inset: 0 }) }}>
           {['louvor', 'ministro'].map(tipo => {

@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { syncOp } from '../lib/offlineSync'
 import { notificar } from '../lib/push'
 import { MEMBROS_FIXOS, MEMBROS_EXTRAS } from '../lib/midia'
-import { useAbaDirecao } from '../lib/useAbaDirecao'
+import { useAbaDirecao, abaAdjacente, useSwipeHandlers } from '../lib/useAbaDirecao'
 
 const ORDEM_ABAS = ['escalas', 'mensagens']
 
@@ -80,6 +80,12 @@ export default function Midia({ onVoltar, sessao, onAjuda }) {
   const podeEnviarMensagem = Object.values(SENHAS_COORD).includes(sessao?.nome)
   const souDaMidia = MEMBROS_FIXOS.includes(sessao?.nome) || MEMBROS_EXTRAS.includes(sessao?.nome)
   const podeVerMensagens = podeEnviarMensagem || souDaMidia
+  const abasList = [{ id: 'escalas', label: '📅 Escalas' }, podeVerMensagens && { id: 'mensagens', label: '💬 Mensagens' }].filter(Boolean)
+  const abasVisiveis = abasList.map(a => a.id)
+  const swipeHandlers = useSwipeHandlers(
+    () => { const p = abaAdjacente(abasVisiveis, aba, 1); if (p) setAba(p) },
+    () => { const p = abaAdjacente(abasVisiveis, aba, -1); if (p) setAba(p) }
+  )
 
   useEffect(() => { carregarEscalas() }, [diaSel])
   useEffect(() => { if (aba === 'mensagens') carregarMensagens() }, [aba])
@@ -195,15 +201,15 @@ export default function Midia({ onVoltar, sessao, onAjuda }) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, padding: '16px 22px 0', overflowX: 'auto', scrollbarWidth: 'none' }}>
-        {[{ id: 'escalas', label: '📅 Escalas' }, podeVerMensagens && { id: 'mensagens', label: '💬 Mensagens' }].filter(Boolean).map(a => (
-          <button key={a.id} onClick={() => setAba(a.id)} style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 20, border: '1px solid var(--border-strong)', background: aba === a.id ? 'var(--accent-glow)' : 'var(--bg-card)', color: aba === a.id ? 'var(--accent-light)' : 'var(--text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+      <div style={{ display: 'flex', gap: 4, padding: 4, margin: '16px 22px 0', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16 }}>
+        {abasList.map(a => (
+          <button key={a.id} onClick={() => setAba(a.id)} style={{ flex: 1, minWidth: 0, padding: '8px 3px', borderRadius: 12, border: 'none', background: aba === a.id ? 'var(--accent-glow)' : 'transparent', color: aba === a.id ? 'var(--accent-light)' : 'var(--text-muted)', fontSize: 10.5, fontWeight: 700, lineHeight: 1.2, cursor: 'pointer', textAlign: 'center' }}>
             {a.label}
           </button>
         ))}
       </div>
 
-      <div style={{ position: 'relative', overflow: 'hidden' }}>
+      <div style={{ position: 'relative', overflow: 'hidden' }} {...swipeHandlers}>
       {(aba === 'escalas' || abaSaindo === 'escalas') && (
       <div className={aba === 'escalas' ? `tab-entra-${direcaoAba.current}` : `tab-sai-${direcaoAba.current}`} style={aba === 'escalas' ? undefined : { position: 'absolute', inset: 0 }}>
       <div style={{ padding: '12px 22px 0' }}>

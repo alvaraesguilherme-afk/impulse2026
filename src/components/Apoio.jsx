@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { syncOp } from '../lib/offlineSync'
 import { EQUIPES } from '../lib/equipes'
 import { notificar } from '../lib/push'
-import { useAbaDirecao } from '../lib/useAbaDirecao'
+import { useAbaDirecao, abaAdjacente, useSwipeHandlers } from '../lib/useAbaDirecao'
 
 const ORDEM_ABAS = ['times', 'escalas', 'chamada', 'mensagens']
 
@@ -134,17 +134,24 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
     carregarMensagens()
   }
 
+  const abasList = [{id:'times',label:`👥 ${tx.times}`},{id:'escalas',label:`📅 ${tx.escalas}`},LIDERES_CHAMADA.some(l => l.nome === sessao?.nome) && {id:'chamada',label:`📋 ${tx.chamada}`},minhaEquipeId !== null && {id:'mensagens',label:'💬 Mensagens'}].filter(Boolean)
+  const abasVisiveis = abasList.map(a => a.id)
+  const swipeHandlers = useSwipeHandlers(
+    () => { const p = abaAdjacente(abasVisiveis, aba, 1); if (p) setAba(p) },
+    () => { const p = abaAdjacente(abasVisiveis, aba, -1); if (p) setAba(p) }
+  )
+
   return (
     <div style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
       <BackBtn onVoltar={onVoltar} titulo={tx.escalasDeServico} onAjuda={onAjuda} />
-      <div style={{ display: 'flex', gap: 8, padding: '16px 22px', overflowX: 'auto', scrollbarWidth: 'none' }}>
-        {[{id:'times',label:`👥 ${tx.times}`},{id:'escalas',label:`📅 ${tx.escalas}`},LIDERES_CHAMADA.some(l => l.nome === sessao?.nome) && {id:'chamada',label:`📋 ${tx.chamada}`},minhaEquipeId !== null && {id:'mensagens',label:'💬 Mensagens'}].filter(Boolean).map(a => (
-          <button key={a.id} onClick={() => setAba(a.id)} style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 20, border: '1px solid var(--border-strong)', background: aba === a.id ? 'var(--accent-glow)' : 'var(--bg-card)', color: aba === a.id ? 'var(--accent-light)' : 'var(--text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+      <div style={{ display: 'flex', gap: 4, padding: 4, margin: '16px 22px 0', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16 }}>
+        {abasList.map(a => (
+          <button key={a.id} onClick={() => setAba(a.id)} style={{ flex: 1, minWidth: 0, padding: '8px 3px', borderRadius: 12, border: 'none', background: aba === a.id ? 'var(--accent-glow)' : 'transparent', color: aba === a.id ? 'var(--accent-light)' : 'var(--text-muted)', fontSize: 10.5, fontWeight: 700, lineHeight: 1.2, cursor: 'pointer', textAlign: 'center' }}>
             {a.label}
           </button>
         ))}
       </div>
-      <div style={{ padding: '0 22px 100px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ padding: '16px 22px 100px', position: 'relative', overflow: 'hidden' }} {...swipeHandlers}>
         {(aba === 'times' || abaSaindo === 'times') && (
           <div className={aba === 'times' ? `tab-entra-${direcaoAba.current}` : `tab-sai-${direcaoAba.current}`} style={aba === 'times' ? undefined : { position: 'absolute', inset: 0 }}>
             {EQUIPES.map(eq => (
