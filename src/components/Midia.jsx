@@ -201,7 +201,7 @@ export default function Midia({ onVoltar, sessao, onAjuda }) {
       </div>
 
       {aba === 'escalas' && (
-      <>
+      <div className="tela-enter">
       <div style={{ padding: '12px 22px 0' }}>
         <div onClick={() => setDiaSel(getDiaAtual())} style={{
           background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)',
@@ -434,11 +434,11 @@ export default function Midia({ onVoltar, sessao, onAjuda }) {
           </div>
         </div>
       </div>
-      </>
+      </div>
       )}
 
       {aba === 'mensagens' && (
-        <div style={{ padding: '0 22px 100px' }}>
+        <div className="tela-enter" style={{ padding: '0 22px 100px' }}>
           {podeEnviarMensagem && (
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '16px 18px', marginBottom: 16 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
@@ -466,8 +466,8 @@ export default function Midia({ onVoltar, sessao, onAjuda }) {
           {mensagens.length === 0 && (
             <p style={{ fontSize: 13, color: 'var(--text-faint)', textAlign: 'center', padding: 20 }}>Nenhuma mensagem ainda.</p>
           )}
-          {mensagens.map(m => (
-            <div key={m.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: '12px 14px', marginBottom: 8 }}>
+          {mensagens.map((m, i) => (
+            <div key={m.id} className="tela-enter" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: '12px 14px', marginBottom: 8, animationDelay: `${Math.min(i, 8) * 0.04}s` }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
                 <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{m.texto}</div>
                 {podeEnviarMensagem && (

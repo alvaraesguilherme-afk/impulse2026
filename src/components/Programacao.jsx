@@ -166,7 +166,7 @@ export default function Programacao({ onVoltar, sessao, onAjuda }) {
       </div>
 
       {aba === 'cadastro' && coordenador && (
-        <div style={{ padding: '0 22px 100px' }}>
+        <div className="tela-enter" style={{ padding: '0 22px 100px' }}>
           {['louvor', 'ministro'].map(tipo => {
             const lista = getCadastrosPorTipo(tipo)
             return (
@@ -246,7 +246,7 @@ export default function Programacao({ onVoltar, sessao, onAjuda }) {
       )}
 
       {(aba === 'louvor' || aba === 'ministro') && (
-        <>
+        <div className="tela-enter">
           <div style={{ padding: '0 22px 12px' }}>
             <div onClick={() => { setDiaSel(getDiaAtual()); setEditando(null) }} style={{
               background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)',
@@ -436,7 +436,7 @@ export default function Programacao({ onVoltar, sessao, onAjuda }) {
               })
             )}
           </div>
-        </>
+        </div>
       )}
 
     </div>

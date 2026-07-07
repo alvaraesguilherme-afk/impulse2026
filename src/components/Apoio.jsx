@@ -143,7 +143,7 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
       </div>
       <div style={{ padding: '0 22px 100px' }}>
         {aba === 'times' && EQUIPES.map(eq => (
-          <div key={eq.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: 18, marginBottom: 12 }}>
+          <div key={eq.id} className="tela-enter" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: 18, marginBottom: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
               <div style={{ width: 44, height: 44, borderRadius: 14, background: eq.grad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{eq.emoji}</div>
               <div>
@@ -158,7 +158,7 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
           </div>
         ))}
         {aba === 'escalas' && (
-            <>
+            <div className="tela-enter">
               <div onClick={() => setDiaEscala(hj >= INICIO && hj <= FIM ? hj : dias[0])} style={{
                 background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)',
                 borderRadius: 16, padding: '14px 18px', marginBottom: 16, cursor: 'pointer',
@@ -223,10 +223,10 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
               {EQUIPES.every(eq => !getTurno(eq, diaEscala)) && (
                 <div style={{ fontSize: 13, color: 'var(--text-faint)', textAlign: 'center', padding: 12 }}>{tx.nenhumaEscala}</div>
               )}
-            </>
+            </div>
         )}
         {aba === 'chamada' && lider && (
-          <>
+          <div className="tela-enter">
             {erroSalvar && (
               <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 14, padding: '12px 16px', marginBottom: 16, fontSize: 12, color: '#F87171' }}>
                 ⚠️ Não foi possível salvar agora. Verifique sua internet — a marcação ficará pendente até sincronizar.
@@ -276,10 +276,10 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
               )
             })}
             {(!diaSel || !turnoSel) && <p style={{ fontSize: 13, color: 'var(--text-faint)', textAlign: 'center', padding: 20 }}>{tx.selecioneDiaTurno}</p>}
-          </>
+          </div>
         )}
         {aba === 'mensagens' && (
-          <>
+          <div className="tela-enter">
             {podeEnviarMensagem && (
               <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '16px 18px', marginBottom: 16 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
@@ -320,8 +320,8 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
             {mensagens.length === 0 && (
               <p style={{ fontSize: 13, color: 'var(--text-faint)', textAlign: 'center', padding: 20 }}>Nenhuma mensagem ainda.</p>
             )}
-            {mensagens.map(m => (
-              <div key={m.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: '12px 14px', marginBottom: 8 }}>
+            {mensagens.map((m, i) => (
+              <div key={m.id} className="tela-enter" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: '12px 14px', marginBottom: 8, animationDelay: `${Math.min(i, 8) * 0.04}s` }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
                   <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{m.texto}</div>
                   {podeEnviarMensagem && (
@@ -331,7 +331,7 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
                 <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 6 }}>{m.autor} · {new Date(m.created_at).toLocaleString('pt-BR')}</div>
               </div>
             ))}
-          </>
+          </div>
         )}
       </div>
     </div>

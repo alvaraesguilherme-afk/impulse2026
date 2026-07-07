@@ -487,10 +487,10 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
           )}
 
           <div style={{ padding: '0 22px 100px', columnCount: 2, columnGap: 8 }}>
-            {fotosExibidas.map(foto => (
-              <div key={foto.id} onClick={() => (setFotoAberta(foto), setConfirmDelete(false))} style={{
+            {fotosExibidas.map((foto, i) => (
+              <div key={foto.id} className="recap-card" onClick={() => (setFotoAberta(foto), setConfirmDelete(false))} style={{
                 breakInside: 'avoid', marginBottom: 8, borderRadius: 14, overflow: 'hidden',
-                cursor: 'pointer', position: 'relative',
+                cursor: 'pointer', position: 'relative', animationDelay: `${Math.min(i, 12) * 0.04}s`,
                 border: '1px solid var(--border)', background: 'var(--bg-card)'
               }}>
                 <img src={foto.url} alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block' }} />
@@ -517,7 +517,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
       )}
 
       {fotoAberta && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 400, display: 'flex', flexDirection: 'column' }}>
+        <div className="overlay-bg" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 400, display: 'flex', flexDirection: 'column' }}>
           {/* Cabeçalho fixo — botão fechar sempre visível */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, padding: '14px 16px 0', flexShrink: 0 }}>
             <button onClick={() => baixarFoto(fotoAberta.url)} style={{
@@ -600,8 +600,8 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
       </div>
 
       {showLegendaModal && pendingPreview && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 20px' }}>
-          <div style={{ width: '100%', maxWidth: 340, background: 'rgba(8,8,20,0.98)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 24, padding: '24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div className="overlay-bg" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 20px' }}>
+          <div className="overlay-enter" style={{ width: '100%', maxWidth: 340, background: 'rgba(8,8,20,0.98)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 24, padding: '24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 700, color: '#fff', textAlign: 'center' }}>Nova foto</div>
             <img src={pendingPreview} alt="" style={{ width: '100%', borderRadius: 14, maxHeight: 220, objectFit: 'cover' }} />
             <textarea

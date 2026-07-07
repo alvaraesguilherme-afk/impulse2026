@@ -188,7 +188,7 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
 
         {/* AVISOS */}
         {aba === 'avisos' && (
-          <>
+          <div className="tela-enter">
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: 18, marginBottom: 16 }}>
               <textarea value={avisoTexto} onChange={e => setAvisoTexto(e.target.value)} placeholder="Digite o aviso para todos verem..." style={{ width: '100%', padding: 12, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, fontSize: 14, resize: 'none', outline: 'none', color: 'var(--text)', fontFamily: 'Inter, sans-serif', minHeight: 100 }} />
               {erroAviso && (
@@ -202,8 +202,8 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
             </div>
             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Publicados</div>
             {avisos.length === 0 && <div style={{ textAlign: 'center', color: 'var(--text-faint)', fontSize: 13, padding: 30 }}>Nenhum aviso ainda</div>}
-            {avisos.map(a => (
-              <div key={a.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: 18, marginBottom: 10 }}>
+            {avisos.map((a, i) => (
+              <div key={a.id} className="tela-enter" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: 18, marginBottom: 10, animationDelay: `${Math.min(i, 8) * 0.04}s` }}>
                 <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 10, lineHeight: 1.5 }}>{a.texto}</div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: 11, color: 'var(--text-faint)' }}><strong style={{ color: '#F87171' }}>{rotuloRelativo(a.created_at)}</strong> · {a.hora}</span>
@@ -211,12 +211,12 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
                 </div>
               </div>
             ))}
-          </>
+          </div>
         )}
 
         {/* CHAMADA */}
         {aba === 'chamada' && (
-          <>
+          <div className="tela-enter">
             {erroSalvar && (
               <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 14, padding: '12px 16px', marginBottom: 16, fontSize: 12, color: '#F87171' }}>
                 ⚠️ Não foi possível salvar agora. Verifique sua internet — a marcação ficará pendente até sincronizar.
@@ -262,12 +262,12 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
                 </div>
               )
             })}
-          </>
+          </div>
         )}
 
         {/* FALTAS */}
         {aba === 'faltas' && (
-          <>
+          <div className="tela-enter">
             {EQUIPES.every(eq => !faltas[eq.id]?.length) && (
               <div style={{ textAlign: 'center', color: 'var(--text-faint)', fontSize: 13, padding: 40 }}>
                 <div style={{ fontSize: 36, marginBottom: 12 }}>🎉</div>
@@ -309,11 +309,11 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
                 }}>📄</button>
               </div>
             )}
-          </>
+          </div>
         )}
         {/* SENHAS */}
         {aba === 'senhas' && (
-          <>
+          <div className="tela-enter">
             {ORDEM_NIVEL.map(nivel => {
               const membros = Object.entries(PINOS)
                 .filter(([, d]) => d.nivel === nivel)
@@ -349,7 +349,7 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
                 </div>
               ))}
             </div>
-          </>
+          </div>
         )}
 
       </div>
