@@ -1,6 +1,7 @@
 import { supabase } from './supabase'
 
 const QUEUE_KEY = 'impulse_offline_queue'
+const TIMEOUT_MS = 8000
 
 function getQueue() {
   try { return JSON.parse(localStorage.getItem(QUEUE_KEY)) || [] }
@@ -11,23 +12,28 @@ function saveQueue(queue) {
   localStorage.setItem(QUEUE_KEY, JSON.stringify(queue))
 }
 
+async function executarOp(type, table, data, options) {
+  const signal = AbortSignal.timeout(TIMEOUT_MS)
+  let result
+  if (type === 'upsert') {
+    result = await supabase.from(table).upsert(data, options).abortSignal(signal)
+  } else if (type === 'insert') {
+    result = await supabase.from(table).insert(data).abortSignal(signal)
+  } else if (type === 'update') {
+    let q = supabase.from(table).update(data.values)
+    for (const [k, v] of Object.entries(data.filters)) q = q.eq(k, v)
+    result = await q.abortSignal(signal)
+  } else if (type === 'delete') {
+    let q = supabase.from(table).delete()
+    for (const [k, v] of Object.entries(data)) q = q.eq(k, v)
+    result = await q.abortSignal(signal)
+  }
+  if (result?.error) throw result.error
+}
+
 export async function syncOp(type, table, data, options) {
   try {
-    let result
-    if (type === 'upsert') {
-      result = await supabase.from(table).upsert(data, options)
-    } else if (type === 'insert') {
-      result = await supabase.from(table).insert(data)
-    } else if (type === 'update') {
-      let q = supabase.from(table).update(data.values)
-      for (const [k, v] of Object.entries(data.filters)) q = q.eq(k, v)
-      result = await q
-    } else if (type === 'delete') {
-      let q = supabase.from(table).delete()
-      for (const [k, v] of Object.entries(data)) q = q.eq(k, v)
-      result = await q
-    }
-    if (result?.error) throw result.error
+    await executarOp(type, table, data, options)
     return true
   } catch {
     addToQueue({ type, table, data, options })
@@ -47,21 +53,7 @@ export async function processQueue() {
   const remaining = []
   for (const op of queue) {
     try {
-      let result
-      if (op.type === 'upsert') {
-        result = await supabase.from(op.table).upsert(op.data, op.options)
-      } else if (op.type === 'insert') {
-        result = await supabase.from(op.table).insert(op.data)
-      } else if (op.type === 'update') {
-        let q = supabase.from(op.table).update(op.data.values)
-        for (const [k, v] of Object.entries(op.data.filters)) q = q.eq(k, v)
-        result = await q
-      } else if (op.type === 'delete') {
-        let q = supabase.from(op.table).delete()
-        for (const [k, v] of Object.entries(op.data)) q = q.eq(k, v)
-        result = await q
-      }
-      if (result?.error) throw result.error
+      await executarOp(op.type, op.table, op.data, op.options)
     } catch {
       remaining.push(op)
     }

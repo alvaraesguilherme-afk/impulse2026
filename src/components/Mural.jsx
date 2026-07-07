@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useTexto } from '../lib/i18n'
 import { supabase } from '../lib/supabase'
 import { syncOp } from '../lib/offlineSync'
+import { blobToBase64, enqueueFotoPendente, getFotoPendingCount, processFotoQueue } from '../lib/fotoSync'
 
 const INICIO = new Date(2026, 6, 14)
 const TOTAL_DIAS = 14
@@ -109,6 +110,8 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [erroUpload, setErroUpload] = useState(false)
+  const [fotoPendenteAvisada, setFotoPendenteAvisada] = useState(false)
+  const [pendingFotos, setPendingFotos] = useState(() => getFotoPendingCount())
   const [fotoAberta, setFotoAberta] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [curtidas, setCurtidas] = useState(() => {
@@ -132,6 +135,17 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
   const inputCamera = useRef(null)
 
   useEffect(() => { carregarFotos(diaSel, todosOsDias, filtroAutor, modoRecap) }, [diaSel, todosOsDias, filtroAutor, modoRecap, ordem])
+
+  useEffect(() => {
+    async function tentarEnviarPendentes() {
+      const enviadas = await processFotoQueue()
+      setPendingFotos(getFotoPendingCount())
+      if (enviadas > 0) carregarFotos()
+    }
+    if (navigator.onLine) tentarEnviarPendentes()
+    window.addEventListener('online', tentarEnviarPendentes)
+    return () => window.removeEventListener('online', tentarEnviarPendentes)
+  }, [])
 
   useEffect(() => {
     if (fotoAberta) {
@@ -192,16 +206,31 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
   async function uploadFoto(file, autorNome, legenda) {
     setUploading(true)
     setErroUpload(false)
+    setFotoPendenteAvisada(false)
+    const nome = `dia${DIAS[diaSel].num}_${Date.now()}.jpg`
+    const TENTATIVAS = 3
+    const blob = await comprimirImagem(file)
+    for (let tentativa = 0; tentativa < TENTATIVAS; tentativa++) {
+      try {
+        const { error } = await supabase.storage.from('mural').upload(nome, blob, { contentType: 'image/jpeg' })
+        if (error) throw error
+        const { data: urlData } = supabase.storage.from('mural').getPublicUrl(nome)
+        await supabase.from('mural_fotos').insert({ dia: DIAS[diaSel].num, url: urlData.publicUrl, arquivo: nome, autor: autorNome, legenda: legenda || null })
+        await carregarFotos()
+        setUploading(false)
+        return
+      } catch (err) {
+        console.error(`Tentativa ${tentativa + 1}/${TENTATIVAS} falhou:`, err)
+        if (tentativa < TENTATIVAS - 1) await new Promise(r => setTimeout(r, 1200))
+      }
+    }
     try {
-      const blob = await comprimirImagem(file)
-      const nome = `dia${DIAS[diaSel].num}_${Date.now()}.jpg`
-      const { error } = await supabase.storage.from('mural').upload(nome, blob, { contentType: 'image/jpeg' })
-      if (error) throw error
-      const { data: urlData } = supabase.storage.from('mural').getPublicUrl(nome)
-      await supabase.from('mural_fotos').insert({ dia: DIAS[diaSel].num, url: urlData.publicUrl, arquivo: nome, autor: autorNome, legenda: legenda || null })
-      await carregarFotos()
+      const base64 = await blobToBase64(blob)
+      enqueueFotoPendente({ base64, arquivo: nome, dia: DIAS[diaSel].num, autor: autorNome, legenda })
+      setPendingFotos(getFotoPendingCount())
+      setFotoPendenteAvisada(true)
     } catch (err) {
-      console.error('Erro no upload:', err)
+      console.error('Erro ao guardar foto pendente:', err)
       setErroUpload(true)
     }
     setUploading(false)
@@ -375,6 +404,22 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
         <div style={{ padding: '0 22px 16px' }}>
           <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 14, padding: '12px', fontSize: 13, color: '#F87171', textAlign: 'center' }}>
             ⚠️ Não foi possível enviar a foto. Verifique sua internet e tente de novo.
+          </div>
+        </div>
+      )}
+
+      {!modoRecap && fotoPendenteAvisada && (
+        <div style={{ padding: '0 22px 16px' }}>
+          <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 14, padding: '12px', fontSize: 13, color: '#FBBF24', textAlign: 'center' }}>
+            📶 Sinal fraco — sua foto foi guardada no aparelho e será enviada automaticamente assim que a conexão melhorar.
+          </div>
+        </div>
+      )}
+
+      {!modoRecap && !uploading && pendingFotos > 0 && (
+        <div style={{ padding: '0 22px 16px' }}>
+          <div style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 14, padding: '10px 12px', fontSize: 12, color: '#FBBF24', textAlign: 'center' }}>
+            ⏳ {pendingFotos} foto{pendingFotos > 1 ? 's' : ''} aguardando conexão pra enviar
           </div>
         </div>
       )}
