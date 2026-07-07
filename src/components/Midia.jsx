@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useTexto } from '../lib/i18n'
 import { supabase } from '../lib/supabase'
 import { syncOp } from '../lib/offlineSync'
+import { notificar } from '../lib/push'
+import { MEMBROS_FIXOS, MEMBROS_EXTRAS } from '../lib/midia'
 
 const INICIO = new Date(2026, 6, 15)
 const TOTAL_DIAS = 11
@@ -21,9 +23,6 @@ function getDiaAtual() {
   if (diff >= 0 && diff < TOTAL_DIAS) return diff
   return 0
 }
-
-const MEMBROS_FIXOS = ['Alyson', 'Caetano', 'Daniel', 'Joyce', 'Juliana']
-const MEMBROS_EXTRAS = ['Sthefany', 'Victória', 'Maria Clara']
 
 const FUNCOES_PADRAO = ['Stories', 'Fotografia', 'Gravação de vídeo']
 const TURNOS = [
@@ -70,8 +69,37 @@ export default function Midia({ onVoltar, sessao, onAjuda }) {
   const [addingTo, setAddingTo] = useState(null)
   const [novaFuncao, setNovaFuncao] = useState('')
   const [funcaoSelecionada, setFuncaoSelecionada] = useState('')
+  const [aba, setAba] = useState('escalas')
+  const [mensagens, setMensagens] = useState([])
+  const [msgTexto, setMsgTexto] = useState('')
+  const [enviandoMsg, setEnviandoMsg] = useState(false)
+
+  const podeEnviarMensagem = Object.values(SENHAS_COORD).includes(sessao?.nome)
+  const souDaMidia = MEMBROS_FIXOS.includes(sessao?.nome) || MEMBROS_EXTRAS.includes(sessao?.nome)
+  const podeVerMensagens = podeEnviarMensagem || souDaMidia
 
   useEffect(() => { carregarEscalas() }, [diaSel])
+  useEffect(() => { if (aba === 'mensagens') carregarMensagens() }, [aba])
+
+  async function carregarMensagens() {
+    const { data } = await supabase.from('mensagens_equipe').select('*').eq('equipe_id', 'midia').order('created_at', { ascending: false })
+    setMensagens(data || [])
+  }
+
+  async function enviarMensagem() {
+    if (!msgTexto.trim() || !podeEnviarMensagem) return
+    setEnviandoMsg(true)
+    const ok = await syncOp('insert', 'mensagens_equipe', { equipe_id: 'midia', autor: sessao.nome, texto: msgTexto.trim() })
+    if (ok) notificar({ tipo: 'equipe', equipeId: 'midia' })
+    setMsgTexto('')
+    setEnviandoMsg(false)
+    carregarMensagens()
+  }
+
+  async function excluirMensagem(id) {
+    await syncOp('delete', 'mensagens_equipe', { id })
+    carregarMensagens()
+  }
 
   async function carregarEscalas() {
     setLoading(true)
@@ -164,6 +192,16 @@ export default function Midia({ onVoltar, sessao, onAjuda }) {
         </div>
       </div>
 
+      <div style={{ display: 'flex', gap: 8, padding: '16px 22px 0', overflowX: 'auto', scrollbarWidth: 'none' }}>
+        {[{ id: 'escalas', label: '📅 Escalas' }, podeVerMensagens && { id: 'mensagens', label: '💬 Mensagens' }].filter(Boolean).map(a => (
+          <button key={a.id} onClick={() => setAba(a.id)} style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 20, border: '1px solid var(--border-strong)', background: aba === a.id ? 'var(--accent-glow)' : 'var(--bg-card)', color: aba === a.id ? 'var(--accent-light)' : 'var(--text-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            {a.label}
+          </button>
+        ))}
+      </div>
+
+      {aba === 'escalas' && (
+      <>
       <div style={{ padding: '12px 22px 0' }}>
         <div onClick={() => setDiaSel(getDiaAtual())} style={{
           background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)',
@@ -396,6 +434,51 @@ export default function Midia({ onVoltar, sessao, onAjuda }) {
           </div>
         </div>
       </div>
+      </>
+      )}
+
+      {aba === 'mensagens' && (
+        <div style={{ padding: '0 22px 100px' }}>
+          {podeEnviarMensagem && (
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '16px 18px', marginBottom: 16 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
+                Mandar mensagem para a equipe de Mídia
+              </div>
+              <textarea
+                value={msgTexto}
+                onChange={e => setMsgTexto(e.target.value)}
+                placeholder="Escreva um recado..."
+                rows={3}
+                style={{ width: '100%', padding: '12px 14px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 12, fontSize: 13, color: 'var(--text)', outline: 'none', marginBottom: 8, fontFamily: 'Inter, sans-serif', resize: 'none' }}
+              />
+              <button
+                onClick={enviarMensagem}
+                disabled={!msgTexto.trim() || enviandoMsg}
+                style={{
+                  width: '100%', padding: 12, borderRadius: 12, border: 'none',
+                  background: msgTexto.trim() ? 'var(--gradient)' : 'var(--input-bg)',
+                  color: msgTexto.trim() ? 'white' : 'var(--text-faint)',
+                  fontSize: 13, fontWeight: 700, cursor: msgTexto.trim() ? 'pointer' : 'not-allowed', fontFamily: 'Inter, sans-serif'
+                }}
+              >{enviandoMsg ? 'Enviando...' : 'Enviar'}</button>
+            </div>
+          )}
+          {mensagens.length === 0 && (
+            <p style={{ fontSize: 13, color: 'var(--text-faint)', textAlign: 'center', padding: 20 }}>Nenhuma mensagem ainda.</p>
+          )}
+          {mensagens.map(m => (
+            <div key={m.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: '12px 14px', marginBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{m.texto}</div>
+                {podeEnviarMensagem && (
+                  <button onClick={() => excluirMensagem(m.id)} style={{ flexShrink: 0, padding: '4px 8px', borderRadius: 10, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.1)', color: '#F87171', fontSize: 11, cursor: 'pointer' }}>🗑</button>
+                )}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 6 }}>{m.autor} · {new Date(m.created_at).toLocaleString('pt-BR')}</div>
+            </div>
+          ))}
+        </div>
+      )}
 
     </div>
   )
