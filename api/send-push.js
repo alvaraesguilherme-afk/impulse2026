@@ -35,6 +35,11 @@ async function resolverConteudo(body) {
     return { title: '💬 Mensagem da sua equipe', body: `${data.autor}: ${data.texto}`.slice(0, 120), equipeId: body.equipeId || null }
   }
 
+  if (tipo === 'lista_compras') {
+    // Mesma lista de acesso da Lista de Compras em Home.jsx — manter sincronizado
+    return { title: '🛒 Nova lista de compras', body: 'Uma nova lista de compras foi criada.', nomes: ['Linda', 'Arthur Bolzan', 'Alvarães', 'Pr. Júnior'] }
+  }
+
   return null
 }
 
@@ -46,6 +51,7 @@ export default async function handler(req, res) {
 
   let query = supabase.from('push_subscriptions').select('*')
   if (conteudo.equipeId) query = query.eq('equipe_id', conteudo.equipeId)
+  else if (conteudo.nomes) query = query.in('nome', conteudo.nomes)
   const { data: subs } = await query
   const lista = subs || []
 

@@ -5,7 +5,7 @@ const STAFF_AREAS = [
   { area: '⛪ Liderança Pastoral', nomes: ['Pr. Júnior Bandeira', 'Pra. Stephanie Bandeira'] },
   { area: '🙌 Apoio', nomes: ['Alvarães','Ana Luiza','Clara Cunha','Emanuel','Francisco','Gabriel Gomes','Gabriel Mendes','Gustavo Massay','Hadassa','Hellen Borges','Hugo Lacroix','Jerônimo','Jhony','Joel Marcos','Júlio','Linda','Lívia Andréa','Lorena','Ludmyla','Maria Clara','Maria Júlia','Mariana Gabrielle','Matheus Almeida','Maurício','Nicoly','Rafael Chaves','Rennan','Riana','Ryan Guedes','Samuel Lopes','Sthefany','Victória','Walterley'] },
   { area: '🎥 Mídia', nomes: ['Alyson','Caetano','Daniel','Joyce','Juliana','Sthefany','Victória','Maria Clara'] },
-  { area: '🍳 Cozinha', nomes: [] },
+  { area: '🍳 Cozinha', nomes: ['Linda'] },
   { area: '🛒 Cantina', nomes: ['Guilherme Valentim', 'Hadstton Capell'] },
   { area: '📋 Secretário', nomes: ['Danilo'] },
   { area: '📅 Programação', nomes: ['Eliel'] },

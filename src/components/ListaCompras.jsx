@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { syncOp } from '../lib/offlineSync'
+import { notificar } from '../lib/push'
 
 const CATEGORIAS = [
   { id: 'comida', label: '🍽️ Comida' },
@@ -210,6 +211,7 @@ export default function ListaCompras({ onVoltar, sessao }) {
     }))
     setItens(prev => [...novosItens, ...prev])
     await syncOp('insert', 'lista_compras', novosItens.map(({ id: _id, ...linha }) => linha))
+    notificar({ tipo: 'lista_compras' })
     setItensRascunho([])
     setCriando(false)
     setAba('pendentes')

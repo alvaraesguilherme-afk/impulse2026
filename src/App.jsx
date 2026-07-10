@@ -11,7 +11,7 @@ import ListaCompras from './components/ListaCompras'
 import Config from './components/Config'
 import Login from './components/Login'
 import { initSync } from './lib/offlineSync'
-import { IdiomaContext, useTexto } from './lib/i18n'
+import { IdiomaContext, getTexto } from './lib/i18n'
 import { supabase } from './lib/supabase'
 import { getDeviceId } from './lib/device'
 
@@ -26,38 +26,40 @@ const ANIM_TELA = {
   mural: 'tela-enter-mural',
 }
 
-const INTROS = {
-  apoio: [
-    { icon: '🦺', title: 'Equipes de Apoio', desc: 'Veja qual equipe está de serviço e em qual turno do dia.' },
-    { icon: '📋', title: 'Chamada', desc: 'Como coordenador, registre presença e ausência de cada membro do seu time.' },
-    { icon: '✅', title: 'Tarefas do Turno', desc: 'Confira as responsabilidades da sua equipe por turno.' },
-  ],
-  staff: [
-    { icon: '👥', title: 'Diretório do Staff', desc: 'Encontre qualquer membro por área de atuação no evento.' },
-  ],
-  midia: [
-    { icon: '📹', title: 'Equipe de Mídia', desc: 'Analise sua escala e veja em qual dia servirá conosco.' },
-    { icon: '🔒', title: 'Coordenador', desc: 'Sendo coordenador, edite as suas próprias escalas.' },
-  ],
-  mural: [
-    { icon: '📸', title: 'Feed Impulse', desc: 'Poste fotos do evento e veja os melhores momentos do staff.' },
-    { icon: '❤️', title: 'Curta as Fotos', desc: 'Toque no coração para curtir as fotos dos seus colegas.' },
-    { icon: '⭐', title: 'Foto Destaque', desc: 'A foto mais curtida do dia aparece em destaque na tela inicial no dia seguinte.' },
-    { icon: '🙏', title: 'Só um recado...', desc: 'Saiba apenas que o Feed aguenta até 2.000 fotos.' },
-    { icon: '🗑️', title: 'Moderação', desc: 'Coordenadores podem excluir fotos que não convém. Basta tocar na foto e escolher excluir.' },
-  ],
-  programacao: [
-    { icon: '🎵', title: 'Louvor', desc: 'Confira as equipes de louvor escaladas por turno e dia.' },
-    { icon: '🎤', title: 'Preletores', desc: 'Veja quem ministra em cada momento do evento.' },
-  ],
-  supervisor: [
-    { icon: '📢', title: 'Avisos', desc: 'Publique e leia comunicados importantes pra toda a equipe.' },
-    { icon: '📋', title: 'Chamada Geral', desc: 'Marque presença e acompanhe faltas de todas as equipes.' },
-    { icon: '❌', title: 'Relatório de Faltas', desc: 'Veja o resumo de ausências por equipe e exporte em PDF.' },
-  ],
-  config: [
-    { icon: '🎨', title: 'Configurações', desc: 'Personalize tema, cor, fonte e idioma do app.' },
-  ],
+function getIntros(tx) {
+  return {
+    apoio: [
+      { icon: '🦺', title: tx.introApoioEquipesTitle, desc: tx.introApoioEquipesDesc },
+      { icon: '📋', title: tx.introApoioChamadaTitle, desc: tx.introApoioChamadaDesc },
+      { icon: '✅', title: tx.introApoioTarefasTitle, desc: tx.introApoioTarefasDesc },
+    ],
+    staff: [
+      { icon: '👥', title: tx.introStaffTitle, desc: tx.introStaffDesc },
+    ],
+    midia: [
+      { icon: '📹', title: tx.introMidiaEquipeTitle, desc: tx.introMidiaEquipeDesc },
+      { icon: '🔒', title: tx.introMidiaCoordenadorTitle, desc: tx.introMidiaCoordenadorDesc },
+    ],
+    mural: [
+      { icon: '📸', title: tx.introMuralFeedTitle, desc: tx.introMuralFeedDesc },
+      { icon: '❤️', title: tx.introMuralCurtirTitle, desc: tx.introMuralCurtirDesc },
+      { icon: '⭐', title: tx.introMuralDestaqueTitle, desc: tx.introMuralDestaqueDesc },
+      { icon: '🙏', title: tx.introMuralRecadoTitle, desc: tx.introMuralRecadoDesc },
+      { icon: '🗑️', title: tx.introMuralModeracaoTitle, desc: tx.introMuralModeracaoDesc },
+    ],
+    programacao: [
+      { icon: '🎵', title: tx.introProgLouvorTitle, desc: tx.introProgLouvorDesc },
+      { icon: '🎤', title: tx.introProgPreletoresTitle, desc: tx.introProgPreletoresDesc },
+    ],
+    supervisor: [
+      { icon: '📢', title: tx.introSupAvisosTitle, desc: tx.introSupAvisosDesc },
+      { icon: '📋', title: tx.introSupChamadaTitle, desc: tx.introSupChamadaDesc },
+      { icon: '❌', title: tx.introSupFaltasTitle, desc: tx.introSupFaltasDesc },
+    ],
+    config: [
+      { icon: '🎨', title: tx.introConfigTitle, desc: tx.introConfigDesc },
+    ],
+  }
 }
 
 const ABAS_SUPERVISOR = {
@@ -89,18 +91,18 @@ function NavIcon({ id, active, size = 22 }) {
   return icons[id] || null
 }
 
-function getSidebarItems(podeSupervisor) {
+function getSidebarItems(podeSupervisor, tx) {
   return [
-    { id: 'home', label: 'Início' },
-    { id: 'mural', label: 'Feed Impulse' },
-    { id: 'apoio', label: 'Apoio' },
-    { id: 'midia', label: 'Mídia' },
-    { id: 'staff', label: 'Staff' },
-    { id: 'programacao', label: 'Programação' },
-    { id: 'advertencias', label: 'Advertências' },
+    { id: 'home', label: tx.inicio },
+    { id: 'mural', label: tx.feedImpulse },
+    { id: 'apoio', label: tx.apoio },
+    { id: 'midia', label: tx.midia },
+    { id: 'staff', label: tx.staff },
+    { id: 'programacao', label: tx.programacao },
+    { id: 'advertencias', label: tx.advertencias },
     podeSupervisor ? null : undefined,
-    podeSupervisor ? { id: 'supervisor', label: 'Supervisor' } : undefined,
-    { id: 'config', label: 'Configurações' },
+    podeSupervisor ? { id: 'supervisor', label: tx.supervisor } : undefined,
+    { id: 'config', label: tx.config },
   ].filter(item => item !== undefined)
 }
 
@@ -115,6 +117,8 @@ export default function App() {
   }, [])
 
   const [idioma, setIdiomaState] = useState(() => localStorage.getItem('impulse_idioma') || 'pt-BR')
+  const tx = getTexto(idioma)
+  const INTROS = getIntros(tx)
   const [tema, setTemaState] = useState(() => localStorage.getItem('tema') || 'dark')
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768)
   const [sessao, setSessao] = useState(() => {
@@ -156,7 +160,7 @@ export default function App() {
       .then(({ data, error }) => {
         if (!data && !error) {
           localStorage.removeItem('impulse_sessao')
-          setMensagemLogin('Sessão expirada. Faça login novamente.')
+          setMensagemLogin(tx.sessaoExpirada)
           setSessao(null)
         }
       })
@@ -177,7 +181,7 @@ export default function App() {
         return // falha de rede/consulta: não desloga, tenta de novo na próxima
       }
       if (!data) {
-        fazerLogout('Sua sessão foi encerrada em outro dispositivo.')
+        fazerLogout(tx.sessaoEncerrada)
       } else {
         // Renova updated_at para não expirar sessão ativa
         supabase.from('sessoes_ativas').upsert(
@@ -298,7 +302,7 @@ export default function App() {
     if (overlay === 'supervisor') {
       const nome = SENHAS.supervisor[senhaInput]
       if (nome) { setSupervisorNome(nome); setOverlay(null); setTela('supervisor'); setNavAtiva('supervisor'); setTelaKey(k => k + 1); mostrarIntroSe('supervisor') }
-      else setSenhaErro('Senha incorreta.')
+      else setSenhaErro(tx.senhaIncorreta)
     }
   }
 
@@ -308,17 +312,15 @@ export default function App() {
     setTelaKey(k => k + 1)
   }
 
-  const t = { 'pt-BR': { home: 'Início', prog: 'Programação', sup: 'Supervisor', cfg: 'Config', senha: 'Digite sua senha para acessar', area: 'Área do Supervisor', entrar: 'Entrar', cancelar: 'Cancelar', senhaErro: 'Senha incorreta.' }, en: { home: 'Home', prog: 'Schedule', sup: 'Supervisor', cfg: 'Settings', senha: 'Enter your password', area: 'Supervisor Area', entrar: 'Enter', cancelar: 'Cancel', senhaErro: 'Wrong password.' } }[idioma]
-
   const nivel = sessao?.nivel
   const NIVEIS_SUPERVISOR = ['maximo', 'alto', 'basico']
   const podeSupervisor = NIVEIS_SUPERVISOR.includes(nivel)
 
   const NAV = [
-    { id: 'home', label: t.home },
-    { id: 'programacao', label: t.prog },
-    podeSupervisor && { id: 'supervisor', label: t.sup },
-    { id: 'config', label: t.cfg },
+    { id: 'home', label: tx.inicio },
+    { id: 'programacao', label: tx.programacao },
+    podeSupervisor && { id: 'supervisor', label: tx.supervisor },
+    { id: 'config', label: tx.config },
   ].filter(Boolean)
 
   return (
@@ -328,7 +330,7 @@ export default function App() {
         ? { position: 'fixed', inset: 0, zIndex: 1000, overflowY: 'auto', background: 'var(--bg-app)' }
         : { position: 'fixed', inset: 0, zIndex: -1, opacity: 0, pointerEvents: 'none' }
       }>
-        <Login onLogin={fazerLogin} mensagem={mensagemLogin} />
+        <Login onLogin={fazerLogin} mensagem={mensagemLogin} idioma={idioma} />
       </div>
 
     <div style={{ background: 'var(--bg-app)', minHeight: '100vh', paddingBottom: isDesktop ? 0 : 80, display: (sessao || splash) ? undefined : 'none' }}>
@@ -344,7 +346,7 @@ export default function App() {
             2026
           </div>
           <div className="splash-sub" style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500, marginTop: 16, letterSpacing: 2, textTransform: 'uppercase' }}>
-            15 a 25 de julho
+            {tx.datasEvento}
           </div>
           <div className="splash-bar splash-loader">
             <div className="splash-loader-bar" />
@@ -367,10 +369,10 @@ export default function App() {
               Escola{' '}
               <span style={{ background: 'var(--gradient-text)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Impulse</span>{' '}2026
             </div>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 5, letterSpacing: 1.5, textTransform: 'uppercase' }}>15 a 25 de julho</div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 5, letterSpacing: 1.5, textTransform: 'uppercase' }}>{tx.datasEvento}</div>
           </div>
 
-          {getSidebarItems(podeSupervisor).map((item, idx) => {
+          {getSidebarItems(podeSupervisor, tx).map((item, idx) => {
             if (!item) return (
               <div key={'sep-' + idx} style={{ height: 1, background: 'var(--border)', margin: '6px 10px 10px' }} />
             )
@@ -446,7 +448,7 @@ export default function App() {
               ))}
             </div>
             <div style={{ position: 'absolute', bottom: 76, fontSize: 11, color: 'rgba(255,255,255,0.3)', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase' }}>
-              {introSlide < slides.length - 1 ? 'Toque para continuar' : 'Toque para começar'}
+              {introSlide < slides.length - 1 ? tx.toqueContinuar : tx.toqueComecar}
             </div>
           </div>
         )
@@ -501,9 +503,9 @@ export default function App() {
               <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             </div>
             <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>
-              {overlay === 'supervisor' ? t.area : t.area}
+              {tx.areaDoSupervisor}
             </h2>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>{t.senha}</p>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>{tx.digiteSenha}</p>
             <input
               type="password"
               value={senhaInput}
@@ -515,8 +517,8 @@ export default function App() {
               style={{ width: '100%', padding: '14px 16px', background: 'var(--input-bg)', border: '1px solid var(--border)', borderRadius: 14, fontSize: 20, textAlign: 'center', letterSpacing: '.3em', outline: 'none', color: 'var(--text)', marginBottom: 12, fontFamily: 'Inter, sans-serif', transition: 'border-color 0.2s' }}
             />
             {senhaErro && <p style={{ fontSize: 12, color: '#F87171', marginBottom: 10 }}>{senhaErro}</p>}
-            <button onClick={verificarSenha} style={{ width: '100%', padding: 14, background: 'var(--gradient)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'white', marginBottom: 10, fontFamily: 'Syne, sans-serif', transition: 'transform 0.1s', boxShadow: '0 4px 20px var(--accent-glow)' }}>{t.entrar}</button>
-            <button onClick={() => setOverlay(null)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer' }}>{t.cancelar}</button>
+            <button onClick={verificarSenha} style={{ width: '100%', padding: 14, background: 'var(--gradient)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'white', marginBottom: 10, fontFamily: 'Syne, sans-serif', transition: 'transform 0.1s', boxShadow: '0 4px 20px var(--accent-glow)' }}>{tx.entrar}</button>
+            <button onClick={() => setOverlay(null)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: 'pointer' }}>{tx.cancelar}</button>
           </div>
         </div>
       )}

@@ -184,16 +184,16 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
         {/* NOTIFICAÇÕES */}
         {(suportaNotificacoes() || isIOS) && (
           <>
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12, marginTop: 28 }}>Notificações</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12, marginTop: 28 }}>{tx.notificacoes}</div>
 
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '16px 18px', marginBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ fontSize: 22 }}>🔔</div>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 600 }}>Notificações push</div>
+                    <div style={{ fontSize: 14, fontWeight: 600 }}>{tx.notificacoesPush}</div>
                     <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                      {!suportaNotificacoes() ? 'Indisponível neste navegador' : statusNotif === 'granted' ? 'Ativadas neste dispositivo' : statusNotif === 'denied' ? 'Bloqueadas — libere nas configurações do navegador' : 'Avisos, frase do dia e programação'}
+                      {!suportaNotificacoes() ? tx.notifIndisponivel : statusNotif === 'granted' ? tx.notifAtivadas : statusNotif === 'denied' ? tx.notifBloqueadas : tx.notifDesc}
                     </div>
                   </div>
                 </div>
@@ -206,9 +206,7 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
               {erroNotif && <div style={{ fontSize: 12, color: '#F87171', marginTop: 10 }}>{erroNotif}</div>}
               {!suportaNotificacoes() && isIOS && (
                 <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 10, lineHeight: 1.4 }}>
-                  {jaInstalado
-                    ? 'Seu iPhone precisa do iOS 16.4 ou mais recente pra ativar notificações. Veja em Ajustes → Geral → Atualização de Software.'
-                    : 'No iPhone, notificações só funcionam depois de adicionar o app à Tela de Início (Safari → Compartilhar → Adicionar à Tela de Início).'}
+                  {jaInstalado ? tx.notifIosAtualizar : tx.notifIosInstalar}
                 </div>
               )}
             </div>
@@ -275,7 +273,7 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
 
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '18px', marginBottom: 10 }}>
           <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Escola Impulse 2026</div>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6 }}>15 a 25 de julho · Rancho Império</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6 }}>{tx.datasEventoLocal}</div>
           <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 12 }}>{tx.versaoBeta} · {tx.feitoComCarinho}</div>
         </div>
 
@@ -285,7 +283,7 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
             <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--gradient)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>👨‍💻</div>
             <div>
               <div style={{ fontSize: 14, fontWeight: 700 }}>Alvarães</div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Desenvolvimento & Design</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{tx.devDesc}</div>
             </div>
           </div>
         </div>
@@ -293,11 +291,11 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
         {/* SESSÃO */}
         {sessao && (
           <div style={{ marginTop: 28, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '18px' }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Sessão</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>{tx.sessao}</div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700 }}>{sessao.nome}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Logado neste dispositivo</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{tx.logadoNesteDispositivo}</div>
               </div>
               <button
                 onClick={onLogout}
@@ -308,7 +306,7 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
                   color: '#F87171', fontSize: 13, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'Syne, sans-serif'
                 }}
-              >Sair</button>
+              >{tx.sair}</button>
             </div>
           </div>
         )}

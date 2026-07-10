@@ -67,7 +67,7 @@ function ContadorSection() {
   if (contador.fase === 'antes') {
     return (
       <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 20, padding: '18px 16px', textAlign: 'center' }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-light)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>Faltam</div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-light)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>{tx.faltam}</div>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
           {[[contador.dias, tx.dias],[contador.horas, tx.hrs],[contador.minutos, tx.min],[contador.segundos, tx.seg]].map(([v, l]) => (
             <div key={l} style={{ minWidth: 52, padding: '8px 4px', background: 'var(--bg-card)', borderRadius: 14, border: '1px solid var(--border)' }}>
@@ -84,7 +84,7 @@ function ContadorSection() {
       <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 20, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
         <div style={{ width: 7, height: 7, background: '#EF4444', borderRadius: '50%', boxShadow: '0 0 8px #EF4444', animation: 'blink 1.5s infinite', flexShrink: 0 }} />
         <div>
-          <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 700, color: 'var(--accent-light)' }}>Dia {contador.diaAtual} de {contador.totalDias}</div>
+          <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 700, color: 'var(--accent-light)' }}>{tx.dia} {contador.diaAtual} {tx.de} {contador.totalDias}</div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{tx.eventoEmAndamento}</div>
         </div>
       </div>
@@ -94,16 +94,16 @@ function ContadorSection() {
     return (
       <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 20, padding: '20px 18px', textAlign: 'center' }}>
         <div style={{ fontSize: 32, marginBottom: 10 }}>🎉</div>
-        <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 17, fontWeight: 700, color: 'var(--accent-light)', lineHeight: 1.4 }}>Hoje é o nosso dia de diversão!</div>
-        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>Aproveite cada momento.</div>
+        <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 17, fontWeight: 700, color: 'var(--accent-light)', lineHeight: 1.4 }}>{tx.diaDeDiversao}</div>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>{tx.aproveiteCadaMomento}</div>
       </div>
     )
   }
   return (
     <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 20, padding: '20px 18px', textAlign: 'center' }}>
       <div style={{ fontSize: 32, marginBottom: 10 }}>💜</div>
-      <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 17, fontWeight: 700, color: 'var(--accent-light)', lineHeight: 1.4 }}>Esta foi a nossa escola.</div>
-      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8, lineHeight: 1.6 }}>Obrigado por servir conosco.<br />Aguardamos na escola de 2027.</div>
+      <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 17, fontWeight: 700, color: 'var(--accent-light)', lineHeight: 1.4 }}>{tx.estaFoiNossaEscola}</div>
+      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8, lineHeight: 1.6 }}>{tx.obrigadoServirConosco}<br />{tx.aguardamosEscola2027}</div>
     </div>
   )
 }
@@ -155,7 +155,7 @@ export default function Home({ onNavegar, sessao }) {
   }
 
   async function salvarFrase() {
-    if (!fraseInput.trim()) { setFraseErro('Digite a frase.'); return }
+    if (!fraseInput.trim()) { setFraseErro(tx.digiteAFrasePonto); return }
     if (salvandoFrase) return
     setSalvandoFrase(true)
     const autor = sessao?.nome || 'Supervisor'
@@ -181,9 +181,9 @@ export default function Home({ onNavegar, sessao }) {
     { id: 'staff', icon: '👥', nome: tx.staff, desc: tx.colaboradores, grad: 'linear-gradient(145deg,rgba(12,74,110,0.55),rgba(14,165,233,0.55))' },
     { id: 'midia', icon: '📹', nome: tx.midia, desc: tx.escalasEEquipe, grad: 'linear-gradient(145deg,rgba(120,53,15,0.55),rgba(245,158,11,0.55))', foto: '/pexels-brunomassao-2095597.jpg' },
     { id: 'mural', icon: '📸', nome: tx.feedImpulse, desc: tx.fotosDoStaff, grad: 'linear-gradient(145deg,rgba(131,24,67,0.55),rgba(236,72,153,0.55))', foto: '/pexels-alejandro-aznar-155337093-16055216.jpg' },
-    { id: 'advertencias', icon: '⚠️', nome: 'Advertências', desc: 'Registro de advertências', grad: 'linear-gradient(145deg,rgba(120,20,20,0.55),rgba(220,38,38,0.55))', foto: '/istockphoto-2170470419-612x612.jpg' },
+    { id: 'advertencias', icon: '⚠️', nome: tx.advertencias, desc: tx.registroAdvertencias, grad: 'linear-gradient(145deg,rgba(120,20,20,0.55),rgba(220,38,38,0.55))', foto: '/istockphoto-2170470419-612x612.jpg' },
     ...(sessao?.nome === 'Linda' || sessao?.nome === 'Arthur Bolzan' || sessao?.nome === 'Alvarães' || sessao?.nome === 'Pr. Júnior'
-      ? [{ id: 'compras', icon: '🛒', nome: 'Lista de Compras', desc: 'Itens e quantidades pra comprar', grad: 'linear-gradient(145deg,rgba(6,78,59,0.55),rgba(16,185,129,0.55))' }]
+      ? [{ id: 'compras', icon: '🛒', nome: tx.listaDeCompras, desc: tx.itensQuantidadesComprar, grad: 'linear-gradient(145deg,rgba(6,78,59,0.55),rgba(16,185,129,0.55))' }]
       : []),
   ]
   const modulosExibidos = modoRestrito ? modulos.filter(m => m.id === 'mural') : modulos
@@ -198,7 +198,7 @@ export default function Home({ onNavegar, sessao }) {
       <div style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 22px 0', fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>
           <span>{new Date().toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
-          <span style={{ color: 'var(--text-secondary)' }}>Oi, {sessao?.nome?.split(' ')[0]}!</span>
+          <span style={{ color: 'var(--text-secondary)' }}>{tx.oi}, {sessao?.nome?.split(' ')[0]}!</span>
         </div>
         <div style={{ padding: '24px 22px 0' }}>
           <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 42, fontWeight: 800, lineHeight: 1.0, letterSpacing: -1, marginBottom: 8 }}>
@@ -206,7 +206,7 @@ export default function Home({ onNavegar, sessao }) {
             <span style={{ background: 'var(--gradient-text)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Impulse</span><br />
             2026
           </div>
-          <div style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 500, marginBottom: 24 }}>15 a 25 de julho · Rancho Império</div>
+          <div style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 500, marginBottom: 24 }}>{tx.datasEventoLocal}</div>
 
           {!modoRestrito && avisos.length > 0 && horasDesde(avisos[0].created_at) < 24 && (
             <div style={{ marginBottom: 24, background: 'rgba(239,68,68,0.14)', border: '2px solid rgba(239,68,68,0.6)', boxShadow: '0 0 16px rgba(239,68,68,0.2)', borderRadius: 16, padding: 14, display: 'flex', alignItems: 'center', gap: 12, cursor: podeSupervisor ? 'pointer' : 'default' }} onClick={() => podeSupervisor && onNavegar('supervisor')}>
@@ -230,7 +230,7 @@ export default function Home({ onNavegar, sessao }) {
             cursor: fraseClicavel ? 'pointer' : 'default'
           }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-light)', opacity: 0.7, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-              ✦ Frase do Dia
+              {tx.fraseDoDia}
             </div>
             {frase?.frase ? (
               <>
@@ -239,7 +239,7 @@ export default function Home({ onNavegar, sessao }) {
                 </div>
                 {sessao?.nome === 'Alvarães' && frase.autor && (
                   <div style={{ fontSize: 10, color: 'var(--accent-light)', opacity: 0.6, marginTop: 8, fontWeight: 600 }}>
-                    por {frase.autor}
+                    {tx.por} {frase.autor}
                   </div>
                 )}
               </>
@@ -277,7 +277,7 @@ export default function Home({ onNavegar, sessao }) {
         {!modoRestrito && fotoDestaque && (
           <div style={{ margin: '24px 22px 0' }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(245,158,11,0.6)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-              ⭐ Foto Destaque — Dia {fotoDestaque.dia}
+              {tx.fotoDestaque} — {tx.dia} {fotoDestaque.dia}
             </div>
             {fotoDestaque.autor && (
               <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>📸 {fotoDestaque.autor}</div>
@@ -286,7 +286,7 @@ export default function Home({ onNavegar, sessao }) {
               <img src={fotoDestaque.url} alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block' }} />
             </div>
             <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 6, textAlign: 'center' }}>
-              ❤️ {fotoDestaque.curtidas} curtida{fotoDestaque.curtidas !== 1 ? 's' : ''}
+              ❤️ {fotoDestaque.curtidas} {fotoDestaque.curtidas !== 1 ? tx.curtidas : tx.curtida}
             </div>
           </div>
         )}
@@ -299,22 +299,22 @@ export default function Home({ onNavegar, sessao }) {
           <div className="overlay-enter" style={{ background: '#1a1a2e', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '28px 24px', width: '90%', maxWidth: 340, textAlign: 'center' }}>
             <div style={{ fontSize: 32, marginBottom: 12 }}>✦</div>
             <h2 style={{ fontFamily: 'Syne, sans-serif', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>
-              {podeEditarFrase ? 'Editar frase do dia' : 'Frase do dia'}
+              {podeEditarFrase ? tx.editarFrase : tx.fraseDoDiaTitulo}
             </h2>
             <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
-              {podeEditarFrase ? `Editando como ${sessao?.nome}` : `Definindo como ${sessao?.nome}`}
+              {podeEditarFrase ? `${tx.editandoComo} ${sessao?.nome}` : `${tx.definindoComo} ${sessao?.nome}`}
             </p>
             <textarea
               value={fraseInput} onChange={e => setFraseInput(e.target.value)}
-              placeholder="Digite a frase..." rows={3}
+              placeholder={tx.digiteFrase} rows={3}
               style={{ width: '100%', padding: '12px 14px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 14, color: 'var(--text)', outline: 'none', marginBottom: 12, fontFamily: 'Inter, sans-serif', resize: 'none' }}
             />
             {fraseErro && <p style={{ fontSize: 12, color: '#F87171', marginBottom: 10 }}>{fraseErro}</p>}
-            <button onClick={salvarFrase} disabled={salvandoFrase} style={{ width: '100%', padding: 14, background: 'var(--gradient)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: salvandoFrase ? 'not-allowed' : 'pointer', opacity: salvandoFrase ? 0.6 : 1, color: 'var(--text)', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>{salvandoFrase ? 'Salvando...' : 'Salvar'}</button>
+            <button onClick={salvarFrase} disabled={salvandoFrase} style={{ width: '100%', padding: 14, background: 'var(--gradient)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: salvandoFrase ? 'not-allowed' : 'pointer', opacity: salvandoFrase ? 0.6 : 1, color: 'var(--text)', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>{salvandoFrase ? tx.salvando : tx.salvar}</button>
             {podeEditarFrase && (
-              <button onClick={excluirFrase} disabled={salvandoFrase} style={{ width: '100%', padding: 14, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: salvandoFrase ? 'not-allowed' : 'pointer', opacity: salvandoFrase ? 0.6 : 1, color: '#F87171', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>Excluir frase</button>
+              <button onClick={excluirFrase} disabled={salvandoFrase} style={{ width: '100%', padding: 14, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: salvandoFrase ? 'not-allowed' : 'pointer', opacity: salvandoFrase ? 0.6 : 1, color: '#F87171', marginBottom: 10, fontFamily: 'Syne, sans-serif' }}>{tx.excluirFrase}</button>
             )}
-            <button onClick={() => setShowFraseModal(false)} disabled={salvandoFrase} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: salvandoFrase ? 'not-allowed' : 'pointer' }}>Cancelar</button>
+            <button onClick={() => setShowFraseModal(false)} disabled={salvandoFrase} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: salvandoFrase ? 'not-allowed' : 'pointer' }}>{tx.cancelar}</button>
           </div>
         </div>
       )}

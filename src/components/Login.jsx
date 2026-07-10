@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { PINOS, NOMES } from '../lib/pinos'
 import { supabase } from '../lib/supabase'
 import { getDeviceId } from '../lib/device'
+import { getTexto } from '../lib/i18n'
 
 function getConvidadosLocal() {
   try { return JSON.parse(localStorage.getItem('impulse_convidados')) || {} } catch { return {} }
@@ -30,7 +31,7 @@ const pinStyle = {
   fontFamily: 'Inter, sans-serif'
 }
 
-async function verificarSessao(nome, nivel) {
+async function verificarSessao(nome, nivel, tx) {
   const deviceId = getDeviceId()
   const limite = LIMITE_DEVICES[nome] ?? LIMITE_DEVICES[nivel] ?? 1
 
@@ -46,9 +47,7 @@ async function verificarSessao(nome, nivel) {
   const jaEsteDevice = frescas.some(s => s.device_id === deviceId)
 
   if (!jaEsteDevice && frescas.length >= limite) {
-    const msg = limite >= 2
-      ? 'Esta conta já está ativa em 2 aparelhos. Faça logout em um deles primeiro.'
-      : 'Esta conta já está ativa em outro aparelho.'
+    const msg = limite >= 2 ? tx.contaAtivaDoisAparelhos : tx.contaAtivaOutroAparelho
     return { bloqueado: true, msg }
   }
 
@@ -59,7 +58,8 @@ async function verificarSessao(nome, nivel) {
   return { bloqueado: false, msg: '' }
 }
 
-export default function Login({ onLogin, mensagem }) {
+export default function Login({ onLogin, mensagem, idioma }) {
+  const tx = getTexto(idioma)
   const [modo, setModo] = useState('login')
   const [entrando, setEntrando] = useState(false)
   const [erro, setErro] = useState('')
@@ -90,23 +90,23 @@ export default function Login({ onLogin, mensagem }) {
   }
 
   async function entrar() {
-    if (!nomeSel) { setErro('Selecione seu nome.'); return }
-    if (!pin) { setErro('Digite seu PIN.'); return }
+    if (!nomeSel) { setErro(tx.selecioneSeuNome); return }
+    if (!pin) { setErro(tx.digiteSeuPin); return }
 
     let nivel
     const dadosPinos = PINOS[nomeSel]
     if (dadosPinos) {
-      if (pin !== dadosPinos.pin) { setErro('PIN incorreto.'); return }
+      if (pin !== dadosPinos.pin) { setErro(tx.pinIncorreto); return }
       nivel = dadosPinos.nivel
     } else if (convidados[nomeSel] !== undefined) {
-      if (pin !== convidados[nomeSel]) { setErro('PIN incorreto.'); return }
+      if (pin !== convidados[nomeSel]) { setErro(tx.pinIncorreto); return }
       nivel = 'convidado'
     } else {
-      setErro('Nome não encontrado.'); return
+      setErro(tx.nomeNaoEncontrado); return
     }
 
     setEntrando(true)
-    const { bloqueado, msg } = await verificarSessao(nomeSel, nivel)
+    const { bloqueado, msg } = await verificarSessao(nomeSel, nivel, tx)
     if (bloqueado) {
       setEntrando(false)
       setErro(msg)
@@ -131,24 +131,24 @@ export default function Login({ onLogin, mensagem }) {
 
   async function cadastrar() {
     const nome = cadNome.trim()
-    if (!nome) { setErro('Digite seu nome.'); return }
-    if (PINOS[nome]) { setErro('Este nome já pertence ao staff.'); return }
-    if (convidados[nome] !== undefined) { setErro('Este nome já está cadastrado.'); return }
-    if (cadPin.length < 5) { setErro('O PIN deve ter 5 dígitos.'); return }
-    if (cadPin !== cadPin2) { setErro('Os PINs não coincidem.'); return }
+    if (!nome) { setErro(tx.digiteSeuNome); return }
+    if (PINOS[nome]) { setErro(tx.nomeJaPertenceStaff); return }
+    if (convidados[nome] !== undefined) { setErro(tx.nomeJaCadastrado); return }
+    if (cadPin.length < 5) { setErro(tx.pinDeveTerCincoDigitos); return }
+    if (cadPin !== cadPin2) { setErro(tx.pinsNaoCoincidem); return }
 
     const todosOsPins = [
       ...Object.values(PINOS).map(d => d.pin),
       ...Object.values(convidados)
     ]
-    if (todosOsPins.includes(cadPin)) { setErro('Este PIN já está em uso. Escolha outro.'); return }
+    if (todosOsPins.includes(cadPin)) { setErro(tx.pinJaEmUso); return }
 
     setEntrando(true)
     const { error } = await supabase.from('convidados').insert({ nome, pin: cadPin })
     if (error) {
       setEntrando(false)
-      if (error.code === '23505') { setErro('Este nome já está cadastrado.'); return }
-      setErro('Erro ao cadastrar. Tente novamente.')
+      if (error.code === '23505') { setErro(tx.nomeJaCadastrado); return }
+      setErro(tx.erroCadastrar)
       return
     }
 
@@ -184,7 +184,7 @@ export default function Login({ onLogin, mensagem }) {
             Escola<br />
             <span style={{ background: 'var(--gradient-text)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Impulse</span>
           </div>
-          <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>15 a 25 de julho · Rancho Império</div>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 500 }}>{tx.datasEventoLocal}</div>
         </div>
 
         {mensagem && (
@@ -194,7 +194,7 @@ export default function Login({ onLogin, mensagem }) {
         )}
 
         <div style={{ display: 'flex', background: 'var(--bg-card)', border: '1px solid var(--border-strong)', borderRadius: 16, padding: 4, marginBottom: 14 }}>
-          {[['login', 'Entrar'], ['cadastro', 'Cadastrar']].map(([m, label]) => (
+          {[['login', tx.entrar], ['cadastro', tx.cadastrarBtn]].map(([m, label]) => (
             <button
               key={m}
               onClick={() => trocarModo(m)}
@@ -213,17 +213,17 @@ export default function Login({ onLogin, mensagem }) {
           {modo === 'login' ? (
             <>
               <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 20, textAlign: 'center' }}>
-                Identificação
+                {tx.identificacao}
               </div>
 
               <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>Seu nome</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>{tx.seuNome}</div>
                 <select
                   value={nomeSel}
                   onChange={e => { setNomeSel(e.target.value); setErro(''); setBloqueadoInfo(null) }}
                   style={{ ...inputStyle, color: nomeSel ? 'var(--text)' : 'var(--text-faint)', appearance: 'none', cursor: 'pointer' }}
                 >
-                  <option value="">Selecione seu nome...</option>
+                  <option value="">{tx.selecioneSeuNomeOpcao}</option>
                   {todosNomes.map(n => (
                     <option key={n} value={n}>{n}{convidados[n] !== undefined ? ' · convidado' : ''}</option>
                   ))}
@@ -231,7 +231,7 @@ export default function Login({ onLogin, mensagem }) {
               </div>
 
               <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>PIN pessoal</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>{tx.pinPessoal}</div>
                 <input
                   type="password" value={pin}
                   onChange={e => { setPin(e.target.value); setErro(''); setBloqueadoInfo(null) }}
@@ -250,7 +250,7 @@ export default function Login({ onLogin, mensagem }) {
                   color: '#F87171', fontSize: 13, fontWeight: 700,
                   cursor: entrando ? 'default' : 'pointer', fontFamily: 'Syne, sans-serif'
                 }}>
-                  {entrando ? 'Entrando...' : 'Sou eu, entrar mesmo assim'}
+                  {entrando ? tx.entrandoAcao : tx.souEuEntrarMesmoAssim}
                 </button>
               )}
 
@@ -260,30 +260,30 @@ export default function Login({ onLogin, mensagem }) {
                 fontSize: 15, fontWeight: 700, cursor: entrando ? 'default' : 'pointer',
                 color: 'white', fontFamily: 'Syne, sans-serif', opacity: entrando ? 0.6 : 1
               }}>
-                {entrando ? 'Verificando...' : 'Entrar'}
+                {entrando ? tx.verificando : tx.entrar}
               </button>
             </>
           ) : (
             <>
               <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6, textAlign: 'center' }}>
-                Novo acesso
+                {tx.novoAcesso}
               </div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginBottom: 20 }}>
-                Você entrará como <strong>Convidado</strong>
+                {tx.entraraComo} <strong>{tx.convidado}</strong>
               </div>
 
               <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>Seu nome</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>{tx.seuNome}</div>
                 <input
                   type="text" value={cadNome}
                   onChange={e => { setCadNome(e.target.value); setErro('') }}
-                  placeholder="Como você quer ser chamado"
+                  placeholder={tx.comoVoceQuerSerChamado}
                   maxLength={30} style={inputStyle}
                 />
               </div>
 
               <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>Crie um PIN (5 dígitos)</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>{tx.criePin5Digitos}</div>
                 <input
                   type="password" value={cadPin}
                   onChange={e => { setCadPin(e.target.value.replace(/\D/g, '')); setErro('') }}
@@ -293,7 +293,7 @@ export default function Login({ onLogin, mensagem }) {
               </div>
 
               <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>Confirme o PIN</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>{tx.confirmePin}</div>
                 <input
                   type="password" value={cadPin2}
                   onChange={e => { setCadPin2(e.target.value.replace(/\D/g, '')); setErro('') }}
@@ -311,14 +311,14 @@ export default function Login({ onLogin, mensagem }) {
                 fontSize: 15, fontWeight: 700, cursor: entrando ? 'default' : 'pointer',
                 color: 'white', fontFamily: 'Syne, sans-serif', opacity: entrando ? 0.6 : 1
               }}>
-                {entrando ? 'Cadastrando...' : 'Cadastrar'}
+                {entrando ? tx.cadastrando : tx.cadastrarBtn}
               </button>
             </>
           )}
         </div>
 
         <div style={{ textAlign: 'center', marginTop: 20, fontSize: 11, color: 'var(--text-faint)' }}>
-          Seu dispositivo ficará reconhecido após o login
+          {tx.dispositivoReconhecido}
         </div>
       </div>
     </div>
