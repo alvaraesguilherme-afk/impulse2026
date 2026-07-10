@@ -48,8 +48,8 @@ function ItemCard({ item, onToggle, onExcluir }) {
 
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', textDecoration: item.comprado ? 'line-through' : 'none' }}>{item.item}</div>
-        {item.quantidade && (
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{item.quantidade}</div>
+        {(item.quantidade_num !== null && item.quantidade_num !== undefined) && (
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{item.quantidade_num}{item.quantidade_unidade ? ` ${item.quantidade_unidade}` : ''}</div>
         )}
       </div>
 
@@ -101,6 +101,52 @@ function ListaCard({ lista, onToggle, onExcluir }) {
   )
 }
 
+function TotalView({ itens }) {
+  const agregados = {}
+  itens.forEach(i => {
+    if (i.quantidade_num === null || i.quantidade_num === undefined) return
+    const n = Number(i.quantidade_num)
+    if (Number.isNaN(n)) return
+    const key = `${i.categoria}|${i.item.trim().toLowerCase()}|${i.quantidade_unidade || ''}`
+    if (!agregados[key]) agregados[key] = { categoria: i.categoria, nome: i.item, unidade: i.quantidade_unidade, total: 0, comprado: 0 }
+    agregados[key].total += n
+    if (i.comprado) agregados[key].comprado += n
+  })
+
+  const grupos = CATEGORIAS
+    .map(cat => ({
+      ...cat,
+      linhas: Object.values(agregados).filter(a => a.categoria === cat.id).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+    }))
+    .filter(g => g.linhas.length > 0)
+
+  if (grupos.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-muted)' }}>
+        <div style={{ fontSize: 36, marginBottom: 10 }}>📊</div>
+        <div style={{ fontSize: 14, fontWeight: 600 }}>Nenhum item com quantidade numérica ainda</div>
+      </div>
+    )
+  }
+
+  return grupos.map(grupo => (
+    <div key={grupo.id} style={{ marginBottom: 20 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 10 }}>
+        {grupo.label}
+      </div>
+      {grupo.linhas.map((l, idx) => (
+        <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, marginBottom: 8 }}>
+          <div style={{ fontSize: 14, fontWeight: 600 }}>{l.nome}</div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent-light)' }}>{l.total}{l.unidade ? ` ${l.unidade}` : ''} no total</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{l.comprado}{l.unidade ? ` ${l.unidade}` : ''} já comprado/consumido</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  ))
+}
+
 export default function ListaCompras({ onVoltar, sessao }) {
   const [itens, setItens] = useState([])
   const [loading, setLoading] = useState(true)
@@ -108,7 +154,8 @@ export default function ListaCompras({ onVoltar, sessao }) {
 
   const [itensRascunho, setItensRascunho] = useState([])
   const [nome, setNome] = useState('')
-  const [quantidade, setQuantidade] = useState('')
+  const [quantidadeNum, setQuantidadeNum] = useState('')
+  const [quantidadeUnidade, setQuantidadeUnidade] = useState('')
   const [categoriaSel, setCategoriaSel] = useState(CATEGORIAS[0].id)
   const [criando, setCriando] = useState(false)
 
@@ -136,9 +183,16 @@ export default function ListaCompras({ onVoltar, sessao }) {
   function adicionarAoRascunho() {
     const nomeItem = nome.trim()
     if (!nomeItem) return
-    setItensRascunho(prev => [...prev, { tempId: `rascunho_${Date.now()}`, item: nomeItem, quantidade: quantidade.trim() || null, categoria: categoriaSel }])
+    const num = quantidadeNum.trim() ? Number(quantidadeNum) : null
+    setItensRascunho(prev => [...prev, {
+      tempId: crypto.randomUUID(), item: nomeItem,
+      quantidadeNum: (num !== null && !Number.isNaN(num)) ? num : null,
+      quantidadeUnidade: quantidadeUnidade.trim() || null,
+      categoria: categoriaSel
+    }])
     setNome('')
-    setQuantidade('')
+    setQuantidadeNum('')
+    setQuantidadeUnidade('')
   }
 
   function removerDoRascunho(tempId) {
@@ -151,7 +205,7 @@ export default function ListaCompras({ onVoltar, sessao }) {
     const listaId = crypto.randomUUID()
     const agora = new Date().toISOString()
     const novosItens = itensRascunho.map((i, idx) => ({
-      id: `tmp_${Date.now()}_${idx}`, item: i.item, quantidade: i.quantidade, categoria: i.categoria,
+      id: `tmp_${Date.now()}_${idx}`, item: i.item, quantidade_num: i.quantidadeNum, quantidade_unidade: i.quantidadeUnidade, categoria: i.categoria,
       comprado: false, criado_por: sessao?.nome || null, lista_id: listaId, created_at: agora
     }))
     setItens(prev => [...novosItens, ...prev])
@@ -222,13 +276,23 @@ export default function ListaCompras({ onVoltar, sessao }) {
             placeholder="Nome do item..."
             style={{ width: '100%', padding: '12px 14px', borderRadius: 14, background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text)', fontSize: 14, outline: 'none', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }}
           />
-          <input
-            value={quantidade}
-            onChange={e => setQuantidade(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && adicionarAoRascunho()}
-            placeholder="Quantidade (ex: 5kg, 2 caixas)..."
-            style={{ width: '100%', padding: '12px 14px', borderRadius: 14, background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text)', fontSize: 14, outline: 'none', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }}
-          />
+          <div style={{ display: 'flex', gap: 10 }}>
+            <input
+              value={quantidadeNum}
+              onChange={e => setQuantidadeNum(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && adicionarAoRascunho()}
+              placeholder="Quantidade (ex: 10)"
+              type="number" inputMode="decimal"
+              style={{ flex: 1, minWidth: 0, padding: '12px 14px', borderRadius: 14, background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text)', fontSize: 14, outline: 'none', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }}
+            />
+            <input
+              value={quantidadeUnidade}
+              onChange={e => setQuantidadeUnidade(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && adicionarAoRascunho()}
+              placeholder="Unidade (kg, un, caixas...)"
+              style={{ flex: 1, minWidth: 0, padding: '12px 14px', borderRadius: 14, background: 'var(--input-bg)', border: '1px solid var(--border-strong)', color: 'var(--text)', fontSize: 14, outline: 'none', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }}
+            />
+          </div>
           <button onClick={adicionarAoRascunho} disabled={!nome.trim()} style={{
             width: '100%', padding: '12px', borderRadius: 14, border: '1px dashed var(--border-strong)',
             background: 'transparent', color: !nome.trim() ? 'var(--text-faint)' : 'var(--text-secondary)',
@@ -248,7 +312,7 @@ export default function ListaCompras({ onVoltar, sessao }) {
               <div key={i.tempId} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, marginBottom: 6 }}>
                 <div style={{ flex: 1 }}>
                   <span style={{ fontSize: 13, fontWeight: 600 }}>{i.item}</span>
-                  {i.quantidade && <span style={{ fontSize: 12, color: 'var(--text-muted)' }}> · {i.quantidade}</span>}
+                  {i.quantidadeNum !== null && <span style={{ fontSize: 12, color: 'var(--text-muted)' }}> · {i.quantidadeNum}{i.quantidadeUnidade ? ` ${i.quantidadeUnidade}` : ''}</span>}
                   <span style={{ fontSize: 11, color: 'var(--text-faint)', marginLeft: 6 }}>{CATEGORIAS.find(c => c.id === i.categoria)?.label}</span>
                 </div>
                 <button onClick={() => removerDoRascunho(i.tempId)} style={{ background: 'none', border: 'none', color: '#F87171', fontSize: 13, cursor: 'pointer' }}>✕</button>
@@ -270,7 +334,7 @@ export default function ListaCompras({ onVoltar, sessao }) {
 
       {/* Abas */}
       <div style={{ display: 'flex', gap: 4, padding: 4, margin: '16px 22px 0', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16 }}>
-        {[{ id: 'pendentes', label: `Pendentes${listasPendentes.length ? ` · ${listasPendentes.length}` : ''}` }, { id: 'historico', label: 'Histórico' }].map(a => (
+        {[{ id: 'pendentes', label: `Pendentes${listasPendentes.length ? ` · ${listasPendentes.length}` : ''}` }, { id: 'historico', label: 'Histórico' }, { id: 'total', label: 'Total' }].map(a => (
           <button key={a.id} onClick={() => setAba(a.id)} style={{ flex: 1, minWidth: 0, padding: '10px 6px', borderRadius: 12, border: 'none', background: aba === a.id ? 'var(--accent-glow)' : 'transparent', color: aba === a.id ? 'var(--accent-light)' : 'var(--text-muted)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
             {a.label}
           </button>
@@ -280,6 +344,8 @@ export default function ListaCompras({ onVoltar, sessao }) {
       <div style={{ padding: '16px 22px 0' }}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: 48, color: 'var(--text-muted)', fontSize: 13 }}>Carregando...</div>
+        ) : aba === 'total' ? (
+          <TotalView itens={itens} />
         ) : listasExibidas.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-muted)' }}>
             <div style={{ fontSize: 36, marginBottom: 10 }}>{aba === 'pendentes' ? '🛒' : '📦'}</div>
