@@ -182,7 +182,7 @@ export default function Home({ onNavegar, sessao }) {
     { id: 'midia', icon: '📹', nome: tx.midia, desc: tx.escalasEEquipe, grad: 'linear-gradient(145deg,rgba(120,53,15,0.55),rgba(245,158,11,0.55))', foto: '/pexels-brunomassao-2095597.jpg' },
     { id: 'mural', icon: '📸', nome: tx.feedImpulse, desc: tx.fotosDoStaff, grad: 'linear-gradient(145deg,rgba(131,24,67,0.55),rgba(236,72,153,0.55))', foto: '/pexels-alejandro-aznar-155337093-16055216.jpg' },
     { id: 'advertencias', icon: '⚠️', nome: 'Advertências', desc: 'Registro de advertências', grad: 'linear-gradient(145deg,rgba(120,20,20,0.55),rgba(220,38,38,0.55))', foto: '/istockphoto-2170470419-612x612.jpg' },
-    ...(sessao?.nome === 'Linda' || sessao?.nome === 'Arthur Bolzan' || sessao?.nome === 'Alvarães'
+    ...(sessao?.nome === 'Linda' || sessao?.nome === 'Arthur Bolzan' || sessao?.nome === 'Alvarães' || sessao?.nome === 'Pr. Júnior'
       ? [{ id: 'compras', icon: '🛒', nome: 'Lista de Compras', desc: 'Itens e quantidades pra comprar', grad: 'linear-gradient(145deg,rgba(6,78,59,0.55),rgba(16,185,129,0.55))' }]
       : []),
   ]
