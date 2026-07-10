@@ -7,6 +7,7 @@ import Mural from './components/Mural'
 import Midia from './components/Midia'
 import Programacao from './components/Programacao'
 import Advertencias from './components/Advertencias'
+import ListaCompras from './components/ListaCompras'
 import Config from './components/Config'
 import Login from './components/Login'
 import { initSync } from './lib/offlineSync'
@@ -414,6 +415,7 @@ export default function App() {
           {tela === 'programacao' && <Programacao onVoltar={voltar} sessao={sessao} onAjuda={() => mostrarIntroForcar('programacao')} />}
           {tela === 'config' && <Config onVoltar={voltar} tema={tema} setTema={setTema} idioma={idioma} setIdioma={setIdioma} sessao={sessao} onLogout={fazerLogout} onAjuda={() => mostrarIntroForcar('config')} />}
           {tela === 'advertencias' && <Advertencias onVoltar={voltar} sessao={sessao} />}
+          {tela === 'compras' && <ListaCompras onVoltar={voltar} sessao={sessao} />}
         </div>
       </div>
 

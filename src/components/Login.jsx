@@ -30,8 +30,6 @@ const pinStyle = {
   fontFamily: 'Inter, sans-serif'
 }
 
-const EXPIRY_MS = 24 * 60 * 60 * 1000 // sessão expira após 24h sem uso
-
 async function verificarSessao(nome, nivel) {
   const deviceId = getDeviceId()
   const limite = LIMITE_DEVICES[nome] ?? LIMITE_DEVICES[nivel] ?? 1
@@ -41,18 +39,9 @@ async function verificarSessao(nome, nivel) {
     .select('device_id, updated_at')
     .eq('nome', nome)
 
-  const agora = Date.now()
-  const todas = sessoes || []
-
-  // Separa sessões frescas de expiradas
-  const frescas = todas.filter(s => agora - new Date(s.updated_at).getTime() < EXPIRY_MS)
-  const expiradas = todas.filter(s => agora - new Date(s.updated_at).getTime() >= EXPIRY_MS)
-
-  // Limpa expiradas em background
-  expiradas.forEach(s =>
-    supabase.from('sessoes_ativas').delete()
-      .eq('nome', nome).eq('device_id', s.device_id).then()
-  )
+  // Sessoes nao expiram mais por tempo — so saem quando alguem faz logout
+  // ou e forcado a sair por estourar o limite de aparelhos.
+  const frescas = sessoes || []
 
   const jaEsteDevice = frescas.some(s => s.device_id === deviceId)
 

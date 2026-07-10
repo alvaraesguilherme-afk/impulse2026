@@ -3,7 +3,7 @@ import { useTexto } from '../lib/i18n'
 import { supabase } from '../lib/supabase'
 const STAFF_AREAS = [
   { area: '⛪ Liderança Pastoral', nomes: ['Pr. Júnior Bandeira', 'Pra. Stephanie Bandeira'] },
-  { area: '🙌 Apoio', nomes: ['Alvarães','Ana Luiza','Clara Cunha','Emanuel','Francisco','Gabriel Gomes','Gabriel Mendes','Gustavo Massay','Hadassa','Hellen Borges','Hugo Lacroix','Jerônimo','Jhony','Joel Marcos','Júlio','Letícia','Linda','Lívia Andréa','Lorena','Ludmyla','Maria Clara','Maria Júlia','Mariana Gabrielle','Matheus Almeida','Maurício','Nicoly','Rafael Chaves','Rennan','Riana','Ryan Guedes','Samuel Lopes','Sthefany','Victória','Walterley'] },
+  { area: '🙌 Apoio', nomes: ['Alvarães','Ana Luiza','Clara Cunha','Emanuel','Francisco','Gabriel Gomes','Gabriel Mendes','Gustavo Massay','Hadassa','Hellen Borges','Hugo Lacroix','Jerônimo','Jhony','Joel Marcos','Júlio','Linda','Lívia Andréa','Lorena','Ludmyla','Maria Clara','Maria Júlia','Mariana Gabrielle','Matheus Almeida','Maurício','Nicoly','Rafael Chaves','Rennan','Riana','Ryan Guedes','Samuel Lopes','Sthefany','Victória','Walterley'] },
   { area: '🎥 Mídia', nomes: ['Alyson','Caetano','Daniel','Joyce','Juliana','Sthefany','Victória','Maria Clara'] },
   { area: '🍳 Cozinha', nomes: ['Samuel Lopes'] },
   { area: '🛒 Cantina', nomes: ['Hadstton Capell'] },
@@ -11,7 +11,7 @@ const STAFF_AREAS = [
   { area: '📅 Programação', nomes: ['Eliel'] },
   { area: '🎤 Preletores', nomes: ['Isabely Matos','Paula'] },
   { area: '💡 Iluminação', nomes: ['Gustavo Borges'] },
-  { area: '📦 Logística', nomes: ['Edson Jr.'] },
+  { area: '📦 Logística', nomes: ['Arthur Bolzan', 'Edson Jr.'] },
 ]
 
 function BackBtn({ onVoltar, titulo, onAjuda }) {
