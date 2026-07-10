@@ -106,27 +106,36 @@ export default function Login({ onLogin, mensagem, idioma }) {
     }
 
     setEntrando(true)
-    const { bloqueado, msg } = await verificarSessao(nomeSel, nivel, tx)
-    if (bloqueado) {
+    try {
+      const { bloqueado, msg } = await verificarSessao(nomeSel, nivel, tx)
+      if (bloqueado) {
+        setErro(msg)
+        setBloqueadoInfo({ nome: nomeSel, nivel })
+        return
+      }
+      onLogin({ nome: nomeSel, nivel })
+    } catch {
+      setErro(tx.erroConexaoLogin)
+    } finally {
       setEntrando(false)
-      setErro(msg)
-      setBloqueadoInfo({ nome: nomeSel, nivel })
-      return
     }
-
-    onLogin({ nome: nomeSel, nivel })
   }
 
   async function forcarLogin() {
     if (!bloqueadoInfo) return
     setEntrando(true)
-    const deviceId = getDeviceId()
-    await supabase.from('sessoes_ativas').delete().eq('nome', bloqueadoInfo.nome)
-    await supabase.from('sessoes_ativas').upsert(
-      { nome: bloqueadoInfo.nome, device_id: deviceId, updated_at: new Date().toISOString() },
-      { onConflict: 'nome,device_id' }
-    )
-    onLogin({ nome: bloqueadoInfo.nome, nivel: bloqueadoInfo.nivel })
+    try {
+      const deviceId = getDeviceId()
+      await supabase.from('sessoes_ativas').delete().eq('nome', bloqueadoInfo.nome)
+      await supabase.from('sessoes_ativas').upsert(
+        { nome: bloqueadoInfo.nome, device_id: deviceId, updated_at: new Date().toISOString() },
+        { onConflict: 'nome,device_id' }
+      )
+      onLogin({ nome: bloqueadoInfo.nome, nivel: bloqueadoInfo.nivel })
+    } catch {
+      setErro(tx.erroConexaoLogin)
+      setEntrando(false)
+    }
   }
 
   async function cadastrar() {
@@ -144,24 +153,28 @@ export default function Login({ onLogin, mensagem, idioma }) {
     if (todosOsPins.includes(cadPin)) { setErro(tx.pinJaEmUso); return }
 
     setEntrando(true)
-    const { error } = await supabase.from('convidados').insert({ nome, pin: cadPin })
-    if (error) {
+    try {
+      const { error } = await supabase.from('convidados').insert({ nome, pin: cadPin })
+      if (error) {
+        if (error.code === '23505') { setErro(tx.nomeJaCadastrado) } else { setErro(tx.erroCadastrar) }
+        setEntrando(false)
+        return
+      }
+
+      const novo = { ...convidados, [nome]: cadPin }
+      localStorage.setItem('impulse_convidados', JSON.stringify(novo))
+      setConvidados(novo)
+
+      await supabase.from('sessoes_ativas').upsert(
+        { nome, device_id: getDeviceId(), updated_at: new Date().toISOString() },
+        { onConflict: 'nome,device_id' }
+      )
+
+      setTimeout(() => onLogin({ nome, nivel: 'convidado' }), 400)
+    } catch {
+      setErro(tx.erroConexaoLogin)
       setEntrando(false)
-      if (error.code === '23505') { setErro(tx.nomeJaCadastrado); return }
-      setErro(tx.erroCadastrar)
-      return
     }
-
-    const novo = { ...convidados, [nome]: cadPin }
-    localStorage.setItem('impulse_convidados', JSON.stringify(novo))
-    setConvidados(novo)
-
-    await supabase.from('sessoes_ativas').upsert(
-      { nome, device_id: getDeviceId(), updated_at: new Date().toISOString() },
-      { onConflict: 'nome,device_id' }
-    )
-
-    setTimeout(() => onLogin({ nome, nivel: 'convidado' }), 400)
   }
 
   const nomesConvidados = Object.keys(convidados).sort((a, b) => a.localeCompare(b, 'pt-BR'))

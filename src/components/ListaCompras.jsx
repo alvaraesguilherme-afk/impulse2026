@@ -170,15 +170,17 @@ export default function ListaCompras({ onVoltar, sessao }) {
 
   async function carregarItens() {
     setLoading(true)
-    const { data } = await supabase.from('lista_compras').select('*').order('created_at', { ascending: false })
-    if (data) {
-      setItens(data)
-    } else {
-      let cache = []
-      try { cache = JSON.parse(localStorage.getItem(CACHE_KEY)) || [] } catch { /* cache vazio/corrompido */ }
-      setItens(cache)
-    }
-    setLoading(false)
+    try {
+      const { data } = await supabase.from('lista_compras').select('*').order('created_at', { ascending: false })
+      if (data) {
+        setItens(data)
+        return
+      }
+    } catch { /* segue pro fallback de cache abaixo */ }
+    finally { setLoading(false) }
+    let cache = []
+    try { cache = JSON.parse(localStorage.getItem(CACHE_KEY)) || [] } catch { /* cache vazio/corrompido */ }
+    setItens(cache)
   }
 
   function adicionarAoRascunho() {
@@ -210,7 +212,11 @@ export default function ListaCompras({ onVoltar, sessao }) {
       comprado: false, criado_por: sessao?.nome || null, lista_id: listaId, created_at: agora
     }))
     setItens(prev => [...novosItens, ...prev])
-    await syncOp('insert', 'lista_compras', novosItens.map(({ id: _id, ...linha }) => linha))
+    const ok = await syncOp('insert', 'lista_compras', novosItens.map(({ id: _id, ...linha }) => linha))
+    if (ok) {
+      const { data } = await supabase.from('lista_compras').select('*').eq('lista_id', listaId)
+      if (data) setItens(prev => [...data, ...prev.filter(i => i.lista_id !== listaId)])
+    }
     notificar({ tipo: 'lista_compras' })
     setItensRascunho([])
     setCriando(false)

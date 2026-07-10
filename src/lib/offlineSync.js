@@ -47,19 +47,27 @@ function addToQueue(op) {
   saveQueue(queue)
 }
 
+let processando = false
+
 export async function processQueue() {
-  const queue = getQueue()
-  if (queue.length === 0) return 0
-  const remaining = []
-  for (const op of queue) {
-    try {
-      await executarOp(op.type, op.table, op.data, op.options)
-    } catch {
-      remaining.push(op)
+  if (processando) return 0
+  processando = true
+  try {
+    const queue = getQueue()
+    if (queue.length === 0) return 0
+    const remaining = []
+    for (const op of queue) {
+      try {
+        await executarOp(op.type, op.table, op.data, op.options)
+      } catch {
+        remaining.push(op)
+      }
     }
+    saveQueue(remaining)
+    return queue.length - remaining.length
+  } finally {
+    processando = false
   }
-  saveQueue(remaining)
-  return queue.length - remaining.length
 }
 
 export function getPendingCount() {

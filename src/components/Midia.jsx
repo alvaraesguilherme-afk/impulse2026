@@ -112,13 +112,18 @@ export default function Midia({ onVoltar, sessao, onAjuda }) {
 
   async function carregarEscalas() {
     setLoading(true)
-    const { data } = await supabase
-      .from('midia_escalas')
-      .select('*')
-      .eq('dia', DIAS[diaSel].num)
-      .order('created_at', { ascending: true })
-    setEscalas(data || [])
-    setLoading(false)
+    try {
+      const { data } = await supabase
+        .from('midia_escalas')
+        .select('*')
+        .eq('dia', DIAS[diaSel].num)
+        .order('created_at', { ascending: true })
+      setEscalas(data || [])
+    } catch {
+      setEscalas([])
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function atribuirPessoa(turno, funcao, pessoa) {

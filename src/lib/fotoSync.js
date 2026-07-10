@@ -8,7 +8,8 @@ function getQueue() {
 }
 
 function saveQueue(queue) {
-  localStorage.setItem(QUEUE_KEY, JSON.stringify(queue))
+  try { localStorage.setItem(QUEUE_KEY, JSON.stringify(queue)) }
+  catch { /* localStorage cheio (fotos sem compressao) — fila nao atualizada nesta chamada */ }
 }
 
 export function blobToBase64(blob) {
@@ -38,26 +39,34 @@ export function getFotoPendingCount() {
   return getQueue().length
 }
 
+let processando = false
+
 export async function processFotoQueue() {
-  const queue = getQueue()
-  if (queue.length === 0) return 0
-  const remaining = []
-  let sincronizadas = 0
-  for (const item of queue) {
-    try {
-      const blob = base64ToBlob(item.base64)
-      const { error } = await supabase.storage.from('mural').upload(item.arquivo, blob, { contentType: 'image/jpeg' })
-      if (error) throw error
-      const { data: urlData } = supabase.storage.from('mural').getPublicUrl(item.arquivo)
-      const { error: insertError } = await supabase.from('mural_fotos').insert({
-        dia: item.dia, url: urlData.publicUrl, arquivo: item.arquivo, autor: item.autor, legenda: item.legenda || null
-      })
-      if (insertError) throw insertError
-      sincronizadas++
-    } catch {
-      remaining.push(item)
+  if (processando) return 0
+  processando = true
+  try {
+    const queue = getQueue()
+    if (queue.length === 0) return 0
+    const remaining = []
+    let sincronizadas = 0
+    for (const item of queue) {
+      try {
+        const blob = base64ToBlob(item.base64)
+        const { error } = await supabase.storage.from('mural').upload(item.arquivo, blob, { contentType: 'image/jpeg' })
+        if (error) throw error
+        const { data: urlData } = supabase.storage.from('mural').getPublicUrl(item.arquivo)
+        const { error: insertError } = await supabase.from('mural_fotos').insert({
+          dia: item.dia, url: urlData.publicUrl, arquivo: item.arquivo, autor: item.autor, legenda: item.legenda || null
+        })
+        if (insertError) throw insertError
+        sincronizadas++
+      } catch {
+        remaining.push(item)
+      }
     }
+    saveQueue(remaining)
+    return sincronizadas
+  } finally {
+    processando = false
   }
-  saveQueue(remaining)
-  return sincronizadas
 }

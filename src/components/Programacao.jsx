@@ -53,14 +53,23 @@ export default function Programacao({ onVoltar, sessao, onAjuda }) {
 
   async function carregar() {
     setLoading(true)
-    const { data } = await supabase.from('programacao').select('*').eq('dia', DIAS[diaSel].num)
-    setDados(data || [])
-    setLoading(false)
+    try {
+      const { data } = await supabase.from('programacao').select('*').eq('dia', DIAS[diaSel].num)
+      setDados(data || [])
+    } catch {
+      setDados([])
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function carregarCadastros() {
-    const { data } = await supabase.from('programacao_cadastro').select('*').order('nome')
-    setCadastros(data || [])
+    try {
+      const { data } = await supabase.from('programacao_cadastro').select('*').order('nome')
+      setCadastros(data || [])
+    } catch {
+      setCadastros([])
+    }
   }
 
   function getDado(turnoId, tipo) {
