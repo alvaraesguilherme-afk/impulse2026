@@ -19,6 +19,7 @@ export const PINOS = {
   'Emanuel':           { pin: '35617', nivel: 'staff'  },
   'Gabriel Gomes':     { pin: '64028', nivel: 'staff'  },
   'Gabriel Mendes':    { pin: '37614', nivel: 'staff'  },
+  'Guilherme Valentim':{ pin: '22120', nivel: 'staff'  },
   'Gustavo Borges':    { pin: '91473', nivel: 'staff'  },
   'Hadassa':           { pin: '51674', nivel: 'staff'  },
   'Hadstton Capell':   { pin: '28509', nivel: 'staff'  },

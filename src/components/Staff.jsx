@@ -6,7 +6,7 @@ const STAFF_AREAS = [
   { area: '🙌 Apoio', nomes: ['Alvarães','Ana Luiza','Clara Cunha','Emanuel','Francisco','Gabriel Gomes','Gabriel Mendes','Gustavo Massay','Hadassa','Hellen Borges','Hugo Lacroix','Jerônimo','Jhony','Joel Marcos','Júlio','Linda','Lívia Andréa','Lorena','Ludmyla','Maria Clara','Maria Júlia','Mariana Gabrielle','Matheus Almeida','Maurício','Nicoly','Rafael Chaves','Rennan','Riana','Ryan Guedes','Samuel Lopes','Sthefany','Victória','Walterley'] },
   { area: '🎥 Mídia', nomes: ['Alyson','Caetano','Daniel','Joyce','Juliana','Sthefany','Victória','Maria Clara'] },
   { area: '🍳 Cozinha', nomes: ['Samuel Lopes'] },
-  { area: '🛒 Cantina', nomes: ['Hadstton Capell'] },
+  { area: '🛒 Cantina', nomes: ['Guilherme Valentim', 'Hadstton Capell'] },
   { area: '📋 Secretário', nomes: ['Danilo'] },
   { area: '📅 Programação', nomes: ['Eliel'] },
   { area: '🎤 Preletores', nomes: ['Isabely Matos','Paula'] },

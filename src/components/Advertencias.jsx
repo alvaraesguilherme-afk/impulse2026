@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { syncOp } from '../lib/offlineSync'
 
 const NIVEIS_SUPERVISOR = ['maximo', 'alto', 'medio', 'basico']
+const NOMES_VALIDADORES_EXTRA = ['Rennan', 'Victória', 'Sthefany', 'Guilherme Valentim']
 
 function CartaoAdv({ adv, onToggle, onConfirmar, onNegar, onExcluir, isSupervisor }) {
   const [confirmExcluir, setConfirmExcluir] = useState(false)
@@ -126,7 +127,7 @@ export default function Advertencias({ onVoltar, sessao }) {
   const [loading, setLoading] = useState(true)
   const [salvando, setSalvando] = useState(false)
 
-  const isSupervisor = NIVEIS_SUPERVISOR.includes(sessao?.nivel)
+  const isSupervisor = NIVEIS_SUPERVISOR.includes(sessao?.nivel) || NOMES_VALIDADORES_EXTRA.includes(sessao?.nome)
 
   useEffect(() => { carregarDados() }, [])
 
