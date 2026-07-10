@@ -18,9 +18,9 @@ async function resolverConteudo(body) {
   }
 
   if (tipo === 'frase') {
-    const { data } = await supabase.from('frase_do_dia').select('frase,autor').eq('dia', body.dia).maybeSingle()
+    const { data } = await supabase.from('frase_do_dia').select('frase').eq('dia', body.dia).maybeSingle()
     if (!data) return null
-    return { title: '✨ Frase do dia atualizada', body: `${data.frase} — ${data.autor}`.slice(0, 120), equipeId: null }
+    return { title: '✨ Frase do dia atualizada', body: data.frase.slice(0, 120), equipeId: null }
   }
 
   if (tipo === 'programacao') {
