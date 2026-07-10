@@ -182,7 +182,7 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
         </div>
 
         {/* NOTIFICAÇÕES */}
-        {suportaNotificacoes() && (
+        {(suportaNotificacoes() || isIOS) && (
           <>
             <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12, marginTop: 28 }}>Notificações</div>
 
@@ -193,20 +193,22 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 600 }}>Notificações push</div>
                     <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                      {statusNotif === 'granted' ? 'Ativadas neste dispositivo' : statusNotif === 'denied' ? 'Bloqueadas — libere nas configurações do navegador' : 'Avisos, frase do dia e programação'}
+                      {!suportaNotificacoes() ? 'Indisponível neste navegador' : statusNotif === 'granted' ? 'Ativadas neste dispositivo' : statusNotif === 'denied' ? 'Bloqueadas — libere nas configurações do navegador' : 'Avisos, frase do dia e programação'}
                     </div>
                   </div>
                 </div>
-                {statusNotif !== 'denied' && (
+                {suportaNotificacoes() && statusNotif !== 'denied' && (
                   <div className={`toggle-track ${statusNotif === 'granted' ? 'active' : ''}`} onClick={carregandoNotif ? undefined : alternarNotificacoes} style={{ opacity: carregandoNotif ? 0.5 : 1, cursor: carregandoNotif ? 'default' : 'pointer' }}>
                     <div className="toggle-thumb" />
                   </div>
                 )}
               </div>
               {erroNotif && <div style={{ fontSize: 12, color: '#F87171', marginTop: 10 }}>{erroNotif}</div>}
-              {isIOS && !jaInstalado && (
+              {!suportaNotificacoes() && isIOS && (
                 <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 10, lineHeight: 1.4 }}>
-                  No iPhone, notificações só funcionam depois de adicionar o app à Tela de Início (Safari → Compartilhar → Adicionar à Tela de Início).
+                  {jaInstalado
+                    ? 'Seu iPhone precisa do iOS 16.4 ou mais recente pra ativar notificações. Veja em Ajustes → Geral → Atualização de Software.'
+                    : 'No iPhone, notificações só funcionam depois de adicionar o app à Tela de Início (Safari → Compartilhar → Adicionar à Tela de Início).'}
                 </div>
               )}
             </div>
