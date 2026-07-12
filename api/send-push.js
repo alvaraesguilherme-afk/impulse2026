@@ -42,7 +42,7 @@ async function resolverConteudo(body) {
 
   if (tipo === 'cadastro_area') {
     // Mesma lista de nomes nivel alto/maximo em pinos.js — manter sincronizado
-    return { title: '📝 Novo pedido de área', body: 'Um convidado se cadastrou pedindo participar de uma área.', nomes: ['Alvarães', 'Pr. Júnior', 'Alyson', 'Pra. Stephanie', 'Caetano'] }
+    return { title: '📝 Novo cadastro aguardando aprovação', body: 'Um novo cadastro foi feito e está aguardando aprovação de acesso.', nomes: ['Alvarães', 'Pr. Júnior', 'Alyson', 'Pra. Stephanie', 'Caetano'] }
   }
 
   return null

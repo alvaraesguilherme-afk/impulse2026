@@ -76,15 +76,34 @@ export default function Login({ onLogin, mensagem, idioma }) {
   const [cadPin2, setCadPin2] = useState('')
   const [cadAreas, setCadAreas] = useState([])
 
+  const [statusConvidados, setStatusConvidados] = useState({})
+  const [aguardandoAprovacao, setAguardandoAprovacao] = useState(false)
+  const [nomeAguardando, setNomeAguardando] = useState('')
+  const [verificandoAprovacao, setVerificandoAprovacao] = useState(false)
+  const [aindaPendente, setAindaPendente] = useState(false)
+
   useEffect(() => {
-    supabase.from('convidados').select('nome, pin').then(({ data }) => {
+    supabase.from('convidados').select('nome, pin, precisa_aprovacao, areas_aprovadas, acesso_geral').then(({ data }) => {
       if (!data) return
       const obj = {}
-      data.forEach(d => { obj[d.nome] = d.pin })
+      const status = {}
+      data.forEach(d => {
+        obj[d.nome] = d.pin
+        status[d.nome] = {
+          precisaAprovacao: !!d.precisa_aprovacao,
+          liberado: (d.areas_aprovadas || []).length > 0 || !!d.acesso_geral,
+        }
+      })
       setConvidados(obj)
+      setStatusConvidados(status)
       localStorage.setItem('impulse_convidados', JSON.stringify(obj))
     })
   }, [])
+
+  function pessoaPrecisaEsperar(nome) {
+    const st = statusConvidados[nome]
+    return st?.precisaAprovacao && !st?.liberado
+  }
 
   function trocarModo(m) {
     setModo(m); setErro('')
@@ -108,6 +127,11 @@ export default function Login({ onLogin, mensagem, idioma }) {
     } else if (convidados[nomeSel] !== undefined) {
       if (pin !== convidados[nomeSel]) { setErro(tx.pinIncorreto); return }
       nivel = 'convidado'
+      if (pessoaPrecisaEsperar(nomeSel)) {
+        setNomeAguardando(nomeSel)
+        setAguardandoAprovacao(true)
+        return
+      }
     } else {
       setErro(tx.nomeNaoEncontrado); return
     }
@@ -161,28 +185,55 @@ export default function Login({ onLogin, mensagem, idioma }) {
 
     setEntrando(true)
     try {
-      const { error } = await supabase.from('convidados').insert({ nome, pin: cadPin, areas_pedidas: cadAreas, areas_aprovadas: [] })
+      const { error } = await supabase.from('convidados').insert({ nome, pin: cadPin, areas_pedidas: cadAreas, areas_aprovadas: [], precisa_aprovacao: true })
       if (error) {
         if (error.code === '23505') { setErro(tx.nomeJaCadastrado) } else { setErro(tx.erroCadastrar) }
         setEntrando(false)
         return
       }
-      if (cadAreas.length > 0) notificar({ tipo: 'cadastro_area' })
+      notificar({ tipo: 'cadastro_area' })
 
       const novo = { ...convidados, [nome]: cadPin }
       localStorage.setItem('impulse_convidados', JSON.stringify(novo))
       setConvidados(novo)
+      setStatusConvidados(prev => ({ ...prev, [nome]: { precisaAprovacao: true, liberado: false } }))
 
-      await supabase.from('sessoes_ativas').upsert(
-        { nome, device_id: getDeviceId(), updated_at: new Date().toISOString() },
-        { onConflict: 'nome,device_id' }
-      )
-
-      setTimeout(() => onLogin({ nome, nivel: 'convidado' }), 400)
+      setEntrando(false)
+      setNomeAguardando(nome)
+      setAguardandoAprovacao(true)
     } catch {
       setErro(tx.erroConexaoLogin)
       setEntrando(false)
     }
+  }
+
+  async function verificarAprovacao() {
+    if (!nomeAguardando || verificandoAprovacao) return
+    setVerificandoAprovacao(true)
+    setAindaPendente(false)
+    try {
+      const { data } = await supabase.from('convidados').select('areas_aprovadas, acesso_geral').eq('nome', nomeAguardando).maybeSingle()
+      const liberado = data && ((data.areas_aprovadas || []).length > 0 || !!data.acesso_geral)
+      if (!liberado) { setVerificandoAprovacao(false); setAindaPendente(true); return }
+      const { bloqueado, msg } = await verificarSessao(nomeAguardando, 'convidado', tx)
+      if (bloqueado) {
+        setAguardandoAprovacao(false)
+        setErro(msg)
+        setBloqueadoInfo({ nome: nomeAguardando, nivel: 'convidado' })
+        return
+      }
+      onLogin({ nome: nomeAguardando, nivel: 'convidado' })
+    } catch {
+      setVerificandoAprovacao(false)
+      setAindaPendente(true)
+    }
+  }
+
+  function voltarDaEspera() {
+    setAguardandoAprovacao(false)
+    setNomeAguardando('')
+    setAindaPendente(false)
+    trocarModo('login')
   }
 
   const nomesConvidados = Object.keys(convidados).sort((a, b) => a.localeCompare(b, 'pt-BR'))
@@ -214,6 +265,29 @@ export default function Login({ onLogin, mensagem, idioma }) {
           </div>
         )}
 
+        {aguardandoAprovacao ? (
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '32px 24px', textAlign: 'center' }}>
+            <div style={{ fontSize: 40, marginBottom: 14 }}>⏳</div>
+            <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 17, fontWeight: 700, marginBottom: 10 }}>{tx.aguardandoAprovacaoTitulo}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 20 }}>{tx.aguardandoAprovacaoDesc}</div>
+            {aindaPendente && (
+              <div style={{ fontSize: 12, color: '#EAB308', marginBottom: 14 }}>{tx.aindaAguardandoAprovacao}</div>
+            )}
+            <button onClick={verificarAprovacao} disabled={verificandoAprovacao} style={{
+              width: '100%', padding: 15, border: 'none', borderRadius: 14, marginBottom: 10,
+              background: verificandoAprovacao ? 'var(--border-strong)' : 'var(--gradient)',
+              fontSize: 14, fontWeight: 700, cursor: verificandoAprovacao ? 'default' : 'pointer',
+              color: 'white', fontFamily: 'Syne, sans-serif', opacity: verificandoAprovacao ? 0.6 : 1
+            }}>
+              {verificandoAprovacao ? tx.verificando : tx.jaFuiAprovadoVerificar}
+            </button>
+            <button onClick={voltarDaEspera} style={{
+              width: '100%', padding: 12, borderRadius: 14, border: '1px solid var(--border)',
+              background: 'transparent', color: 'var(--text-muted)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
+            }}>{tx.voltarLogin}</button>
+          </div>
+        ) : (
+          <>
         <div style={{ display: 'flex', background: 'var(--bg-card)', border: '1px solid var(--border-strong)', borderRadius: 16, padding: 4, marginBottom: 14 }}>
           {[['login', tx.entrar], ['cadastro', tx.cadastrarBtn]].map(([m, label]) => (
             <button
@@ -360,6 +434,8 @@ export default function Login({ onLogin, mensagem, idioma }) {
             </>
           )}
         </div>
+          </>
+        )}
 
         <div style={{ textAlign: 'center', marginTop: 20, fontSize: 11, color: 'var(--text-faint)' }}>
           {tx.dispositivoReconhecido}

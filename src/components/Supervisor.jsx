@@ -66,8 +66,13 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
   async function carregarPendentes() {
     setLoadingPendentes(true)
     try {
-      const { data } = await supabase.from('convidados').select('nome, areas_pedidas, areas_aprovadas, equipe_atribuida').order('nome')
-      const lista = (data || []).filter(c => (c.areas_pedidas || []).length > 0)
+      const { data } = await supabase.from('convidados').select('nome, areas_pedidas, areas_aprovadas, equipe_atribuida, precisa_aprovacao, acesso_geral').order('nome')
+      const lista = (data || []).filter(c => {
+        if (!c.precisa_aprovacao) return false
+        const liberado = (c.areas_aprovadas || []).length > 0 || c.acesso_geral
+        const faltaArea = (c.areas_pedidas || []).some(a => !(c.areas_aprovadas || []).includes(a))
+        return !liberado || faltaArea
+      })
       setPendentes(lista)
     } catch {
       setPendentes([])
@@ -83,6 +88,15 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
     const novoArray = atual.includes(area) ? atual.filter(a => a !== area) : [...atual, area]
     setPendentes(prev => prev.map(c => c.nome === nomeConvidado ? { ...c, areas_aprovadas: novoArray } : c))
     const ok = await syncOp('update', 'convidados', { values: { areas_aprovadas: novoArray }, filters: { nome: nomeConvidado } })
+    if (!ok) setErroAprovacao(true)
+  }
+
+  async function toggleAcessoGeral(nomeConvidado) {
+    const alvo = pendentes.find(c => c.nome === nomeConvidado)
+    if (!alvo) return
+    const novoValor = !alvo.acesso_geral
+    setPendentes(prev => prev.map(c => c.nome === nomeConvidado ? { ...c, acesso_geral: novoValor } : c))
+    const ok = await syncOp('update', 'convidados', { values: { acesso_geral: novoValor }, filters: { nome: nomeConvidado } })
     if (!ok) setErroAprovacao(true)
   }
 
@@ -421,6 +435,18 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
               <div key={c.nome} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: 16, marginBottom: 12 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>{c.nome}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div>
+                    {c.areas_pedidas.length === 0 && (
+                      <div style={{ fontSize: 11, color: 'var(--text-faint)', marginBottom: 6 }}>Não pediu nenhuma área — só precisa de acesso geral</div>
+                    )}
+                    <button onClick={() => toggleAcessoGeral(c.nome)} style={{
+                      alignSelf: 'flex-start',
+                      padding: '7px 13px', borderRadius: 20, cursor: 'pointer', fontSize: 12, fontWeight: 700,
+                      border: c.acesso_geral ? '1px solid rgba(167,139,250,0.5)' : '1px solid var(--border-strong)',
+                      background: c.acesso_geral ? 'rgba(167,139,250,0.15)' : 'var(--input-bg)',
+                      color: c.acesso_geral ? '#C4B5FD' : 'var(--text-muted)'
+                    }}>{c.acesso_geral ? '✓ ' : ''}✅ Liberar acesso</button>
+                  </div>
                   {c.areas_pedidas.map(area => {
                     if (area === AREAS[0]) {
                       const aprovadoApoio = (c.areas_aprovadas || []).includes(area)
