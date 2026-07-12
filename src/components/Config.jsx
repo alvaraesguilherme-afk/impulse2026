@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { syncOp } from '../lib/offlineSync'
 import { useTexto } from '../lib/i18n'
 import { getStatusNotificacoes, ativarNotificacoes, desativarNotificacoes, suportaNotificacoes, sincronizarInscricao } from '../lib/push'
 
@@ -23,6 +24,14 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
   const [bugEnviado, setBugEnviado] = useState(false)
   const [showRelatos, setShowRelatos] = useState(false)
   const [relatos, setRelatos] = useState([])
+  const [naoLidos, setNaoLidos] = useState(0)
+
+  useEffect(() => {
+    if (sessao?.nome !== 'Alvarães') return
+    supabase.from('bug_reports').select('id', { count: 'exact', head: true }).eq('lido', false).then(({ count }) => {
+      setNaoLidos(count || 0)
+    })
+  }, [sessao?.nome])
   const [statusNotif, setStatusNotif] = useState('unsupported')
   const [carregandoNotif, setCarregandoNotif] = useState(false)
   const [erroNotif, setErroNotif] = useState('')
@@ -79,6 +88,12 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
     const { data } = await supabase.from('bug_reports').select('*').order('created_at', { ascending: false })
     setRelatos(data || [])
     setShowRelatos(true)
+  }
+
+  async function marcarLido(id, lido) {
+    setRelatos(prev => prev.map(r => r.id === id ? { ...r, lido } : r))
+    setNaoLidos(prev => Math.max(0, prev + (lido ? -1 : 1)))
+    await syncOp('update', 'bug_reports', { values: { lido }, filters: { id } })
   }
 
   return (
@@ -244,8 +259,14 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
               <button onClick={abrirRelatos} style={{
                 padding: '4px 10px', borderRadius: 10, border: '1px solid var(--border)',
                 background: 'var(--bg-card)', color: 'var(--text-faint)',
-                fontSize: 10, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
-              }}>🔒</button>
+                fontSize: 10, cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+                display: 'flex', alignItems: 'center', gap: 5
+              }}>
+                🔒
+                {naoLidos > 0 && (
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#F87171', background: 'rgba(239,68,68,0.15)', borderRadius: 10, padding: '1px 6px' }}>{naoLidos}</span>
+                )}
+              </button>
             )}
           </div>
           {bugEnviado ? (
@@ -320,9 +341,17 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
             <div style={{ flex: 1, overflowY: 'auto' }}>
               {relatos.length === 0 && <div style={{ textAlign: 'center', color: 'var(--text-faint)', fontSize: 13, padding: 20 }}>{tx.nenhumRelato}</div>}
               {relatos.map(r => (
-                <div key={r.id} style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', borderRadius: 14, padding: '12px 14px', marginBottom: 8 }}>
+                <div key={r.id} style={{ background: 'var(--input-bg)', border: r.lido ? '1px solid var(--border)' : '1px solid rgba(239,68,68,0.3)', borderRadius: 14, padding: '12px 14px', marginBottom: 8, opacity: r.lido ? 0.55 : 1 }}>
                   <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{r.texto}</div>
-                  <div style={{ fontSize: 10, color: 'var(--text-faint)', marginTop: 6 }}>{new Date(r.created_at).toLocaleString('pt-BR')}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+                    <div style={{ fontSize: 10, color: 'var(--text-faint)' }}>{new Date(r.created_at).toLocaleString('pt-BR')}</div>
+                    <button onClick={() => marcarLido(r.id, !r.lido)} style={{
+                      padding: '4px 10px', borderRadius: 10, cursor: 'pointer', fontSize: 10, fontWeight: 700,
+                      border: r.lido ? '1px solid var(--border-strong)' : '1px solid rgba(16,185,129,0.4)',
+                      background: r.lido ? 'var(--bg-card)' : 'rgba(16,185,129,0.15)',
+                      color: r.lido ? 'var(--text-muted)' : '#6EE7B7'
+                    }}>{r.lido ? '↩ Marcar não lido' : '✓ Marcar como lido'}</button>
+                  </div>
                 </div>
               ))}
             </div>
