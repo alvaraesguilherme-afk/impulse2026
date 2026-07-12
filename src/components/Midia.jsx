@@ -331,7 +331,7 @@ export default function Midia({ onVoltar, sessao, onAjuda }) {
                                   )
                                 })}
                                 {convidadosMidia.map(m => (
-                                  <option key={m} value={m}>{m} · convidado</option>
+                                  <option key={m} value={m}>{m}</option>
                                 ))}
                               </optgroup>
                             </select>
@@ -459,7 +459,7 @@ export default function Midia({ onVoltar, sessao, onAjuda }) {
               )
             })}
             {convidadosMidia.map(m => (
-              <span key={m} style={{ fontSize: 11, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.25)', borderRadius: 20, padding: '4px 10px', color: '#C4B5FD', fontWeight: 500 }}>{m} · convidado</span>
+              <span key={m} style={{ fontSize: 11, background: 'var(--accent-bg)', border: '1px solid var(--accent-glow)', borderRadius: 20, padding: '4px 10px', color: 'var(--accent-light)', fontWeight: 500 }}>{m}</span>
             ))}
           </div>
         </div>

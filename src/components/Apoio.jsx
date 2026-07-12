@@ -175,7 +175,7 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {eq.membros.map(m => <span key={m} style={{ fontSize: 11, background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 20, padding: '4px 10px', color: 'var(--text-secondary)' }}>{m}</span>)}
                   {convidadosComEquipe.filter(c => c.equipe_atribuida === eq.id).map(c => (
-                    <span key={c.nome} style={{ fontSize: 11, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.25)', borderRadius: 20, padding: '4px 10px', color: '#C4B5FD' }}>{c.nome} · convidado</span>
+                    <span key={c.nome} style={{ fontSize: 11, background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 20, padding: '4px 10px', color: 'var(--text-secondary)' }}>{c.nome}</span>
                   ))}
                 </div>
               </div>

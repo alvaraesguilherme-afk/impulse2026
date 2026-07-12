@@ -361,11 +361,8 @@ export default function Login({ onLogin, mensagem, idioma }) {
             </>
           ) : (
             <>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6, textAlign: 'center' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 20, textAlign: 'center' }}>
                 {tx.novoAcesso}
-              </div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginBottom: 20 }}>
-                {tx.entraraComo} <strong>{tx.convidado}</strong>
               </div>
 
               <div style={{ marginBottom: 14 }}>

@@ -57,8 +57,8 @@ export default function Staff({ onVoltar, onAjuda }) {
                 {extras.map(c => {
                   const equipe = s.area === AREAS[0] && c.equipe_atribuida ? EQUIPES.find(e => e.id === c.equipe_atribuida) : null
                   return (
-                    <span key={c.nome} style={{ fontSize: 12, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.25)', borderRadius: 20, padding: '6px 14px', color: '#C4B5FD', fontWeight: 500 }}>
-                      {c.nome} · convidado{equipe ? ` · ${equipe.nome.replace('Equipe ', '')}` : ''}
+                    <span key={c.nome} style={{ fontSize: 12, background: 'var(--bg-card)', border: '1px solid var(--border-strong)', borderRadius: 20, padding: '6px 14px', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                      {c.nome}{equipe ? ` · ${equipe.nome.replace('Equipe ', '')}` : ''}
                     </span>
                   )
                 })}
