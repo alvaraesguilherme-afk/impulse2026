@@ -3,6 +3,8 @@ import { PINOS, NOMES } from '../lib/pinos'
 import { supabase } from '../lib/supabase'
 import { getDeviceId } from '../lib/device'
 import { getTexto } from '../lib/i18n'
+import { AREAS } from '../lib/areas'
+import { notificar } from '../lib/push'
 
 function getConvidadosLocal() {
   try { return JSON.parse(localStorage.getItem('impulse_convidados')) || {} } catch { return {} }
@@ -72,6 +74,7 @@ export default function Login({ onLogin, mensagem, idioma }) {
   const [cadNome, setCadNome] = useState('')
   const [cadPin, setCadPin] = useState('')
   const [cadPin2, setCadPin2] = useState('')
+  const [cadAreas, setCadAreas] = useState([])
 
   useEffect(() => {
     supabase.from('convidados').select('nome, pin').then(({ data }) => {
@@ -86,7 +89,11 @@ export default function Login({ onLogin, mensagem, idioma }) {
   function trocarModo(m) {
     setModo(m); setErro('')
     setNomeSel(''); setPin('')
-    setCadNome(''); setCadPin(''); setCadPin2('')
+    setCadNome(''); setCadPin(''); setCadPin2(''); setCadAreas([])
+  }
+
+  function toggleArea(area) {
+    setCadAreas(prev => prev.includes(area) ? prev.filter(a => a !== area) : [...prev, area])
   }
 
   async function entrar() {
@@ -154,12 +161,13 @@ export default function Login({ onLogin, mensagem, idioma }) {
 
     setEntrando(true)
     try {
-      const { error } = await supabase.from('convidados').insert({ nome, pin: cadPin })
+      const { error } = await supabase.from('convidados').insert({ nome, pin: cadPin, areas_pedidas: cadAreas, areas_aprovadas: [] })
       if (error) {
         if (error.code === '23505') { setErro(tx.nomeJaCadastrado) } else { setErro(tx.erroCadastrar) }
         setEntrando(false)
         return
       }
+      if (cadAreas.length > 0) notificar({ tipo: 'cadastro_area' })
 
       const novo = { ...convidados, [nome]: cadPin }
       localStorage.setItem('impulse_convidados', JSON.stringify(novo))
@@ -314,6 +322,29 @@ export default function Login({ onLogin, mensagem, idioma }) {
                   placeholder="•••••" maxLength={5} inputMode="numeric"
                   style={pinStyle}
                 />
+              </div>
+
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>{tx.areasDeInteresse}</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
+                  {AREAS.map(area => (
+                    <button
+                      key={area}
+                      type="button"
+                      onClick={() => toggleArea(area)}
+                      style={{
+                        padding: '7px 13px', borderRadius: 20,
+                        border: cadAreas.includes(area) ? '1px solid var(--accent-border)' : '1px solid var(--border-strong)',
+                        background: cadAreas.includes(area) ? 'var(--accent-bg)' : 'var(--bg-card)',
+                        color: cadAreas.includes(area) ? 'var(--accent-light)' : 'var(--text-secondary)',
+                        fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
+                      }}
+                    >{area}</button>
+                  ))}
+                </div>
+                {cadAreas.length > 0 && (
+                  <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{tx.areasAprovacaoAviso}</div>
+                )}
               </div>
 
               {erro && <div style={{ fontSize: 12, color: '#F87171', textAlign: 'center', marginBottom: 14 }}>{erro}</div>}

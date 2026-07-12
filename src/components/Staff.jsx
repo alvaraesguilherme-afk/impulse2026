@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react'
 import { useTexto } from '../lib/i18n'
 import { supabase } from '../lib/supabase'
+import { AREAS } from '../lib/areas'
+import { EQUIPES } from '../lib/equipes'
 const STAFF_AREAS = [
   { area: '⛪ Liderança Pastoral', nomes: ['Pr. Júnior Bandeira', 'Pra. Stephanie Bandeira'] },
-  { area: '🙌 Apoio', nomes: ['Alvarães','Ana Luiza','Clara Cunha','Emanuel','Francisco','Gabriel Gomes','Gabriel Mendes','Gustavo Massay','Hadassa','Hellen Borges','Hugo Lacroix','Jerônimo','Jhony','Joel Marcos','Júlio','Linda','Lívia Andréa','Lorena','Ludmyla','Maria Clara','Maria Júlia','Mariana Gabrielle','Matheus Almeida','Maurício','Nicoly','Rafael Chaves','Rennan','Riana','Ryan Guedes','Samuel Lopes','Sthefany','Victória','Walterley'] },
-  { area: '🎥 Mídia', nomes: ['Alyson','Caetano','Daniel','Joyce','Juliana','Sthefany','Victória','Maria Clara'] },
-  { area: '🍳 Cozinha', nomes: ['Linda'] },
-  { area: '🛒 Cantina', nomes: ['Guilherme Valentim', 'Hadstton Capell'] },
-  { area: '📋 Secretário', nomes: ['Danilo'] },
-  { area: '📅 Programação', nomes: ['Eliel'] },
-  { area: '🎤 Preletores', nomes: ['Isabely Matos','Paula'] },
-  { area: '💡 Iluminação', nomes: ['Gustavo Borges'] },
-  { area: '📦 Logística', nomes: ['Arthur Bolzan', 'Edson Jr.'] },
+  { area: AREAS[0], nomes: ['Alvarães','Ana Luiza','Clara Cunha','Emanuel','Francisco','Gabriel Gomes','Gabriel Mendes','Gustavo Massay','Hadassa','Hellen Borges','Hugo Lacroix','Jerônimo','Jhony','Joel Marcos','Júlio','Linda','Lívia Andréa','Lorena','Ludmyla','Maria Clara','Maria Júlia','Mariana Gabrielle','Matheus Almeida','Maurício','Nicoly','Rafael Chaves','Rennan','Riana','Ryan Guedes','Samuel Lopes','Sthefany','Victória','Walterley'] },
+  { area: AREAS[1], nomes: ['Alyson','Caetano','Daniel','Joyce','Juliana','Sthefany','Victória','Maria Clara'] },
+  { area: AREAS[2], nomes: ['Linda'] },
+  { area: AREAS[3], nomes: ['Guilherme Valentim', 'Hadstton Capell'] },
+  { area: AREAS[4], nomes: ['Danilo'] },
+  { area: AREAS[5], nomes: ['Eliel'] },
+  { area: AREAS[6], nomes: ['Isabely Matos','Paula'] },
+  { area: AREAS[7], nomes: ['Gustavo Borges'] },
+  { area: AREAS[8], nomes: ['Arthur Bolzan', 'Edson Jr.'] },
 ]
 
 function BackBtn({ onVoltar, titulo, onAjuda }) {
@@ -29,10 +31,14 @@ function BackBtn({ onVoltar, titulo, onAjuda }) {
 export default function Staff({ onVoltar, onAjuda }) {
   const tx = useTexto()
   const [convidados, setConvidados] = useState([])
+  const [aprovados, setAprovados] = useState([])
 
   useEffect(() => {
-    supabase.from('convidados').select('nome').order('nome').then(({ data }) => {
-      if (data) setConvidados(data.map(d => d.nome))
+    supabase.from('convidados').select('nome, areas_aprovadas, equipe_atribuida').order('nome').then(({ data }) => {
+      if (data) {
+        setConvidados(data.map(d => d.nome))
+        setAprovados(data)
+      }
     })
   }, [])
 
@@ -40,16 +46,28 @@ export default function Staff({ onVoltar, onAjuda }) {
     <div style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
       <BackBtn onVoltar={onVoltar} titulo={tx.staff} onAjuda={onAjuda} />
       <div style={{ padding: '24px 22px 100px' }}>
-        {STAFF_AREAS.filter(s => s.nomes.length > 0).map(s => (
-          <div key={s.area} style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>{s.area}</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {s.nomes.map(n => (
-                <span key={n} style={{ fontSize: 12, background: 'var(--bg-card)', border: '1px solid var(--border-strong)', borderRadius: 20, padding: '6px 14px', color: 'var(--text-secondary)', fontWeight: 500 }}>{n}</span>
-              ))}
+        {STAFF_AREAS.map(s => {
+          const extras = aprovados.filter(c => (c.areas_aprovadas || []).includes(s.area))
+          if (s.nomes.length === 0 && extras.length === 0) return null
+          return (
+            <div key={s.area} style={{ marginBottom: 24 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>{s.area}</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {s.nomes.map(n => (
+                  <span key={n} style={{ fontSize: 12, background: 'var(--bg-card)', border: '1px solid var(--border-strong)', borderRadius: 20, padding: '6px 14px', color: 'var(--text-secondary)', fontWeight: 500 }}>{n}</span>
+                ))}
+                {extras.map(c => {
+                  const equipe = s.area === AREAS[0] && c.equipe_atribuida ? EQUIPES.find(e => e.id === c.equipe_atribuida) : null
+                  return (
+                    <span key={c.nome} style={{ fontSize: 12, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.25)', borderRadius: 20, padding: '6px 14px', color: '#C4B5FD', fontWeight: 500 }}>
+                      {c.nome} · convidado{equipe ? ` · ${equipe.nome.replace('Equipe ', '')}` : ''}
+                    </span>
+                  )
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
 
         {convidados.length > 0 && (
           <div style={{ marginBottom: 24 }}>

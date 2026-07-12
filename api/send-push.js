@@ -40,6 +40,11 @@ async function resolverConteudo(body) {
     return { title: '🛒 Nova lista de compras', body: 'Uma nova lista de compras foi criada.', nomes: ['Linda', 'Arthur Bolzan', 'Alvarães', 'Pr. Júnior'] }
   }
 
+  if (tipo === 'cadastro_area') {
+    // Mesma lista de nomes nivel alto/maximo em pinos.js — manter sincronizado
+    return { title: '📝 Novo pedido de área', body: 'Um convidado se cadastrou pedindo participar de uma área.', nomes: ['Alvarães', 'Pr. Júnior', 'Alyson', 'Pra. Stephanie', 'Caetano'] }
+  }
+
   return null
 }
 

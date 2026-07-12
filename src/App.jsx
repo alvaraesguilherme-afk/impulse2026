@@ -14,6 +14,7 @@ import { initSync } from './lib/offlineSync'
 import { IdiomaContext, getTexto } from './lib/i18n'
 import { supabase } from './lib/supabase'
 import { getDeviceId } from './lib/device'
+import { PINOS } from './lib/pinos'
 
 const SENHAS = {
   supervisor: { '2306': 'Alvarães', '6090': 'Danilo', '0404': 'Caetano', '2121': 'Alyson', '9089': 'Paula', '1778': 'Eliel', '3321': 'Edson', '5050': 'Pr. Júnior', '4780': 'Pra. Stephanie' },
@@ -316,6 +317,12 @@ export default function App() {
   const NIVEIS_SUPERVISOR = ['maximo', 'alto', 'basico']
   const podeSupervisor = NIVEIS_SUPERVISOR.includes(nivel)
 
+  const abasSupervisorBase = ABAS_SUPERVISOR[supervisorNome] || []
+  const podeAprovarCadastros = ['alto', 'maximo'].includes(PINOS[supervisorNome]?.nivel)
+  const abasSupervisor = podeAprovarCadastros && !abasSupervisorBase.includes('aprovacoes')
+    ? [...abasSupervisorBase, 'aprovacoes']
+    : abasSupervisorBase
+
   const NAV = [
     { id: 'home', label: tx.inicio },
     { id: 'programacao', label: tx.programacao },
@@ -411,7 +418,7 @@ export default function App() {
           {tela === 'home' && <Home onNavegar={navegarPara} sessao={sessao} />}
           {tela === 'apoio' && <Apoio onVoltar={voltar} sessao={sessao} onAjuda={() => mostrarIntroForcar('apoio')} />}
           {tela === 'staff' && <Staff onVoltar={voltar} onAjuda={() => mostrarIntroForcar('staff')} />}
-          {tela === 'supervisor' && <Supervisor onVoltar={voltar} nome={supervisorNome} abas={ABAS_SUPERVISOR[supervisorNome] || []} onAjuda={() => mostrarIntroForcar('supervisor')} />}
+          {tela === 'supervisor' && <Supervisor onVoltar={voltar} nome={supervisorNome} abas={abasSupervisor} onAjuda={() => mostrarIntroForcar('supervisor')} />}
           {tela === 'mural' && <Mural onVoltar={voltar} autor={sessao?.nome} onAjuda={() => mostrarIntroForcar('mural')} />}
           {tela === 'midia' && <Midia onVoltar={voltar} sessao={sessao} onAjuda={() => mostrarIntroForcar('midia')} />}
           {tela === 'programacao' && <Programacao onVoltar={voltar} sessao={sessao} onAjuda={() => mostrarIntroForcar('programacao')} />}

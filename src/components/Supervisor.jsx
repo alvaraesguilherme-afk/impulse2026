@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { syncOp } from '../lib/offlineSync'
 import { PINOS } from '../lib/pinos'
 import { EQUIPES } from '../lib/equipes'
+import { AREAS } from '../lib/areas'
 import { rotuloRelativo } from '../lib/tempo'
 import { notificar } from '../lib/push'
 import { useAbaDirecao, abaAdjacente, useSwipeHandlers } from '../lib/useAbaDirecao'
@@ -11,7 +12,7 @@ const CICLO = ['M','T','N','F']
 const TURNO_LABEL = { M:'Manhã', T:'Tarde', N:'Noite', F:'Folga' }
 const DIAS_C = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
 const INICIO = new Date(2026,6,15)
-const ABA_LABELS = { avisos:'📢 Avisos', chamada:'📋 Chamada', faltas:'❌ Faltas', senhas:'🔐 Senhas' }
+const ABA_LABELS = { avisos:'📢 Avisos', chamada:'📋 Chamada', faltas:'❌ Faltas', senhas:'🔐 Senhas', aprovacoes:'✅ Aprovações' }
 
 const NIVEL_COR = {
   maximo: { bg: 'rgba(124,58,237,0.18)', border: 'rgba(124,58,237,0.4)', text: '#A78BFA', label: 'Máximo' },
@@ -21,7 +22,7 @@ const NIVEL_COR = {
   staff:  { bg: 'var(--bg-card)', border: 'var(--border)', text: 'var(--text-secondary)', label: 'Staff' },
 }
 const ORDEM_NIVEL = ['maximo', 'alto', 'medio', 'basico', 'staff']
-const ORDEM_ABAS = ['avisos', 'chamada', 'faltas', 'senhas']
+const ORDEM_ABAS = ['avisos', 'chamada', 'faltas', 'senhas', 'aprovacoes']
 
 function getTurno(eq, data) {
   const diff = Math.round((data.getTime() - INICIO.getTime()) / 86400000)
@@ -51,12 +52,55 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
   const [erroAviso, setErroAviso] = useState(false)
   const [convidados, setConvidados] = useState([])
   const [loadingConvidados, setLoadingConvidados] = useState(false)
+  const [pendentes, setPendentes] = useState([])
+  const [loadingPendentes, setLoadingPendentes] = useState(false)
+  const [erroAprovacao, setErroAprovacao] = useState(false)
 
   useEffect(() => {
     if (aba === 'avisos') carregarAvisos()
     if (aba === 'faltas') carregarFaltas()
     if (aba === 'senhas') carregarConvidados()
+    if (aba === 'aprovacoes') carregarPendentes()
   }, [aba])
+
+  async function carregarPendentes() {
+    setLoadingPendentes(true)
+    try {
+      const { data } = await supabase.from('convidados').select('nome, areas_pedidas, areas_aprovadas, equipe_atribuida').order('nome')
+      const lista = (data || []).filter(c => (c.areas_pedidas || []).length > 0)
+      setPendentes(lista)
+    } catch {
+      setPendentes([])
+    } finally {
+      setLoadingPendentes(false)
+    }
+  }
+
+  async function toggleAprovacao(nomeConvidado, area) {
+    const alvo = pendentes.find(c => c.nome === nomeConvidado)
+    if (!alvo) return
+    const atual = alvo.areas_aprovadas || []
+    const novoArray = atual.includes(area) ? atual.filter(a => a !== area) : [...atual, area]
+    setPendentes(prev => prev.map(c => c.nome === nomeConvidado ? { ...c, areas_aprovadas: novoArray } : c))
+    const ok = await syncOp('update', 'convidados', { values: { areas_aprovadas: novoArray }, filters: { nome: nomeConvidado } })
+    if (!ok) setErroAprovacao(true)
+  }
+
+  async function definirApoio(nomeConvidado, equipeId) {
+    const alvo = pendentes.find(c => c.nome === nomeConvidado)
+    if (!alvo) return
+    const areaApoio = AREAS[0]
+    const aprovadoApoio = (alvo.areas_aprovadas || []).includes(areaApoio)
+    const atual = aprovadoApoio ? (alvo.equipe_atribuida || 'aleatorio') : null
+    const jaSelecionado = atual === equipeId
+    const novasAreas = jaSelecionado
+      ? (alvo.areas_aprovadas || []).filter(a => a !== areaApoio)
+      : (aprovadoApoio ? alvo.areas_aprovadas : [...(alvo.areas_aprovadas || []), areaApoio])
+    const novaEquipe = jaSelecionado ? null : (equipeId === 'aleatorio' ? null : equipeId)
+    setPendentes(prev => prev.map(c => c.nome === nomeConvidado ? { ...c, areas_aprovadas: novasAreas, equipe_atribuida: novaEquipe } : c))
+    const ok = await syncOp('update', 'convidados', { values: { areas_aprovadas: novasAreas, equipe_atribuida: novaEquipe }, filters: { nome: nomeConvidado } })
+    if (!ok) setErroAprovacao(true)
+  }
 
   async function carregarConvidados() {
     setLoadingConvidados(true)
@@ -355,6 +399,68 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* APROVAÇÕES */}
+        {(aba === 'aprovacoes' || abaSaindo === 'aprovacoes') && (
+          <div className={aba === 'aprovacoes' ? `tab-entra-${direcaoAba.current}` : `tab-sai-${direcaoAba.current}`} style={aba === 'aprovacoes' ? undefined : { position: 'absolute', inset: 0 }}>
+            {erroAprovacao && (
+              <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 14, padding: '12px 16px', marginBottom: 16, fontSize: 12, color: '#F87171' }}>
+                ⚠️ Não foi possível salvar agora. Verifique sua internet e tente de novo.
+              </div>
+            )}
+            {loadingPendentes ? (
+              <div style={{ textAlign: 'center', color: 'var(--text-faint)', fontSize: 13, padding: 40 }}>Carregando...</div>
+            ) : pendentes.length === 0 ? (
+              <div style={{ textAlign: 'center', color: 'var(--text-faint)', fontSize: 13, padding: 40 }}>
+                <div style={{ fontSize: 36, marginBottom: 12 }}>📭</div>
+                Nenhum pedido de área ainda
+              </div>
+            ) : pendentes.map(c => (
+              <div key={c.nome} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: 16, marginBottom: 12 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>{c.nome}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {c.areas_pedidas.map(area => {
+                    if (area === AREAS[0]) {
+                      const aprovadoApoio = (c.areas_aprovadas || []).includes(area)
+                      const equipeAtual = aprovadoApoio ? (c.equipe_atribuida || 'aleatorio') : null
+                      return (
+                        <div key={area}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', marginBottom: 6 }}>{area}</div>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                            {EQUIPES.map(eq => (
+                              <button key={eq.id} onClick={() => definirApoio(c.nome, eq.id)} style={{
+                                padding: '6px 12px', borderRadius: 20, cursor: 'pointer', fontSize: 11, fontWeight: 700,
+                                border: equipeAtual === eq.id ? `1px solid ${eq.cor}` : '1px solid var(--border-strong)',
+                                background: equipeAtual === eq.id ? `${eq.cor}26` : 'var(--input-bg)',
+                                color: equipeAtual === eq.id ? eq.cor : 'var(--text-muted)'
+                              }}>{eq.emoji} {eq.nome.replace('Equipe ', '')}</button>
+                            ))}
+                            <button onClick={() => definirApoio(c.nome, 'aleatorio')} style={{
+                              padding: '6px 12px', borderRadius: 20, cursor: 'pointer', fontSize: 11, fontWeight: 700,
+                              border: equipeAtual === 'aleatorio' ? '1px solid rgba(167,139,250,0.5)' : '1px solid var(--border-strong)',
+                              background: equipeAtual === 'aleatorio' ? 'rgba(167,139,250,0.15)' : 'var(--input-bg)',
+                              color: equipeAtual === 'aleatorio' ? '#C4B5FD' : 'var(--text-muted)'
+                            }}>🎲 Aleatório</button>
+                          </div>
+                        </div>
+                      )
+                    }
+                    const aprovado = (c.areas_aprovadas || []).includes(area)
+                    return (
+                      <button key={area} onClick={() => toggleAprovacao(c.nome, area)} style={{
+                        alignSelf: 'flex-start',
+                        padding: '7px 13px', borderRadius: 20, cursor: 'pointer', fontSize: 12, fontWeight: 700,
+                        border: aprovado ? '1px solid rgba(16,185,129,0.4)' : '1px solid var(--border-strong)',
+                        background: aprovado ? 'rgba(16,185,129,0.15)' : 'var(--input-bg)',
+                        color: aprovado ? '#6EE7B7' : 'var(--text-muted)'
+                      }}>{aprovado ? '✓ ' : ''}{area}</button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
