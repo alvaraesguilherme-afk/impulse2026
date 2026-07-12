@@ -44,8 +44,9 @@ function CartaoAdv({ adv, onToggle, onConfirmar, onNegar, onExcluir, isSuperviso
               {adv.motivo}
             </div>
           )}
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             <span>🕐 {dataHora}</span>
+            {isSupervisor && adv.autor && <span>· 👤 {adv.autor}</span>}
             {aguardando && <span style={{ color: '#EAB308', fontWeight: 700 }}>· Aguardando avaliação</span>}
             {negada && <span style={{ color: 'var(--text-muted)', fontWeight: 700 }}>· Não considerada</span>}
           </div>
@@ -157,9 +158,10 @@ export default function Advertencias({ onVoltar, sessao }) {
   async function registrarAdvertencia() {
     if (!alunoSel || salvando) return
     setSalvando(true)
-    const novaAdv = { id: `tmp_${Date.now()}`, aluno: alunoSel, motivo: motivo.trim() || null, pago: false, status: 'aguardando', created_at: new Date().toISOString() }
+    const autor = sessao?.nome || null
+    const novaAdv = { id: `tmp_${Date.now()}`, aluno: alunoSel, motivo: motivo.trim() || null, pago: false, status: 'aguardando', autor, created_at: new Date().toISOString() }
     setAdvertencias(prev => [novaAdv, ...prev])
-    await syncOp('insert', 'advertencias', { aluno: alunoSel, motivo: motivo.trim() || null, pago: false, status: 'aguardando' })
+    await syncOp('insert', 'advertencias', { aluno: alunoSel, motivo: motivo.trim() || null, pago: false, status: 'aguardando', autor })
     setAlunoSel(null)
     setMotivo('')
     setSalvando(false)
