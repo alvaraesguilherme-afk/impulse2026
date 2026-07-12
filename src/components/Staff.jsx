@@ -30,17 +30,15 @@ function BackBtn({ onVoltar, titulo, onAjuda }) {
 
 export default function Staff({ onVoltar, onAjuda }) {
   const tx = useTexto()
-  const [convidados, setConvidados] = useState([])
   const [aprovados, setAprovados] = useState([])
 
   useEffect(() => {
     supabase.from('convidados').select('nome, areas_aprovadas, equipe_atribuida').order('nome').then(({ data }) => {
-      if (data) {
-        setConvidados(data.map(d => d.nome))
-        setAprovados(data)
-      }
+      if (data) setAprovados(data)
     })
   }, [])
+
+  const convidadosSemArea = aprovados.filter(c => (c.areas_aprovadas || []).length === 0).map(c => c.nome)
 
   return (
     <div style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
@@ -69,11 +67,11 @@ export default function Staff({ onVoltar, onAjuda }) {
           )
         })}
 
-        {convidados.length > 0 && (
+        {convidadosSemArea.length > 0 && (
           <div style={{ marginBottom: 24 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>👤 Convidados</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {convidados.map(n => (
+              {convidadosSemArea.map(n => (
                 <span key={n} style={{ fontSize: 12, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.25)', borderRadius: 20, padding: '6px 14px', color: '#C4B5FD', fontWeight: 500 }}>{n}</span>
               ))}
             </div>
