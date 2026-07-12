@@ -176,6 +176,7 @@ export default function Login({ onLogin, mensagem, idioma }) {
     if (convidados[nome] !== undefined) { setErro(tx.nomeJaCadastrado); return }
     if (cadPin.length < 5) { setErro(tx.pinDeveTerCincoDigitos); return }
     if (cadPin !== cadPin2) { setErro(tx.pinsNaoCoincidem); return }
+    if (cadAreas.length === 0) { setErro(tx.selecioneAoMenosUmaArea); return }
 
     const todosOsPins = [
       ...Object.values(PINOS).map(d => d.pin),
