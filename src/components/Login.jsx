@@ -3,7 +3,7 @@ import { PINOS, NOMES } from '../lib/pinos'
 import { supabase } from '../lib/supabase'
 import { getDeviceId } from '../lib/device'
 import { getTexto } from '../lib/i18n'
-import { AREAS } from '../lib/areas'
+import { AREAS_CADASTRO } from '../lib/areas'
 import { notificar } from '../lib/push'
 
 function getConvidadosLocal() {
@@ -327,7 +327,7 @@ export default function Login({ onLogin, mensagem, idioma }) {
               <div style={{ marginBottom: 20 }}>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>{tx.areasDeInteresse}</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
-                  {AREAS.map(area => (
+                  {AREAS_CADASTRO.map(area => (
                     <button
                       key={area}
                       type="button"
