@@ -126,12 +126,14 @@ export default function Login({ onLogin, mensagem, idioma }) {
       nivel = dadosPinos.nivel
     } else if (convidados[nomeSel] !== undefined) {
       if (pin !== convidados[nomeSel]) { setErro(tx.pinIncorreto); return }
-      nivel = 'convidado'
       if (pessoaPrecisaEsperar(nomeSel)) {
         setNomeAguardando(nomeSel)
         setAguardandoAprovacao(true)
         return
       }
+      // Convidado ja aprovado (ou cadastro antigo, de antes da aprovacao existir) entra como staff normal
+      const st = statusConvidados[nomeSel]
+      nivel = (st?.precisaAprovacao && st?.liberado) ? 'staff' : 'convidado'
     } else {
       setErro(tx.nomeNaoEncontrado); return
     }
@@ -216,14 +218,14 @@ export default function Login({ onLogin, mensagem, idioma }) {
       const { data } = await supabase.from('convidados').select('areas_aprovadas, acesso_geral').eq('nome', nomeAguardando).maybeSingle()
       const liberado = data && ((data.areas_aprovadas || []).length > 0 || !!data.acesso_geral)
       if (!liberado) { setVerificandoAprovacao(false); setAindaPendente(true); return }
-      const { bloqueado, msg } = await verificarSessao(nomeAguardando, 'convidado', tx)
+      const { bloqueado, msg } = await verificarSessao(nomeAguardando, 'staff', tx)
       if (bloqueado) {
         setAguardandoAprovacao(false)
         setErro(msg)
-        setBloqueadoInfo({ nome: nomeAguardando, nivel: 'convidado' })
+        setBloqueadoInfo({ nome: nomeAguardando, nivel: 'staff' })
         return
       }
-      onLogin({ nome: nomeAguardando, nivel: 'convidado' })
+      onLogin({ nome: nomeAguardando, nivel: 'staff' })
     } catch {
       setVerificandoAprovacao(false)
       setAindaPendente(true)
