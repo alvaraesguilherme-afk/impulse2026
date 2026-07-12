@@ -67,12 +67,7 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
     setLoadingPendentes(true)
     try {
       const { data } = await supabase.from('convidados').select('nome, areas_pedidas, areas_aprovadas, equipe_atribuida, precisa_aprovacao, acesso_geral').order('nome')
-      const lista = (data || []).filter(c => {
-        if (!c.precisa_aprovacao) return false
-        const liberado = (c.areas_aprovadas || []).length > 0 || c.acesso_geral
-        const faltaArea = (c.areas_pedidas || []).some(a => !(c.areas_aprovadas || []).includes(a))
-        return !liberado || faltaArea
-      })
+      const lista = (data || []).filter(c => c.precisa_aprovacao && !pessoaResolvida(c))
       setPendentes(lista)
     } catch {
       setPendentes([])
@@ -81,12 +76,29 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
     }
   }
 
+  function pessoaResolvida(c) {
+    const liberado = (c.areas_aprovadas || []).length > 0 || c.acesso_geral
+    const faltaArea = (c.areas_pedidas || []).some(a => !(c.areas_aprovadas || []).includes(a))
+    return liberado && !faltaArea
+  }
+
+  // Aplica o patch no estado local; some da lista assim que a pessoa fica
+  // totalmente resolvida (liberada e sem nenhuma area pendente) — isso e a
+  // confirmacao visual de que a aprovacao foi salva.
+  function aplicarLocal(nomeConvidado, patch) {
+    setPendentes(prev => prev.flatMap(c => {
+      if (c.nome !== nomeConvidado) return [c]
+      const atualizado = { ...c, ...patch }
+      return pessoaResolvida(atualizado) ? [] : [atualizado]
+    }))
+  }
+
   async function toggleAprovacao(nomeConvidado, area) {
     const alvo = pendentes.find(c => c.nome === nomeConvidado)
     if (!alvo) return
     const atual = alvo.areas_aprovadas || []
     const novoArray = atual.includes(area) ? atual.filter(a => a !== area) : [...atual, area]
-    setPendentes(prev => prev.map(c => c.nome === nomeConvidado ? { ...c, areas_aprovadas: novoArray } : c))
+    aplicarLocal(nomeConvidado, { areas_aprovadas: novoArray })
     const ok = await syncOp('update', 'convidados', { values: { areas_aprovadas: novoArray }, filters: { nome: nomeConvidado } })
     if (!ok) setErroAprovacao(true)
   }
@@ -95,7 +107,7 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
     const alvo = pendentes.find(c => c.nome === nomeConvidado)
     if (!alvo) return
     const novoValor = !alvo.acesso_geral
-    setPendentes(prev => prev.map(c => c.nome === nomeConvidado ? { ...c, acesso_geral: novoValor } : c))
+    aplicarLocal(nomeConvidado, { acesso_geral: novoValor })
     const ok = await syncOp('update', 'convidados', { values: { acesso_geral: novoValor }, filters: { nome: nomeConvidado } })
     if (!ok) setErroAprovacao(true)
   }
@@ -111,7 +123,7 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
       ? (alvo.areas_aprovadas || []).filter(a => a !== areaApoio)
       : (aprovadoApoio ? alvo.areas_aprovadas : [...(alvo.areas_aprovadas || []), areaApoio])
     const novaEquipe = jaSelecionado ? null : (equipeId === 'aleatorio' ? null : equipeId)
-    setPendentes(prev => prev.map(c => c.nome === nomeConvidado ? { ...c, areas_aprovadas: novasAreas, equipe_atribuida: novaEquipe } : c))
+    aplicarLocal(nomeConvidado, { areas_aprovadas: novasAreas, equipe_atribuida: novaEquipe })
     const ok = await syncOp('update', 'convidados', { values: { areas_aprovadas: novasAreas, equipe_atribuida: novaEquipe }, filters: { nome: nomeConvidado } })
     if (!ok) setErroAprovacao(true)
   }

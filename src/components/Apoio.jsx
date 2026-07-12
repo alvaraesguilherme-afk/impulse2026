@@ -55,6 +55,13 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
   const tx = useTexto()
   const [aba, setAba, direcaoAba, abaSaindo] = useAbaDirecao('times', ORDEM_ABAS)
   const [lider] = useState(() => LIDERES_CHAMADA.find(l => l.nome === sessao?.nome) || null)
+  const [convidadosComEquipe, setConvidadosComEquipe] = useState([])
+
+  useEffect(() => {
+    supabase.from('convidados').select('nome, equipe_atribuida').not('equipe_atribuida', 'is', null).then(({ data }) => {
+      if (data) setConvidadosComEquipe(data)
+    })
+  }, [])
   const [diaSel, setDiaSel] = useState('')
   const [turnoSel, setTurnoSel] = useState('')
   const [chamadaData, setChamadaData] = useState({})
@@ -96,7 +103,8 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
   function isMinhaEquipe(eq) {
     if (!sessao?.nome) return false
     const lideres = eq.lideres.split(' e ').map(l => l.trim())
-    return eq.membros.includes(sessao.nome) || lideres.includes(sessao.nome)
+    const minhaEquipeAprovada = convidadosComEquipe.find(c => c.nome === sessao.nome)?.equipe_atribuida
+    return eq.membros.includes(sessao.nome) || lideres.includes(sessao.nome) || minhaEquipeAprovada === eq.id
   }
 
   const minhaEquipeId = lider ? lider.equipeId : (EQUIPES.find(eq => isMinhaEquipe(eq))?.id ?? null)
@@ -166,6 +174,9 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8 }}>{tx.membros}</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {eq.membros.map(m => <span key={m} style={{ fontSize: 11, background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 20, padding: '4px 10px', color: 'var(--text-secondary)' }}>{m}</span>)}
+                  {convidadosComEquipe.filter(c => c.equipe_atribuida === eq.id).map(c => (
+                    <span key={c.nome} style={{ fontSize: 11, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.25)', borderRadius: 20, padding: '4px 10px', color: '#C4B5FD' }}>{c.nome} · convidado</span>
+                  ))}
                 </div>
               </div>
             ))}
