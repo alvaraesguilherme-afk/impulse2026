@@ -55,6 +55,8 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
   const [pendentes, setPendentes] = useState([])
   const [loadingPendentes, setLoadingPendentes] = useState(false)
   const [erroAprovacao, setErroAprovacao] = useState(false)
+  const [rascunhos, setRascunhos] = useState({})
+  const [confirmando, setConfirmando] = useState(null)
 
   useEffect(() => {
     if (aba === 'avisos') carregarAvisos()
@@ -82,46 +84,51 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
     return liberado && !faltaArea
   }
 
-  // Aplica o patch no estado local sem tirar da lista — o card fica visivel
-  // com o selo "Aprovado" (pessoaResolvida) pra confirmar que salvou e ainda
-  // dar pra ajustar. So some de verdade na proxima vez que a aba recarregar.
-  function aplicarLocal(nomeConvidado, patch) {
-    setPendentes(prev => prev.map(c => c.nome === nomeConvidado ? { ...c, ...patch } : c))
+  // Enquanto nao confirma, as escolhas ficam so num rascunho local (nada e
+  // salvo ainda) — assim da pra corrigir um clique errado antes de valer.
+  function getDraft(nomeConvidado) {
+    if (rascunhos[nomeConvidado]) return rascunhos[nomeConvidado]
+    const base = pendentes.find(c => c.nome === nomeConvidado)
+    return { areas_aprovadas: base?.areas_aprovadas || [], equipe_atribuida: base?.equipe_atribuida ?? null, acesso_geral: !!base?.acesso_geral }
   }
 
-  async function toggleAprovacao(nomeConvidado, area) {
-    const alvo = pendentes.find(c => c.nome === nomeConvidado)
-    if (!alvo) return
-    const atual = alvo.areas_aprovadas || []
-    const novoArray = atual.includes(area) ? atual.filter(a => a !== area) : [...atual, area]
-    aplicarLocal(nomeConvidado, { areas_aprovadas: novoArray })
-    const ok = await syncOp('update', 'convidados', { values: { areas_aprovadas: novoArray }, filters: { nome: nomeConvidado } })
-    if (!ok) setErroAprovacao(true)
+  function setDraft(nomeConvidado, patch) {
+    setRascunhos(prev => ({ ...prev, [nomeConvidado]: { ...getDraft(nomeConvidado), ...patch } }))
   }
 
-  async function toggleAcessoGeral(nomeConvidado) {
-    const alvo = pendentes.find(c => c.nome === nomeConvidado)
-    if (!alvo) return
-    const novoValor = !alvo.acesso_geral
-    aplicarLocal(nomeConvidado, { acesso_geral: novoValor })
-    const ok = await syncOp('update', 'convidados', { values: { acesso_geral: novoValor }, filters: { nome: nomeConvidado } })
-    if (!ok) setErroAprovacao(true)
+  function toggleAprovacao(nomeConvidado, area) {
+    const d = getDraft(nomeConvidado)
+    const novoArray = d.areas_aprovadas.includes(area) ? d.areas_aprovadas.filter(a => a !== area) : [...d.areas_aprovadas, area]
+    setDraft(nomeConvidado, { areas_aprovadas: novoArray })
   }
 
-  async function definirApoio(nomeConvidado, equipeId) {
-    const alvo = pendentes.find(c => c.nome === nomeConvidado)
-    if (!alvo) return
+  function toggleAcessoGeral(nomeConvidado) {
+    const d = getDraft(nomeConvidado)
+    setDraft(nomeConvidado, { acesso_geral: !d.acesso_geral })
+  }
+
+  function definirApoio(nomeConvidado, equipeId) {
+    const d = getDraft(nomeConvidado)
     const areaApoio = AREAS[0]
-    const aprovadoApoio = (alvo.areas_aprovadas || []).includes(areaApoio)
-    const atual = aprovadoApoio ? (alvo.equipe_atribuida || 'aleatorio') : null
+    const aprovadoApoio = d.areas_aprovadas.includes(areaApoio)
+    const atual = aprovadoApoio ? (d.equipe_atribuida || 'aleatorio') : null
     const jaSelecionado = atual === equipeId
     const novasAreas = jaSelecionado
-      ? (alvo.areas_aprovadas || []).filter(a => a !== areaApoio)
-      : (aprovadoApoio ? alvo.areas_aprovadas : [...(alvo.areas_aprovadas || []), areaApoio])
+      ? d.areas_aprovadas.filter(a => a !== areaApoio)
+      : (aprovadoApoio ? d.areas_aprovadas : [...d.areas_aprovadas, areaApoio])
     const novaEquipe = jaSelecionado ? null : (equipeId === 'aleatorio' ? null : equipeId)
-    aplicarLocal(nomeConvidado, { areas_aprovadas: novasAreas, equipe_atribuida: novaEquipe })
-    const ok = await syncOp('update', 'convidados', { values: { areas_aprovadas: novasAreas, equipe_atribuida: novaEquipe }, filters: { nome: nomeConvidado } })
-    if (!ok) setErroAprovacao(true)
+    setDraft(nomeConvidado, { areas_aprovadas: novasAreas, equipe_atribuida: novaEquipe })
+  }
+
+  async function confirmarAprovacao(nomeConvidado) {
+    const d = rascunhos[nomeConvidado]
+    if (!d) return
+    setConfirmando(nomeConvidado)
+    const ok = await syncOp('update', 'convidados', { values: { areas_aprovadas: d.areas_aprovadas, equipe_atribuida: d.equipe_atribuida, acesso_geral: d.acesso_geral }, filters: { nome: nomeConvidado } })
+    setConfirmando(null)
+    if (!ok) { setErroAprovacao(true); return }
+    setPendentes(prev => prev.map(c => c.nome === nomeConvidado ? { ...c, ...d } : c))
+    setRascunhos(prev => { const cp = { ...prev }; delete cp[nomeConvidado]; return cp })
   }
 
   async function carregarConvidados() {
@@ -439,16 +446,22 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
                 <div style={{ fontSize: 36, marginBottom: 12 }}>📭</div>
                 Nenhum pedido de área ainda
               </div>
-            ) : pendentes.map(c => (
+            ) : pendentes.map(c => {
+              const d = getDraft(c.nome)
+              const temRascunho = !!rascunhos[c.nome]
+              return (
               <div key={c.nome} style={{
                 background: pessoaResolvida(c) ? 'rgba(16,185,129,0.05)' : 'var(--bg-card)',
-                border: pessoaResolvida(c) ? '1px solid rgba(16,185,129,0.3)' : '1px solid var(--border)',
+                border: pessoaResolvida(c) ? '1px solid rgba(16,185,129,0.3)' : temRascunho ? '1px solid rgba(234,179,8,0.4)' : '1px solid var(--border)',
                 borderRadius: 20, padding: 16, marginBottom: 12
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                   <div style={{ fontSize: 14, fontWeight: 700 }}>{c.nome}</div>
-                  {pessoaResolvida(c) && (
+                  {pessoaResolvida(c) && !temRascunho && (
                     <span style={{ fontSize: 11, fontWeight: 700, color: '#6EE7B7', background: 'rgba(16,185,129,0.15)', padding: '3px 10px', borderRadius: 20 }}>✓ Aprovado</span>
+                  )}
+                  {temRascunho && (
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#EAB308', background: 'rgba(234,179,8,0.15)', padding: '3px 10px', borderRadius: 20 }}>Não confirmado</span>
                   )}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -458,16 +471,16 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
                       <button onClick={() => toggleAcessoGeral(c.nome)} style={{
                         alignSelf: 'flex-start',
                         padding: '7px 13px', borderRadius: 20, cursor: 'pointer', fontSize: 12, fontWeight: 700,
-                        border: c.acesso_geral ? '1px solid rgba(167,139,250,0.5)' : '1px solid var(--border-strong)',
-                        background: c.acesso_geral ? 'rgba(167,139,250,0.15)' : 'var(--input-bg)',
-                        color: c.acesso_geral ? '#C4B5FD' : 'var(--text-muted)'
-                      }}>{c.acesso_geral ? '✓ ' : ''}✅ Liberar acesso</button>
+                        border: d.acesso_geral ? '1px solid rgba(167,139,250,0.5)' : '1px solid var(--border-strong)',
+                        background: d.acesso_geral ? 'rgba(167,139,250,0.15)' : 'var(--input-bg)',
+                        color: d.acesso_geral ? '#C4B5FD' : 'var(--text-muted)'
+                      }}>{d.acesso_geral ? '✓ ' : ''}✅ Liberar acesso</button>
                     </div>
                   )}
                   {c.areas_pedidas.map(area => {
                     if (area === AREAS[0]) {
-                      const aprovadoApoio = (c.areas_aprovadas || []).includes(area)
-                      const equipeAtual = aprovadoApoio ? (c.equipe_atribuida || 'aleatorio') : null
+                      const aprovadoApoio = d.areas_aprovadas.includes(area)
+                      const equipeAtual = aprovadoApoio ? (d.equipe_atribuida || 'aleatorio') : null
                       return (
                         <div key={area}>
                           <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', marginBottom: 6 }}>{area}</div>
@@ -490,7 +503,7 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
                         </div>
                       )
                     }
-                    const aprovado = (c.areas_aprovadas || []).includes(area)
+                    const aprovado = d.areas_aprovadas.includes(area)
                     return (
                       <button key={area} onClick={() => toggleAprovacao(c.nome, area)} style={{
                         alignSelf: 'flex-start',
@@ -501,9 +514,18 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
                       }}>{aprovado ? '✓ ' : ''}{area}</button>
                     )
                   })}
+                  {temRascunho && (
+                    <button onClick={() => confirmarAprovacao(c.nome)} disabled={confirmando === c.nome} style={{
+                      marginTop: 4, padding: '12px', borderRadius: 14, border: 'none',
+                      background: confirmando === c.nome ? 'var(--input-bg)' : 'var(--gradient)',
+                      color: confirmando === c.nome ? 'var(--text-faint)' : 'white',
+                      fontSize: 13, fontWeight: 700, cursor: confirmando === c.nome ? 'default' : 'pointer', fontFamily: 'Syne, sans-serif'
+                    }}>{confirmando === c.nome ? 'Confirmando...' : '✅ Confirmar aprovação'}</button>
+                  )}
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         )}
 
