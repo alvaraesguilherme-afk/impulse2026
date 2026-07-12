@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { syncOp } from '../lib/offlineSync'
 import { notificar } from '../lib/push'
 import { MEMBROS_FIXOS, MEMBROS_EXTRAS } from '../lib/midia'
+import { AREAS } from '../lib/areas'
 import { useAbaDirecao, abaAdjacente, useSwipeHandlers } from '../lib/useAbaDirecao'
 
 const ORDEM_ABAS = ['escalas', 'mensagens']
@@ -77,8 +78,16 @@ export default function Midia({ onVoltar, sessao, onAjuda }) {
   const [msgTexto, setMsgTexto] = useState('')
   const [enviandoMsg, setEnviandoMsg] = useState(false)
 
+  const [convidadosMidia, setConvidadosMidia] = useState([])
+
+  useEffect(() => {
+    supabase.from('convidados').select('nome, areas_aprovadas').then(({ data }) => {
+      if (data) setConvidadosMidia(data.filter(c => (c.areas_aprovadas || []).includes(AREAS[1])).map(c => c.nome))
+    })
+  }, [])
+
   const podeEnviarMensagem = Object.values(SENHAS_COORD).includes(sessao?.nome)
-  const souDaMidia = MEMBROS_FIXOS.includes(sessao?.nome) || MEMBROS_EXTRAS.includes(sessao?.nome)
+  const souDaMidia = MEMBROS_FIXOS.includes(sessao?.nome) || MEMBROS_EXTRAS.includes(sessao?.nome) || convidadosMidia.includes(sessao?.nome)
   const podeVerMensagens = podeEnviarMensagem || souDaMidia
   const abasList = [{ id: 'escalas', label: '📅 Escalas' }, podeVerMensagens && { id: 'mensagens', label: '💬 Mensagens' }].filter(Boolean)
   const abasVisiveis = abasList.map(a => a.id)
@@ -321,6 +330,9 @@ export default function Midia({ onVoltar, sessao, onAjuda }) {
                                     </option>
                                   )
                                 })}
+                                {convidadosMidia.map(m => (
+                                  <option key={m} value={m}>{m} · convidado</option>
+                                ))}
                               </optgroup>
                             </select>
                             {pessoaIndisponivel && !pessoaIndisponivel.livre && (
@@ -446,6 +458,9 @@ export default function Midia({ onVoltar, sessao, onAjuda }) {
                 </span>
               )
             })}
+            {convidadosMidia.map(m => (
+              <span key={m} style={{ fontSize: 11, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.25)', borderRadius: 20, padding: '4px 10px', color: '#C4B5FD', fontWeight: 500 }}>{m} · convidado</span>
+            ))}
           </div>
         </div>
       </div>
