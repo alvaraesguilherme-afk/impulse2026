@@ -41,8 +41,15 @@ async function resolverConteudo(body) {
   }
 
   if (tipo === 'cadastro_area') {
-    // Mesma lista de nomes nivel alto/maximo em pinos.js — manter sincronizado
-    return { title: '📝 Novo cadastro aguardando aprovação', body: 'Um novo cadastro foi feito e está aguardando aprovação de acesso.', nomes: ['Alvarães', 'Pr. Júnior', 'Alyson', 'Pra. Stephanie', 'Caetano'] }
+    // Lider(es) de cada area que pode ser escolhida no cadastro (src/lib/areas.js AREAS_CADASTRO) — manter sincronizado
+    const LIDER_POR_AREA = {
+      '🙌 Apoio': ['Alvarães'],
+      '🎥 Mídia': ['Alyson', 'Caetano'],
+    }
+    const areas = Array.isArray(body.areas) ? body.areas : []
+    const nomes = [...new Set(areas.flatMap(a => LIDER_POR_AREA[a] || []))]
+    if (nomes.length === 0) return null
+    return { title: '📝 Novo cadastro aguardando aprovação', body: 'Um novo cadastro foi feito e está aguardando aprovação de acesso.', nomes }
   }
 
   return null

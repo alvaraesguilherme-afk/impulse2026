@@ -11,5 +11,6 @@ export const AREAS = [
 ]
 
 // Subconjunto oferecido no seletor de áreas do cadastro (Login.jsx) —
-// Programação, Preletores e Iluminação ficam fora da escolha por pedido do Renato.
-export const AREAS_CADASTRO = AREAS.filter(a => !['📅 Programação', '🎤 Preletores', '💡 Iluminação'].includes(a))
+// só Apoio e Mídia têm entrada por autocadastro; as outras áreas não têm
+// como uma pessoa nova entrar por conta própria, por pedido do Renato.
+export const AREAS_CADASTRO = AREAS.filter(a => ['🙌 Apoio', '🎥 Mídia'].includes(a))

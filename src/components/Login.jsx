@@ -194,7 +194,7 @@ export default function Login({ onLogin, mensagem, idioma }) {
         setEntrando(false)
         return
       }
-      notificar({ tipo: 'cadastro_area' })
+      notificar({ tipo: 'cadastro_area', areas: cadAreas })
 
       const novo = { ...convidados, [nome]: cadPin }
       localStorage.setItem('impulse_convidados', JSON.stringify(novo))
