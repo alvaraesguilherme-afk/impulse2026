@@ -452,18 +452,18 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
                   )}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div>
-                    {c.areas_pedidas.length === 0 && (
+                  {c.areas_pedidas.length === 0 && (
+                    <div>
                       <div style={{ fontSize: 11, color: 'var(--text-faint)', marginBottom: 6 }}>Não pediu nenhuma área — só precisa de acesso geral</div>
-                    )}
-                    <button onClick={() => toggleAcessoGeral(c.nome)} style={{
-                      alignSelf: 'flex-start',
-                      padding: '7px 13px', borderRadius: 20, cursor: 'pointer', fontSize: 12, fontWeight: 700,
-                      border: c.acesso_geral ? '1px solid rgba(167,139,250,0.5)' : '1px solid var(--border-strong)',
-                      background: c.acesso_geral ? 'rgba(167,139,250,0.15)' : 'var(--input-bg)',
-                      color: c.acesso_geral ? '#C4B5FD' : 'var(--text-muted)'
-                    }}>{c.acesso_geral ? '✓ ' : ''}✅ Liberar acesso</button>
-                  </div>
+                      <button onClick={() => toggleAcessoGeral(c.nome)} style={{
+                        alignSelf: 'flex-start',
+                        padding: '7px 13px', borderRadius: 20, cursor: 'pointer', fontSize: 12, fontWeight: 700,
+                        border: c.acesso_geral ? '1px solid rgba(167,139,250,0.5)' : '1px solid var(--border-strong)',
+                        background: c.acesso_geral ? 'rgba(167,139,250,0.15)' : 'var(--input-bg)',
+                        color: c.acesso_geral ? '#C4B5FD' : 'var(--text-muted)'
+                      }}>{c.acesso_geral ? '✓ ' : ''}✅ Liberar acesso</button>
+                    </div>
+                  )}
                   {c.areas_pedidas.map(area => {
                     if (area === AREAS[0]) {
                       const aprovadoApoio = (c.areas_aprovadas || []).includes(area)
