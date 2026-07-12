@@ -82,15 +82,11 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
     return liberado && !faltaArea
   }
 
-  // Aplica o patch no estado local; some da lista assim que a pessoa fica
-  // totalmente resolvida (liberada e sem nenhuma area pendente) — isso e a
-  // confirmacao visual de que a aprovacao foi salva.
+  // Aplica o patch no estado local sem tirar da lista — o card fica visivel
+  // com o selo "Aprovado" (pessoaResolvida) pra confirmar que salvou e ainda
+  // dar pra ajustar. So some de verdade na proxima vez que a aba recarregar.
   function aplicarLocal(nomeConvidado, patch) {
-    setPendentes(prev => prev.flatMap(c => {
-      if (c.nome !== nomeConvidado) return [c]
-      const atualizado = { ...c, ...patch }
-      return pessoaResolvida(atualizado) ? [] : [atualizado]
-    }))
+    setPendentes(prev => prev.map(c => c.nome === nomeConvidado ? { ...c, ...patch } : c))
   }
 
   async function toggleAprovacao(nomeConvidado, area) {
@@ -444,8 +440,17 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
                 Nenhum pedido de área ainda
               </div>
             ) : pendentes.map(c => (
-              <div key={c.nome} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: 16, marginBottom: 12 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>{c.nome}</div>
+              <div key={c.nome} style={{
+                background: pessoaResolvida(c) ? 'rgba(16,185,129,0.05)' : 'var(--bg-card)',
+                border: pessoaResolvida(c) ? '1px solid rgba(16,185,129,0.3)' : '1px solid var(--border)',
+                borderRadius: 20, padding: 16, marginBottom: 12
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700 }}>{c.nome}</div>
+                  {pessoaResolvida(c) && (
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#6EE7B7', background: 'rgba(16,185,129,0.15)', padding: '3px 10px', borderRadius: 20 }}>✓ Aprovado</span>
+                  )}
+                </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <div>
                     {c.areas_pedidas.length === 0 && (
