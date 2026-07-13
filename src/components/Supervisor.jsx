@@ -107,16 +107,27 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
     setDraft(nomeConvidado, { acesso_geral: !d.acesso_geral })
   }
 
-  function definirApoio(nomeConvidado, equipeId) {
+  // Conta gente fixa (EQUIPES) + convidados ja aprovados no banco pra cada
+  // equipe, e devolve o id da que tiver menos gente no momento do clique.
+  async function equipeComMenosGente() {
+    const { data } = await supabase.from('convidados').select('equipe_atribuida')
+    const contagem = {}
+    EQUIPES.forEach(eq => { contagem[eq.id] = eq.membros.length })
+    ;(data || []).forEach(c => { if (contagem[c.equipe_atribuida] !== undefined) contagem[c.equipe_atribuida]++ })
+    return EQUIPES.reduce((menor, eq) => contagem[eq.id] < contagem[menor.id] ? eq : menor, EQUIPES[0]).id
+  }
+
+  async function definirApoio(nomeConvidado, equipeId) {
     const d = getDraft(nomeConvidado)
     const areaApoio = AREAS[0]
     const aprovadoApoio = d.areas_aprovadas.includes(areaApoio)
-    const atual = aprovadoApoio ? (d.equipe_atribuida || 'aleatorio') : null
-    const jaSelecionado = atual === equipeId
+    const atual = aprovadoApoio ? d.equipe_atribuida : null
+    const alvo = equipeId === 'aleatorio' ? await equipeComMenosGente() : equipeId
+    const jaSelecionado = atual === alvo
     const novasAreas = jaSelecionado
       ? d.areas_aprovadas.filter(a => a !== areaApoio)
       : (aprovadoApoio ? d.areas_aprovadas : [...d.areas_aprovadas, areaApoio])
-    const novaEquipe = jaSelecionado ? null : (equipeId === 'aleatorio' ? null : equipeId)
+    const novaEquipe = jaSelecionado ? null : alvo
     setDraft(nomeConvidado, { areas_aprovadas: novasAreas, equipe_atribuida: novaEquipe })
   }
 
@@ -480,7 +491,7 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
                   {c.areas_pedidas.map(area => {
                     if (area === AREAS[0]) {
                       const aprovadoApoio = d.areas_aprovadas.includes(area)
-                      const equipeAtual = aprovadoApoio ? (d.equipe_atribuida || 'aleatorio') : null
+                      const equipeAtual = aprovadoApoio ? d.equipe_atribuida : null
                       return (
                         <div key={area}>
                           <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', marginBottom: 6 }}>{area}</div>
@@ -493,11 +504,17 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
                                 color: equipeAtual === eq.id ? eq.cor : 'var(--text-muted)'
                               }}>{eq.emoji} {eq.nome.replace('Equipe ', '')}</button>
                             ))}
+                            <button onClick={() => definirApoio(c.nome, 'sem_escala')} style={{
+                              padding: '6px 12px', borderRadius: 20, cursor: 'pointer', fontSize: 11, fontWeight: 700,
+                              border: equipeAtual === 'sem_escala' ? '1px solid var(--text-faint)' : '1px solid var(--border-strong)',
+                              background: equipeAtual === 'sem_escala' ? 'var(--bg-card)' : 'var(--input-bg)',
+                              color: equipeAtual === 'sem_escala' ? 'var(--text-secondary)' : 'var(--text-muted)'
+                            }}>🚫 Sem escala</button>
                             <button onClick={() => definirApoio(c.nome, 'aleatorio')} style={{
                               padding: '6px 12px', borderRadius: 20, cursor: 'pointer', fontSize: 11, fontWeight: 700,
-                              border: equipeAtual === 'aleatorio' ? '1px solid rgba(167,139,250,0.5)' : '1px solid var(--border-strong)',
-                              background: equipeAtual === 'aleatorio' ? 'rgba(167,139,250,0.15)' : 'var(--input-bg)',
-                              color: equipeAtual === 'aleatorio' ? '#C4B5FD' : 'var(--text-muted)'
+                              border: '1px solid rgba(167,139,250,0.5)',
+                              background: 'rgba(167,139,250,0.15)',
+                              color: '#C4B5FD'
                             }}>🎲 Aleatório</button>
                           </div>
                         </div>

@@ -62,9 +62,10 @@ export default function Staff({ onVoltar, onAjuda }) {
                 ))}
                 {extras.map(c => {
                   const equipe = s.area === AREAS[0] && c.equipe_atribuida ? EQUIPES.find(e => e.id === c.equipe_atribuida) : null
+                  const semEscala = s.area === AREAS[0] && c.equipe_atribuida === 'sem_escala'
                   return (
                     <span key={c.nome} style={{ fontSize: 12, background: 'var(--bg-card)', border: '1px solid var(--border-strong)', borderRadius: 20, padding: '6px 14px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                      {c.nome}{equipe ? ` · ${equipe.nome.replace('Equipe ', '')}` : ''}
+                      {c.nome}{equipe ? ` · ${equipe.nome.replace('Equipe ', '')}` : semEscala ? ' · sem escala' : ''}
                     </span>
                   )
                 })}
