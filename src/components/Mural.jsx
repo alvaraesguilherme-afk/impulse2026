@@ -551,7 +551,9 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
                     {foto.legenda && <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginBottom: 2, lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{foto.legenda}</div>}
                     {foto.autor && <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 1 }}>{foto.autor}</div>}
                     <div style={{ fontSize: 10, color: 'var(--text-faint)' }}>
-                      {new Date(foto.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      {todosOsDias || DIAS[diaSel].nums.length > 1
+                        ? new Date(foto.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+                        : new Date(foto.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
                   <button onClick={e => { e.stopPropagation(); curtirFoto(foto) }} className="btn-curtida" style={{
