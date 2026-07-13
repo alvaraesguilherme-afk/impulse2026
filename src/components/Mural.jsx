@@ -298,7 +298,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
     <div style={{ background: '#05051a', minHeight: '100vh', position: 'relative' }}>
       {MOSAICO_FOTOS.length > 0 && (
         <div style={{
-          position: 'absolute', top: 0, left: 0, right: 0,
+          position: 'absolute', inset: 0, overflow: 'hidden',
           columnCount: 3, columnGap: 3, zIndex: 0
         }}>
           {MOSAICO_TILES.map((src, i) => (
@@ -306,7 +306,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
           ))}
         </div>
       )}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '10000px', background: 'rgba(5,5,20,0.70)', zIndex: 0 }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(5,5,20,0.70)', zIndex: 0 }} />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
