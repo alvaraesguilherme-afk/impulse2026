@@ -4,19 +4,26 @@ import { supabase } from '../lib/supabase'
 import { syncOp } from '../lib/offlineSync'
 import { blobToBase64, enqueueFotoPendente, getFotoPendingCount, processFotoQueue } from '../lib/fotoSync'
 
-const INICIO = new Date(2026, 6, 14)
-const TOTAL_DIAS = 14
-const DIAS = Array.from({ length: TOTAL_DIAS }, (_, i) => {
-  const d = new Date(INICIO.getTime() + i * 86400000)
-  return { num: d.getDate(), data: d, label: `${d.getDate()} Jul`, labelDia: `Dia ${i}` }
-})
+// Dia 0 junta 13 e 14/07 (dias de chegada, antes do evento comecar de
+// verdade) — a partir dai cada dia vira sua propria aba, Dia 1 = 15/07.
+const DIAS = [
+  { nums: [13, 14], label: '13-14 Jul', labelDia: 'Dia 0' },
+  ...Array.from({ length: 13 }, (_, i) => {
+    const diaMes = 15 + i
+    return { nums: [diaMes], label: `${diaMes} Jul`, labelDia: `Dia ${i + 1}` }
+  }),
+]
 
-function getDiaAtual() {
+function diaMesHoje() {
   const hj = new Date()
   hj.setHours(0, 0, 0, 0)
-  const diff = Math.round((hj.getTime() - INICIO.getTime()) / 86400000)
-  if (diff >= 0 && diff < TOTAL_DIAS) return diff
-  return 0
+  return hj.getDate()
+}
+
+function getDiaAtual() {
+  const diaMes = diaMesHoje()
+  const idx = DIAS.findIndex(d => d.nums.includes(diaMes))
+  return idx >= 0 ? idx : 0
 }
 
 function comprimirImagem(file, maxKB = 500) {
@@ -164,7 +171,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
       query = query.eq('autor', autorFiltro).order('created_at', { ascending: false })
     } else {
       const col = ordem === 'curtidas' ? 'curtidas' : 'created_at'
-      query = query.eq('dia', DIAS[diaIdx].num).order(col, { ascending: false })
+      query = query.in('dia', DIAS[diaIdx].nums).order(col, { ascending: false })
     }
     const { data } = await query
     setFotos(data || [])
@@ -206,7 +213,8 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
     setUploading(true)
     setErroUpload(false)
     setFotoPendenteAvisada(false)
-    const nome = `dia${DIAS[diaSel].num}_${Date.now()}.jpg`
+    const diaReal = diaMesHoje()
+    const nome = `dia${diaReal}_${Date.now()}.jpg`
     const TENTATIVAS = 3
     const blob = await comprimirImagem(file)
     for (let tentativa = 0; tentativa < TENTATIVAS; tentativa++) {
@@ -214,7 +222,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
         const { error } = await supabase.storage.from('mural').upload(nome, blob, { contentType: 'image/jpeg' })
         if (error) throw error
         const { data: urlData } = supabase.storage.from('mural').getPublicUrl(nome)
-        await supabase.from('mural_fotos').insert({ dia: DIAS[diaSel].num, url: urlData.publicUrl, arquivo: nome, autor: autorNome, legenda: legenda || null })
+        await supabase.from('mural_fotos').insert({ dia: diaReal, url: urlData.publicUrl, arquivo: nome, autor: autorNome, legenda: legenda || null })
         await carregarFotos()
         setUploading(false)
         return
@@ -225,7 +233,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
     }
     try {
       const base64 = await blobToBase64(blob)
-      enqueueFotoPendente({ base64, arquivo: nome, dia: DIAS[diaSel].num, autor: autorNome, legenda })
+      enqueueFotoPendente({ base64, arquivo: nome, dia: diaReal, autor: autorNome, legenda })
       setPendingFotos(getFotoPendingCount())
       setFotoPendenteAvisada(true)
     } catch (err) {
