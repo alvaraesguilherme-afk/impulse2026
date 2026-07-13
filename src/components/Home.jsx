@@ -119,9 +119,8 @@ export default function Home({ onNavegar, sessao }) {
   const [fotoDestaque, setFotoDestaque] = useState(null)
 
   const nivelSupervisor = NIVEIS_SUPERVISOR.includes(sessao?.nivel)
-  const nivelMaximo = sessao?.nivel === 'maximo'
-  const podeEscreverFrase = !frase && nivelSupervisor
-  const podeEditarFrase = !!frase && nivelMaximo
+  const podeEscreverFrase = !frase
+  const podeEditarFrase = !!frase && nivelSupervisor
   const fraseClicavel = podeEscreverFrase || podeEditarFrase
   const podeSupervisor = ['maximo', 'alto', 'basico'].includes(sessao?.nivel)
   const temAcessoPleno = NIVEIS_SUPERVISOR.includes(sessao?.nivel)

@@ -48,7 +48,6 @@ function comprimirImagem(file, maxKB = 500) {
   })
 }
 
-const MURAL_INICIO = new Date(2026, 6, 14)
 const MURAL_FIM = new Date(2026, 6, 27)
 const RECAP_INICIO = new Date(2026, 6, 28)
 function isRecapDisponivel() { return new Date() >= RECAP_INICIO }
@@ -100,7 +99,7 @@ const MOSAICO_TILES = buildMosaico(MOSAICO_FOTOS)
 function podeMuralPostar() {
   const hj = new Date()
   hj.setHours(0, 0, 0, 0)
-  return hj >= MURAL_INICIO && hj <= MURAL_FIM
+  return hj <= MURAL_FIM
 }
 
 export default function Mural({ onVoltar, autor, onAjuda }) {

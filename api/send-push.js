@@ -40,6 +40,10 @@ async function resolverConteudo(body) {
     return { title: '🛒 Nova lista de compras', body: 'Uma nova lista de compras foi criada.', nomes: ['Linda', 'Arthur Bolzan', 'Alvarães', 'Pr. Júnior'] }
   }
 
+  if (tipo === 'feed_liberado') {
+    return { title: '📸 Feed liberado!', body: 'Já dá pra postar suas fotos no Feed Impulse.', equipeId: null }
+  }
+
   if (tipo === 'cadastro_area') {
     // Lider(es) de cada area que pode ser escolhida no cadastro (src/lib/areas.js AREAS_CADASTRO) — manter sincronizado
     const LIDER_POR_AREA = {
