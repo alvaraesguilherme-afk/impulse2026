@@ -227,7 +227,7 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
     EQUIPES.forEach(eq => {
       (faltas[eq.id] || []).forEach(f => linhas.push({ equipe: eq.nome, ...f }))
     })
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Faltas - Impulse 2026</title>
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Faltas - Impulse</title>
       <style>
         body{font-family:Arial,sans-serif;padding:24px;color:#111}
         h1{font-size:18px;margin-bottom:4px}
@@ -236,7 +236,7 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
         th,td{border:1px solid #ccc;padding:6px 8px;text-align:left}
         th{background:#f0f0f0}
       </style></head><body>
-      <h1>Relatório de Faltas — Escola Impulse 2026</h1>
+      <h1>Relatório de Faltas — Escola Impulse</h1>
       <div class="sub">Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')} · Total: ${linhas.length}</div>
       <table>
         <tr><th>Equipe</th><th>Nome</th><th>Data</th><th>Turno</th><th>Observação</th></tr>
@@ -404,10 +404,16 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
         {/* SENHAS */}
         {(aba === 'senhas' || abaSaindo === 'senhas') && (
           <div className={aba === 'senhas' ? `tab-entra-${direcaoAba.current}` : `tab-sai-${direcaoAba.current}`} style={aba === 'senhas' ? undefined : { position: 'absolute', inset: 0 }}>
-            {ORDEM_NIVEL.map(nivel => {
-              const membros = Object.entries(PINOS)
+            {loadingConvidados ? (
+              <div style={{ fontSize: 13, color: 'var(--text-faint)', padding: '12px 0' }}>Carregando...</div>
+            ) : ORDEM_NIVEL.map(nivel => {
+              const doPinos = Object.entries(PINOS)
                 .filter(([, d]) => d.nivel === nivel)
-                .sort(([a], [b]) => a.localeCompare(b, 'pt-BR'))
+                .map(([nome, dados]) => ({ nome, pin: dados.pin }))
+              // Convidados aprovados viram nivel 'staff' na sessao (Login.jsx) —
+              // entram junto aqui, sem secao separada.
+              const doConvidados = nivel === 'staff' ? convidados.map(c => ({ nome: c.nome, pin: c.pin })) : []
+              const membros = [...doPinos, ...doConvidados].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
               if (!membros.length) return null
               const cor = NIVEL_COR[nivel]
               return (
@@ -415,30 +421,15 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
                   <div style={{ fontSize: 10, fontWeight: 700, color: cor.text, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 10 }}>
                     {cor.label} <span style={{ color: 'var(--text-faint)', fontWeight: 400 }}>({membros.length})</span>
                   </div>
-                  {membros.map(([nome, dados]) => (
-                    <div key={nome} style={{ background: cor.bg, border: `1px solid ${cor.border}`, borderRadius: 14, padding: '10px 14px', marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: 13, fontWeight: 600 }}>{nome}</span>
-                      <span style={{ fontFamily: 'monospace', fontSize: 14, fontWeight: 700, color: cor.text, background: 'rgba(0,0,0,0.2)', borderRadius: 8, padding: '3px 10px', letterSpacing: '0.15em' }}>{dados.pin}</span>
+                  {membros.map(m => (
+                    <div key={m.nome} style={{ background: cor.bg, border: `1px solid ${cor.border}`, borderRadius: 14, padding: '10px 14px', marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: 13, fontWeight: 600 }}>{m.nome}</span>
+                      <span style={{ fontFamily: 'monospace', fontSize: 14, fontWeight: 700, color: cor.text, background: 'rgba(0,0,0,0.2)', borderRadius: 8, padding: '3px 10px', letterSpacing: '0.15em' }}>{m.pin}</span>
                     </div>
                   ))}
                 </div>
               )
             })}
-            <div style={{ marginBottom: 24 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: '#F87171', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 10 }}>
-                Convidados <span style={{ color: 'var(--text-faint)', fontWeight: 400 }}>({convidados.length})</span>
-              </div>
-              {loadingConvidados ? (
-                <div style={{ fontSize: 13, color: 'var(--text-faint)', padding: '12px 0' }}>Carregando...</div>
-              ) : convidados.length === 0 ? (
-                <div style={{ fontSize: 13, color: 'var(--text-faint)', fontStyle: 'italic' }}>Nenhum convidado cadastrado ainda.</div>
-              ) : convidados.map(c => (
-                <div key={c.nome} style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.22)', borderRadius: 14, padding: '10px 14px', marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: 13, fontWeight: 600 }}>{c.nome}</span>
-                  <span style={{ fontFamily: 'monospace', fontSize: 14, fontWeight: 700, color: '#F87171', background: 'rgba(0,0,0,0.2)', borderRadius: 8, padding: '3px 10px', letterSpacing: '0.15em' }}>{c.pin}</span>
-                </div>
-              ))}
-            </div>
           </div>
         )}
 

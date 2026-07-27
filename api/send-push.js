@@ -44,6 +44,10 @@ async function resolverConteudo(body) {
     return { title: '📸 Feed liberado!', body: 'Já dá pra postar suas fotos no Feed Impulse.', equipeId: null }
   }
 
+  if (tipo === 'despedida_2027') {
+    return { title: '🙏 Até 2027!', body: 'Obrigado por fazer parte da Escola Impulse. Deus abençoe até a próxima!', equipeId: null }
+  }
+
   if (tipo === 'cadastro_area') {
     // Lider(es) de cada area que pode ser escolhida no cadastro (src/lib/areas.js AREAS_CADASTRO) — manter sincronizado
     const LIDER_POR_AREA = {

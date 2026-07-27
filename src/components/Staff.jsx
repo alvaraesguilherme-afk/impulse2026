@@ -5,15 +5,15 @@ import { AREAS } from '../lib/areas'
 import { EQUIPES } from '../lib/equipes'
 const STAFF_AREAS = [
   { area: '⛪ Liderança Pastoral', nomes: ['Pr. Júnior Bandeira', 'Pra. Stephanie Bandeira'] },
-  { area: AREAS[0], nomes: ['Alvarães','Ana Luiza','Clara Cunha','Emanuel','Francisco','Gabriel Gomes','Gabriel Mendes','Gustavo Massay','Hadassa','Hellen Borges','Hugo Lacroix','Jerônimo','Jhony','Joel Marcos','Júlio','Linda','Lívia Andréa','Lorena','Ludmyla','Maria Clara','Maria Júlia','Mariana Gabrielle','Matheus Almeida','Maurício','Nicoly','Rafael Chaves','Rennan','Riana','Ryan Guedes','Samuel Lopes','Sthefany','Victória','Walterley'] },
-  { area: AREAS[1], nomes: ['Alyson','Caetano','Daniel','Joyce','Juliana','Sthefany','Victória','Maria Clara'] },
-  { area: AREAS[2], nomes: ['Linda'] },
-  { area: AREAS[3], nomes: ['Guilherme Valentim', 'Hadstton Capell'] },
-  { area: AREAS[4], nomes: ['Danilo'] },
-  { area: AREAS[5], nomes: ['Eliel'] },
-  { area: AREAS[6], nomes: ['Isabely Matos','Paula'] },
-  { area: AREAS[7], nomes: ['Gustavo Borges'] },
-  { area: AREAS[8], nomes: ['Arthur Bolzan', 'Edson Jr.'] },
+  { area: AREAS[0], nomes: [] },
+  { area: AREAS[1], nomes: [] },
+  { area: AREAS[2], nomes: [] },
+  { area: AREAS[3], nomes: [] },
+  { area: AREAS[4], nomes: [] },
+  { area: AREAS[5], nomes: [] },
+  { area: AREAS[6], nomes: [] },
+  { area: AREAS[7], nomes: [] },
+  { area: AREAS[8], nomes: [] },
 ]
 
 function BackBtn({ onVoltar, titulo, onAjuda, total }) {
@@ -43,8 +43,8 @@ export default function Staff({ onVoltar, onAjuda }) {
     })
   }, [])
 
-  const convidadosSemArea = aprovados.filter(c => (c.areas_aprovadas || []).length === 0).map(c => c.nome)
-  const totalStaff = new Set([...STAFF_AREAS.flatMap(s => s.nomes), ...aprovados.map(c => c.nome)]).size
+  const aprovadosComArea = aprovados.filter(c => (c.areas_aprovadas || []).length > 0)
+  const totalStaff = new Set([...STAFF_AREAS.flatMap(s => s.nomes), ...aprovadosComArea.map(c => c.nome)]).size
 
   return (
     <div style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
@@ -73,17 +73,6 @@ export default function Staff({ onVoltar, onAjuda }) {
             </div>
           )
         })}
-
-        {convidadosSemArea.length > 0 && (
-          <div style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>👤 Convidados</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {convidadosSemArea.map(n => (
-                <span key={n} style={{ fontSize: 12, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.25)', borderRadius: 20, padding: '6px 14px', color: '#C4B5FD', fontWeight: 500 }}>{n}</span>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )

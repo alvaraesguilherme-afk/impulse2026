@@ -1,4 +1,4 @@
-const CACHE_NAME = 'impulse2026-v6'
+const CACHE_NAME = 'impulse2026-v7'
 const FONTS_CACHE = 'impulse2026-fonts-v1'
 const STATIC_ASSETS = [
   '/',
@@ -48,12 +48,12 @@ self.addEventListener('fetch', e => {
     return
   }
 
-  if (url.origin !== location.origin) {
-    e.respondWith(
-      fetch(e.request).catch(() => caches.match(e.request))
-    )
-    return
-  }
+  // Chamadas pra outros dominios (Supabase, etc): nunca cacheamos essas
+  // respostas, entao nao ha nada útil pra devolver do cache aqui. Deixa
+  // passar direto pro navegador tratar — senao "caches.match" sempre
+  // retorna undefined e o service worker quebra com um erro pior do que
+  // o proprio erro de rede (que o app ja sabe tratar).
+  if (url.origin !== location.origin) return
 
   e.respondWith(
     fetch(e.request)

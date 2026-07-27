@@ -462,7 +462,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
         <div style={{ padding: '0 16px 100px' }}>
           <div style={{ textAlign: 'center', padding: '18px 0 28px' }}>
             <div style={{ fontSize: 44, marginBottom: 10 }}>🏆</div>
-            <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 21, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Top 100 do Impulso 2026</div>
+            <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 21, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Top 100 do Impulso</div>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', letterSpacing: 0.4 }}>as fotos mais curtidas do evento</div>
           </div>
 

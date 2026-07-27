@@ -293,7 +293,7 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
         <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12, marginTop: 28 }}>{tx.sobre}</div>
 
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '18px', marginBottom: 10 }}>
-          <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Escola Impulse 2026</div>
+          <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Escola Impulse</div>
           <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6 }}>{tx.datasEventoLocal}</div>
           <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 12 }}>{tx.versaoBeta} · {tx.feitoComCarinho}</div>
         </div>

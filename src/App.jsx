@@ -349,8 +349,7 @@ export default function App() {
           <div className="splash-glow" style={{ width: 120, height: 120, background: '#F59E0B', top: '50%', left: '60%', animationDelay: '1s' }} />
           <div className="splash-logo" style={{ fontFamily: 'Syne, sans-serif', fontSize: 48, fontWeight: 800, lineHeight: 1.0, letterSpacing: -1, textAlign: 'center' }}>
             Escola<br />
-            <span style={{ background: 'var(--gradient-text)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Impulse</span><br />
-            2026
+            <span style={{ background: 'var(--gradient-text)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Impulse</span>
           </div>
           <div className="splash-sub" style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500, marginTop: 16, letterSpacing: 2, textTransform: 'uppercase' }}>
             {tx.datasEvento}
@@ -374,7 +373,7 @@ export default function App() {
           <div style={{ padding: '0 10px', marginBottom: 36 }}>
             <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 20, fontWeight: 800, lineHeight: 1.2, letterSpacing: -0.5 }}>
               Escola{' '}
-              <span style={{ background: 'var(--gradient-text)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Impulse</span>{' '}2026
+              <span style={{ background: 'var(--gradient-text)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Impulse</span>
             </div>
             <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 5, letterSpacing: 1.5, textTransform: 'uppercase' }}>{tx.datasEvento}</div>
           </div>

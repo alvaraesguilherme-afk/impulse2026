@@ -27,13 +27,6 @@ function getDiaFrase() {
   return Math.floor(hj.getTime() / 86400000)
 }
 
-function foraDoEvento() {
-  const hj = new Date()
-  hj.setHours(0, 0, 0, 0)
-  const diff = Math.round((hj.getTime() - INICIO.getTime()) / 86400000)
-  return diff < 0 || diff > 10
-}
-
 function isPosEventoFinal() {
   const hj = new Date()
   hj.setHours(0, 0, 0, 0)
@@ -41,13 +34,21 @@ function isPosEventoFinal() {
   return diff > 11  // July 27+
 }
 
+// A partir de 28/07/2026 o contador vira pra frente, contando pro
+// proximo Impulse (14/07/2027) em vez de continuar preso ao evento
+// que ja passou.
+const REVELAR_PROXIMO = new Date(2026, 6, 27)
+const INICIO_PROXIMO = new Date(2027, 6, 14)
+
 function useContador() {
   const [agora, setAgora] = useState(new Date())
   useEffect(() => {
     const t = setInterval(() => setAgora(new Date()), 1000)
     return () => clearInterval(t)
   }, [])
-  const diff = INICIO.getTime() - agora.getTime()
+
+  const alvo = agora >= REVELAR_PROXIMO ? INICIO_PROXIMO : INICIO
+  const diff = alvo.getTime() - agora.getTime()
   if (diff > 0) {
     const d = Math.floor(diff / 86400000)
     const h = Math.floor((diff % 86400000) / 3600000)
@@ -67,6 +68,8 @@ function ContadorSection() {
   if (contador.fase === 'antes') {
     return (
       <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 20, padding: '18px 16px', textAlign: 'center' }}>
+        <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 14, fontWeight: 700, fontStyle: 'italic', color: 'var(--accent-light)', textAlign: 'center' }}>"{tx.naoAndeisAnsiosos}"</div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textAlign: 'center', marginBottom: 12 }}>Fp 4:6</div>
         <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-light)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>{tx.faltam}</div>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
           {[[contador.dias, tx.dias],[contador.horas, tx.hrs],[contador.minutos, tx.min],[contador.segundos, tx.seg]].map(([v, l]) => (
@@ -136,14 +139,14 @@ export default function Home({ onNavegar, sessao }) {
     supabase.from('frase_do_dia').select('*').eq('dia', diaFrase).maybeSingle().then(({ data }) => {
       setFrase(data || null)
     })
-    if (diaEvento) {
-      const diaDestaque = foraDoEvento() ? diaEvento : diaEvento - 1
-      if (diaEvento > 1 || foraDoEvento()) {
-        supabase.from('mural_fotos').select('*').eq('dia', diaDestaque).order('curtidas', { ascending: false }).limit(1).then(({ data }) => {
-          if (data && data.length > 0 && (data[0].curtidas || 0) > 0) setFotoDestaque(data[0])
-        })
-      }
-    }
+    // mural_fotos.dia guarda o dia real do mes (13-27), nao o "dia do evento"
+    // (1-11) — precisa comparar com o mesmo tipo de valor, senao nunca bate.
+    const ontem = new Date()
+    ontem.setHours(0, 0, 0, 0)
+    ontem.setDate(ontem.getDate() - 1)
+    supabase.from('mural_fotos').select('*').eq('dia', ontem.getDate()).order('curtidas', { ascending: false }).limit(1).then(({ data }) => {
+      if (data && data.length > 0 && (data[0].curtidas || 0) > 0) setFotoDestaque(data[0])
+    })
   }, [])
 
   function abrirFraseModal() {
@@ -202,8 +205,7 @@ export default function Home({ onNavegar, sessao }) {
         <div style={{ padding: '24px 22px 0' }}>
           <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 42, fontWeight: 800, lineHeight: 1.0, letterSpacing: -1, marginBottom: 8 }}>
             Escola<br />
-            <span style={{ background: 'var(--gradient-text)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Impulse</span><br />
-            2026
+            <span style={{ background: 'var(--gradient-text)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Impulse</span>
           </div>
           <div style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 500, marginBottom: 24 }}>{tx.datasEventoLocal}</div>
 
