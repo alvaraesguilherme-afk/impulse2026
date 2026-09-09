@@ -63,8 +63,13 @@ async function resolverConteudo(body) {
   return null
 }
 
+// Evento 2026 encerrado — notificacoes desligadas ate o app voltar a ser
+// usado em 2027. Pra reativar, e so remover este bloco.
+const NOTIFICACOES_DESLIGADAS = true
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end()
+  if (NOTIFICACOES_DESLIGADAS) return res.status(200).json({ ok: true, enviados: 0 })
 
   const conteudo = await resolverConteudo(req.body || {})
   if (!conteudo) return res.status(200).json({ ok: true, enviados: 0 })

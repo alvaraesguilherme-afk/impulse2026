@@ -1,8 +1,5 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "framework": "vite",
-  "crons": [
-    { "path": "/api/lembrete-foto", "schedule": "0 21 * * *" }
-  ]
+  "framework": "vite"
 }
