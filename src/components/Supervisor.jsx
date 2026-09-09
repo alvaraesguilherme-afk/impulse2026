@@ -68,7 +68,7 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
   async function carregarStaffGestao() {
     setLoadingStaffGestao(true)
     try {
-      const { data } = await supabase.from('staff').select('nome, areas_aprovadas, equipe_atribuida').order('nome')
+      const { data } = await supabase.from('staff').select('nome, areas_aprovadas, equipe_atribuida, area_pendente').order('nome')
       setStaffGestao(data || [])
     } catch {
       setStaffGestao([])
@@ -82,7 +82,12 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
   function getDraft(nomeStaff) {
     if (rascunhos[nomeStaff]) return rascunhos[nomeStaff]
     const base = staffGestao.find(c => c.nome === nomeStaff)
-    return { areas_aprovadas: base?.areas_aprovadas || [], equipe_atribuida: base?.equipe_atribuida ?? null }
+    // Se a pessoa ja declarou uma area no login e ainda nao foi aprovada,
+    // ela vem pre-selecionada aqui — o supervisor so confirma ou corrige.
+    const areasIniciais = base?.areas_aprovadas?.length
+      ? base.areas_aprovadas
+      : (base?.area_pendente ? [base.area_pendente] : [])
+    return { areas_aprovadas: areasIniciais, equipe_atribuida: base?.equipe_atribuida ?? null }
   }
 
   function setDraft(nomeStaff, patch) {
@@ -123,7 +128,7 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
     const d = rascunhos[nomeStaff]
     if (!d) return
     setConfirmando(nomeStaff)
-    const ok = await syncOp('update', 'staff', { values: { areas_aprovadas: d.areas_aprovadas, equipe_atribuida: d.equipe_atribuida }, filters: { nome: nomeStaff } })
+    const ok = await syncOp('update', 'staff', { values: { areas_aprovadas: d.areas_aprovadas, equipe_atribuida: d.equipe_atribuida, area_pendente: null }, filters: { nome: nomeStaff } })
     setConfirmando(null)
     if (!ok) { setErroGestao(true); return }
     setStaffGestao(prev => prev.map(c => c.nome === nomeStaff ? { ...c, ...d } : c))
@@ -447,8 +452,10 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                   <div style={{ fontSize: 14, fontWeight: 700 }}>{c.nome}</div>
-                  {temRascunho && (
+                  {temRascunho ? (
                     <span style={{ fontSize: 11, fontWeight: 700, color: '#EAB308', background: 'rgba(234,179,8,0.15)', padding: '3px 10px', borderRadius: 20 }}>Não salvo</span>
+                  ) : c.area_pendente && (
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#A78BFA', background: 'rgba(167,139,250,0.15)', padding: '3px 10px', borderRadius: 20 }}>⏳ Pediu: {c.area_pendente}</span>
                   )}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

@@ -3,6 +3,7 @@ import { PINOS, NOMES } from '../lib/pinos'
 import { supabase } from '../lib/supabase'
 import { getDeviceId } from '../lib/device'
 import { getTexto } from '../lib/i18n'
+import { AREAS } from '../lib/areas'
 
 function getStaffExtraLocal() {
   try { return JSON.parse(localStorage.getItem('impulse_staff_extra')) || {} } catch { return {} }
@@ -61,16 +62,28 @@ export default function Login({ onLogin, mensagem, idioma }) {
 
   const [nomeSel, setNomeSel] = useState('')
   const [pin, setPin] = useState('')
+  const [areaSel, setAreaSel] = useState('')
+
+  const [aguardandoAprovacao, setAguardandoAprovacao] = useState(false)
+  const [nomeAguardando, setNomeAguardando] = useState('')
+  const [verificandoAprovacao, setVerificandoAprovacao] = useState(false)
+  const [aindaPendente, setAindaPendente] = useState(false)
+  const [voltandoDaEspera, setVoltandoDaEspera] = useState(false)
 
   useEffect(() => {
-    supabase.from('staff').select('nome, pin').then(({ data }) => {
+    supabase.from('staff').select('nome, pin, areas_aprovadas, area_pendente').then(({ data }) => {
       if (!data) return
       const obj = {}
-      data.forEach(d => { obj[d.nome] = d.pin })
+      data.forEach(d => {
+        obj[d.nome] = { pin: d.pin, areasAprovadas: d.areas_aprovadas || [], areaPendente: d.area_pendente || null }
+      })
       setStaffExtra(obj)
       localStorage.setItem('impulse_staff_extra', JSON.stringify(obj))
     })
   }, [])
+
+  const infoStaffExtra = staffExtra[nomeSel]
+  const precisaDeclararArea = !!infoStaffExtra && infoStaffExtra.areasAprovadas.length === 0 && !infoStaffExtra.areaPendente
 
   async function entrar() {
     if (!nomeSel) { setErro(tx.selecioneSeuNome); return }
@@ -81,9 +94,25 @@ export default function Login({ onLogin, mensagem, idioma }) {
     if (dadosPinos) {
       if (pin !== dadosPinos.pin) { setErro(tx.pinIncorreto); return }
       nivel = dadosPinos.nivel
-    } else if (staffExtra[nomeSel] !== undefined) {
-      if (pin !== staffExtra[nomeSel]) { setErro(tx.pinIncorreto); return }
-      nivel = 'staff'
+    } else if (infoStaffExtra !== undefined) {
+      if (pin !== infoStaffExtra.pin) { setErro(tx.pinIncorreto); return }
+
+      if (infoStaffExtra.areasAprovadas.length > 0) {
+        nivel = 'staff'
+      } else if (infoStaffExtra.areaPendente) {
+        setNomeAguardando(nomeSel)
+        setAguardandoAprovacao(true)
+        return
+      } else {
+        if (!areaSel) { setErro(tx.selecioneAoMenosUmaArea); return }
+        setEntrando(true)
+        const { error } = await supabase.from('staff').update({ area_pendente: areaSel }).eq('nome', nomeSel)
+        setEntrando(false)
+        if (error) { setErro(tx.erroConexaoLogin); return }
+        setNomeAguardando(nomeSel)
+        setAguardandoAprovacao(true)
+        return
+      }
     } else {
       setErro(tx.nomeNaoEncontrado); return
     }
@@ -121,6 +150,46 @@ export default function Login({ onLogin, mensagem, idioma }) {
     }
   }
 
+  async function verificarAprovacao() {
+    if (!nomeAguardando || verificandoAprovacao) return
+    setVerificandoAprovacao(true)
+    setAindaPendente(false)
+    try {
+      const { data } = await supabase.from('staff').select('areas_aprovadas').eq('nome', nomeAguardando).maybeSingle()
+      const liberado = data && (data.areas_aprovadas || []).length > 0
+      if (!liberado) { setVerificandoAprovacao(false); setAindaPendente(true); return }
+      const { bloqueado, msg } = await verificarSessao(nomeAguardando, 'staff', tx)
+      if (bloqueado) {
+        setAguardandoAprovacao(false)
+        setErro(msg)
+        setBloqueadoInfo({ nome: nomeAguardando, nivel: 'staff' })
+        return
+      }
+      onLogin({ nome: nomeAguardando, nivel: 'staff' })
+    } catch {
+      setVerificandoAprovacao(false)
+      setAindaPendente(true)
+    }
+  }
+
+  // Voltar antes de ser aprovado anula o pedido — some da fila do
+  // supervisor, como se nunca tivesse acontecido, e a pessoa pode
+  // refazer a escolha de área do zero.
+  async function voltarDaEspera() {
+    if (!nomeAguardando) return
+    setVoltandoDaEspera(true)
+    await supabase.from('staff').update({ area_pendente: null }).eq('nome', nomeAguardando)
+    setStaffExtra(prev => prev[nomeAguardando]
+      ? { ...prev, [nomeAguardando]: { ...prev[nomeAguardando], areaPendente: null } }
+      : prev)
+    setVoltandoDaEspera(false)
+    setAguardandoAprovacao(false)
+    setNomeAguardando('')
+    setAindaPendente(false)
+    setAreaSel('')
+    setPin('')
+  }
+
   const nomesStaffExtra = Object.keys(staffExtra).sort((a, b) => a.localeCompare(b, 'pt-BR'))
   const todosNomes = [...NOMES, ...nomesStaffExtra].sort((a, b) => a.localeCompare(b, 'pt-BR'))
 
@@ -150,58 +219,104 @@ export default function Login({ onLogin, mensagem, idioma }) {
           </div>
         )}
 
-        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '28px 24px' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 20, textAlign: 'center' }}>
-            {tx.identificacao}
-          </div>
-
-          <div style={{ marginBottom: 14 }}>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>{tx.seuNome}</div>
-            <select
-              value={nomeSel}
-              onChange={e => { setNomeSel(e.target.value); setErro(''); setBloqueadoInfo(null) }}
-              style={{ ...inputStyle, color: nomeSel ? 'var(--text)' : 'var(--text-faint)', appearance: 'none', cursor: 'pointer' }}
-            >
-              <option value="">{tx.selecioneSeuNomeOpcao}</option>
-              {todosNomes.map(n => (
-                <option key={n} value={n}>{n}</option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>{tx.pinPessoal}</div>
-            <input
-              type="password" value={pin}
-              onChange={e => { setPin(e.target.value); setErro(''); setBloqueadoInfo(null) }}
-              onKeyDown={e => e.key === 'Enter' && entrar()}
-              placeholder="••••" maxLength={6} inputMode="numeric"
-              style={pinStyle}
-            />
-          </div>
-
-          {erro && <div style={{ fontSize: 12, color: '#F87171', textAlign: 'center', marginBottom: 10 }}>{erro}</div>}
-
-          {bloqueadoInfo && (
-            <button onClick={forcarLogin} disabled={entrando} style={{
-              width: '100%', padding: 12, borderRadius: 14, marginBottom: 14,
-              border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)',
-              color: '#F87171', fontSize: 13, fontWeight: 700,
-              cursor: entrando ? 'default' : 'pointer', fontFamily: 'Syne, sans-serif'
+        {aguardandoAprovacao ? (
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '32px 24px', textAlign: 'center' }}>
+            <div style={{ fontSize: 40, marginBottom: 14 }}>⏳</div>
+            <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 17, fontWeight: 700, marginBottom: 10 }}>{tx.aguardandoAprovacaoTitulo}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 20 }}>{tx.aguardandoAprovacaoDesc}</div>
+            {aindaPendente && (
+              <div style={{ fontSize: 12, color: '#EAB308', marginBottom: 14 }}>{tx.aindaAguardandoAprovacao}</div>
+            )}
+            <button onClick={verificarAprovacao} disabled={verificandoAprovacao} style={{
+              width: '100%', padding: 15, border: 'none', borderRadius: 14, marginBottom: 10,
+              background: verificandoAprovacao ? 'var(--border-strong)' : 'var(--gradient)',
+              fontSize: 14, fontWeight: 700, cursor: verificandoAprovacao ? 'default' : 'pointer',
+              color: 'white', fontFamily: 'Syne, sans-serif', opacity: verificandoAprovacao ? 0.6 : 1
             }}>
-              {entrando ? tx.entrandoAcao : tx.souEuEntrarMesmoAssim}
+              {verificandoAprovacao ? tx.verificando : tx.jaFuiAprovadoVerificar}
             </button>
-          )}
+            <button onClick={voltarDaEspera} disabled={voltandoDaEspera} style={{
+              width: '100%', padding: 12, borderRadius: 14, border: '1px solid var(--border)',
+              background: 'transparent', color: 'var(--text-muted)', fontSize: 13, fontWeight: 600,
+              cursor: voltandoDaEspera ? 'default' : 'pointer', fontFamily: 'Inter, sans-serif', opacity: voltandoDaEspera ? 0.6 : 1
+            }}>{tx.voltarLogin}</button>
+          </div>
+        ) : (
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '28px 24px' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 20, textAlign: 'center' }}>
+              {tx.identificacao}
+            </div>
 
-          <button onClick={entrar} disabled={entrando} style={{
-            width: '100%', padding: 15, border: 'none', borderRadius: 14,
-            background: entrando ? 'var(--border-strong)' : 'var(--gradient)',
-            fontSize: 15, fontWeight: 700, cursor: entrando ? 'default' : 'pointer',
-            color: 'white', fontFamily: 'Syne, sans-serif', opacity: entrando ? 0.6 : 1
-          }}>
-            {entrando ? tx.verificando : tx.entrar}
-          </button>
-        </div>
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>{tx.seuNome}</div>
+              <select
+                value={nomeSel}
+                onChange={e => { setNomeSel(e.target.value); setAreaSel(''); setErro(''); setBloqueadoInfo(null) }}
+                style={{ ...inputStyle, color: nomeSel ? 'var(--text)' : 'var(--text-faint)', appearance: 'none', cursor: 'pointer' }}
+              >
+                <option value="">{tx.selecioneSeuNomeOpcao}</option>
+                {todosNomes.map(n => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ marginBottom: precisaDeclararArea ? 14 : 20 }}>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>{tx.pinPessoal}</div>
+              <input
+                type="password" value={pin}
+                onChange={e => { setPin(e.target.value); setErro(''); setBloqueadoInfo(null) }}
+                onKeyDown={e => e.key === 'Enter' && !precisaDeclararArea && entrar()}
+                placeholder="••••" maxLength={6} inputMode="numeric"
+                style={pinStyle}
+              />
+            </div>
+
+            {precisaDeclararArea && (
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>{tx.areasDeInteresse}</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {AREAS.map(area => (
+                    <button
+                      key={area}
+                      type="button"
+                      onClick={() => { setAreaSel(area); setErro('') }}
+                      style={{
+                        padding: '7px 13px', borderRadius: 20,
+                        border: areaSel === area ? '1px solid var(--accent-border)' : '1px solid var(--border-strong)',
+                        background: areaSel === area ? 'var(--accent-bg)' : 'var(--bg-card)',
+                        color: areaSel === area ? 'var(--accent-light)' : 'var(--text-secondary)',
+                        fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
+                      }}
+                    >{area}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {erro && <div style={{ fontSize: 12, color: '#F87171', textAlign: 'center', marginBottom: 10 }}>{erro}</div>}
+
+            {bloqueadoInfo && (
+              <button onClick={forcarLogin} disabled={entrando} style={{
+                width: '100%', padding: 12, borderRadius: 14, marginBottom: 14,
+                border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)',
+                color: '#F87171', fontSize: 13, fontWeight: 700,
+                cursor: entrando ? 'default' : 'pointer', fontFamily: 'Syne, sans-serif'
+              }}>
+                {entrando ? tx.entrandoAcao : tx.souEuEntrarMesmoAssim}
+              </button>
+            )}
+
+            <button onClick={entrar} disabled={entrando} style={{
+              width: '100%', padding: 15, border: 'none', borderRadius: 14,
+              background: entrando ? 'var(--border-strong)' : 'var(--gradient)',
+              fontSize: 15, fontWeight: 700, cursor: entrando ? 'default' : 'pointer',
+              color: 'white', fontFamily: 'Syne, sans-serif', opacity: entrando ? 0.6 : 1
+            }}>
+              {entrando ? tx.verificando : tx.entrar}
+            </button>
+          </div>
+        )}
 
         <div style={{ textAlign: 'center', marginTop: 20, fontSize: 11, color: 'var(--text-faint)' }}>
           {tx.dispositivoReconhecido}
