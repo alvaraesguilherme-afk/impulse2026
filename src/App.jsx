@@ -27,42 +27,6 @@ const ANIM_TELA = {
   mural: 'tela-enter-mural',
 }
 
-function getIntros(tx) {
-  return {
-    apoio: [
-      { icon: '🦺', title: tx.introApoioEquipesTitle, desc: tx.introApoioEquipesDesc },
-      { icon: '📋', title: tx.introApoioChamadaTitle, desc: tx.introApoioChamadaDesc },
-      { icon: '✅', title: tx.introApoioTarefasTitle, desc: tx.introApoioTarefasDesc },
-    ],
-    staff: [
-      { icon: '👥', title: tx.introStaffTitle, desc: tx.introStaffDesc },
-    ],
-    midia: [
-      { icon: '📹', title: tx.introMidiaEquipeTitle, desc: tx.introMidiaEquipeDesc },
-      { icon: '🔒', title: tx.introMidiaCoordenadorTitle, desc: tx.introMidiaCoordenadorDesc },
-    ],
-    mural: [
-      { icon: '📸', title: tx.introMuralFeedTitle, desc: tx.introMuralFeedDesc },
-      { icon: '❤️', title: tx.introMuralCurtirTitle, desc: tx.introMuralCurtirDesc },
-      { icon: '⭐', title: tx.introMuralDestaqueTitle, desc: tx.introMuralDestaqueDesc },
-      { icon: '🙏', title: tx.introMuralRecadoTitle, desc: tx.introMuralRecadoDesc },
-      { icon: '🗑️', title: tx.introMuralModeracaoTitle, desc: tx.introMuralModeracaoDesc },
-    ],
-    programacao: [
-      { icon: '🎵', title: tx.introProgLouvorTitle, desc: tx.introProgLouvorDesc },
-      { icon: '🎤', title: tx.introProgPreletoresTitle, desc: tx.introProgPreletoresDesc },
-    ],
-    supervisor: [
-      { icon: '📢', title: tx.introSupAvisosTitle, desc: tx.introSupAvisosDesc },
-      { icon: '📋', title: tx.introSupChamadaTitle, desc: tx.introSupChamadaDesc },
-      { icon: '❌', title: tx.introSupFaltasTitle, desc: tx.introSupFaltasDesc },
-    ],
-    config: [
-      { icon: '🎨', title: tx.introConfigTitle, desc: tx.introConfigDesc },
-    ],
-  }
-}
-
 const ABAS_SUPERVISOR = {
   'Alvarães': ['avisos', 'chamada', 'faltas', 'senhas'],
   'Danilo': ['avisos'],
@@ -119,7 +83,6 @@ export default function App() {
 
   const [idioma, setIdiomaState] = useState(() => localStorage.getItem('impulse_idioma') || 'pt-BR')
   const tx = getTexto(idioma)
-  const INTROS = getIntros(tx)
   const [tema, setTemaState] = useState(() => localStorage.getItem('tema') || 'dark')
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768)
   const [sessao, setSessao] = useState(() => {
@@ -141,7 +104,6 @@ export default function App() {
         .then()
     }
     localStorage.removeItem('impulse_sessao')
-    Object.keys(INTROS).forEach(id => localStorage.removeItem('impulse_intro_' + id))
     setTela('home')
     setNavAtiva('home')
     setMensagemLogin(msg || '')
@@ -234,9 +196,6 @@ export default function App() {
   const [supervisorNome, setSupervisorNome] = useState(null)
   const [navAtiva, setNavAtiva] = useState('home')
   const homeScrollRef = useRef(0)
-  const [introAtivo, setIntroAtivo] = useState(null)
-  const [introSlide, setIntroSlide] = useState(0)
-  const [introSaindo, setIntroSaindo] = useState(false)
 
   useEffect(() => {
     function handleBack(e) {
@@ -251,30 +210,6 @@ export default function App() {
     window.scrollTo(0, tela === 'home' ? homeScrollRef.current : 0)
   }, [telaKey])
 
-  function mostrarIntroSe(id) {
-    if (INTROS[id] && !localStorage.getItem('impulse_intro_' + id)) {
-      setIntroAtivo(id); setIntroSlide(0); setIntroSaindo(false)
-    }
-  }
-
-  function mostrarIntroForcar(id) {
-    if (!INTROS[id]) return
-    setIntroAtivo(id); setIntroSlide(0); setIntroSaindo(false)
-  }
-
-  function avancarSlide() {
-    const slides = INTROS[introAtivo] || []
-    if (introSlide < slides.length - 1) {
-      setIntroSlide(s => s + 1)
-    } else {
-      setIntroSaindo(true)
-      setTimeout(() => {
-        localStorage.setItem('impulse_intro_' + introAtivo, '1')
-        setIntroAtivo(null); setIntroSaindo(false)
-      }, 500)
-    }
-  }
-
   function navegarPara(id) {
     if (tela === 'home') homeScrollRef.current = window.scrollY
     if (id === 'supervisor') {
@@ -282,7 +217,7 @@ export default function App() {
       if (['maximo', 'alto', 'basico'].includes(nivel)) {
         setSupervisorNome(sessao.nome)
         if (id !== tela) window.history.pushState(null, '')
-        setTela('supervisor'); setNavAtiva('supervisor'); setTelaKey(k => k + 1); mostrarIntroSe('supervisor')
+        setTela('supervisor'); setNavAtiva('supervisor'); setTelaKey(k => k + 1)
       } else {
         abrirOverlay('supervisor')
       }
@@ -290,7 +225,6 @@ export default function App() {
     }
     if (id !== tela) window.history.pushState(null, '')
     setTela(id); setNavAtiva(id); setTelaKey(k => k + 1)
-    mostrarIntroSe(id)
   }
 
   function abrirOverlay(tipo) {
@@ -302,7 +236,7 @@ export default function App() {
   function verificarSenha() {
     if (overlay === 'supervisor') {
       const nome = SENHAS.supervisor[senhaInput]
-      if (nome) { setSupervisorNome(nome); setOverlay(null); setTela('supervisor'); setNavAtiva('supervisor'); setTelaKey(k => k + 1); mostrarIntroSe('supervisor') }
+      if (nome) { setSupervisorNome(nome); setOverlay(null); setTela('supervisor'); setNavAtiva('supervisor'); setTelaKey(k => k + 1) }
       else setSenhaErro(tx.senhaIncorreta)
     }
   }
@@ -415,50 +349,17 @@ export default function App() {
       <div style={{ marginLeft: isDesktop ? 240 : 0, minHeight: '100vh' }}>
         <div key={telaKey} className={ANIM_TELA[tela] || 'tela-enter'}>
           {tela === 'home' && <Home onNavegar={navegarPara} sessao={sessao} />}
-          {tela === 'apoio' && <Apoio onVoltar={voltar} sessao={sessao} onAjuda={() => mostrarIntroForcar('apoio')} />}
-          {tela === 'staff' && <Staff onVoltar={voltar} onAjuda={() => mostrarIntroForcar('staff')} />}
-          {tela === 'supervisor' && <Supervisor onVoltar={voltar} nome={supervisorNome} abas={abasSupervisor} onAjuda={() => mostrarIntroForcar('supervisor')} />}
-          {tela === 'mural' && <Mural onVoltar={voltar} autor={sessao?.nome} onAjuda={() => mostrarIntroForcar('mural')} />}
-          {tela === 'midia' && <Midia onVoltar={voltar} sessao={sessao} onAjuda={() => mostrarIntroForcar('midia')} />}
-          {tela === 'programacao' && <Programacao onVoltar={voltar} sessao={sessao} onAjuda={() => mostrarIntroForcar('programacao')} />}
-          {tela === 'config' && <Config onVoltar={voltar} tema={tema} setTema={setTema} idioma={idioma} setIdioma={setIdioma} sessao={sessao} onLogout={fazerLogout} onAjuda={() => mostrarIntroForcar('config')} />}
+          {tela === 'apoio' && <Apoio onVoltar={voltar} sessao={sessao} />}
+          {tela === 'staff' && <Staff onVoltar={voltar} />}
+          {tela === 'supervisor' && <Supervisor onVoltar={voltar} nome={supervisorNome} abas={abasSupervisor} />}
+          {tela === 'mural' && <Mural onVoltar={voltar} autor={sessao?.nome} />}
+          {tela === 'midia' && <Midia onVoltar={voltar} sessao={sessao} />}
+          {tela === 'programacao' && <Programacao onVoltar={voltar} sessao={sessao} />}
+          {tela === 'config' && <Config onVoltar={voltar} tema={tema} setTema={setTema} idioma={idioma} setIdioma={setIdioma} sessao={sessao} onLogout={fazerLogout} />}
           {tela === 'advertencias' && <Advertencias onVoltar={voltar} sessao={sessao} />}
           {tela === 'compras' && <ListaCompras onVoltar={voltar} sessao={sessao} />}
         </div>
       </div>
-
-      {/* INTRO OVERLAY */}
-      {introAtivo && (() => {
-        const slides = INTROS[introAtivo] || []
-        const slide = slides[introSlide]
-        if (!slide) return null
-        return (
-          <div onClick={avancarSlide} className={`intro-overlay${introSaindo ? ' intro-saindo' : ''}`} style={{
-            position: 'fixed', inset: 0, zIndex: 150,
-            background: 'rgba(5,5,20,0.94)', backdropFilter: 'blur(16px)',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            padding: '0 36px', textAlign: 'center', cursor: 'pointer'
-          }}>
-            <div key={introSlide} className="intro-slide">
-              <div style={{ fontSize: 72, marginBottom: 28 }}>{slide.icon}</div>
-              <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 26, fontWeight: 800, color: '#fff', marginBottom: 14, lineHeight: 1.2 }}>{slide.title}</div>
-              <div style={{ fontSize: 15, color: 'rgba(255,255,255,0.55)', lineHeight: 1.8, maxWidth: 270, textAlign: 'center', margin: '0 auto' }}>{slide.desc}</div>
-            </div>
-            <div style={{ position: 'absolute', bottom: 130, display: 'flex', gap: 8 }}>
-              {slides.map((_, i) => (
-                <div key={i} style={{
-                  width: i === introSlide ? 22 : 6, height: 6, borderRadius: 3,
-                  background: i === introSlide ? 'var(--accent-light)' : 'rgba(255,255,255,0.2)',
-                  transition: 'all 0.35s ease'
-                }} />
-              ))}
-            </div>
-            <div style={{ position: 'absolute', bottom: 76, fontSize: 11, color: 'rgba(255,255,255,0.3)', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase' }}>
-              {introSlide < slides.length - 1 ? tx.toqueContinuar : tx.toqueComecar}
-            </div>
-          </div>
-        )
-      })()}
 
       {/* NAV BAR MOBILE */}
       {!isDesktop && (
