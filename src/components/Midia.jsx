@@ -78,16 +78,16 @@ export default function Midia({ onVoltar, sessao, onAjuda }) {
   const [msgTexto, setMsgTexto] = useState('')
   const [enviandoMsg, setEnviandoMsg] = useState(false)
 
-  const [convidadosMidia, setConvidadosMidia] = useState([])
+  const [staffMidia, setStaffMidia] = useState([])
 
   useEffect(() => {
-    supabase.from('convidados').select('nome, areas_aprovadas').then(({ data }) => {
-      if (data) setConvidadosMidia(data.filter(c => (c.areas_aprovadas || []).includes(AREAS[1])).map(c => c.nome))
+    supabase.from('staff').select('nome, areas_aprovadas').then(({ data }) => {
+      if (data) setStaffMidia(data.filter(c => (c.areas_aprovadas || []).includes(AREAS[1])).map(c => c.nome))
     })
   }, [])
 
   const podeEnviarMensagem = Object.values(SENHAS_COORD).includes(sessao?.nome)
-  const souDaMidia = MEMBROS_FIXOS.includes(sessao?.nome) || MEMBROS_EXTRAS.includes(sessao?.nome) || convidadosMidia.includes(sessao?.nome)
+  const souDaMidia = MEMBROS_FIXOS.includes(sessao?.nome) || MEMBROS_EXTRAS.includes(sessao?.nome) || staffMidia.includes(sessao?.nome)
   const podeVerMensagens = podeEnviarMensagem || souDaMidia
   const abasList = [{ id: 'escalas', label: '📅 Escalas' }, podeVerMensagens && { id: 'mensagens', label: '💬 Mensagens' }].filter(Boolean)
   const abasVisiveis = abasList.map(a => a.id)
@@ -330,7 +330,7 @@ export default function Midia({ onVoltar, sessao, onAjuda }) {
                                     </option>
                                   )
                                 })}
-                                {convidadosMidia.map(m => (
+                                {staffMidia.map(m => (
                                   <option key={m} value={m}>{m}</option>
                                 ))}
                               </optgroup>
@@ -458,7 +458,7 @@ export default function Midia({ onVoltar, sessao, onAjuda }) {
                 </span>
               )
             })}
-            {convidadosMidia.map(m => (
+            {staffMidia.map(m => (
               <span key={m} style={{ fontSize: 11, background: 'var(--accent-bg)', border: '1px solid var(--accent-glow)', borderRadius: 20, padding: '4px 10px', color: 'var(--accent-light)', fontWeight: 500 }}>{m}</span>
             ))}
           </div>

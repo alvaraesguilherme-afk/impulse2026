@@ -3,17 +3,9 @@ import { PINOS, NOMES } from '../lib/pinos'
 import { supabase } from '../lib/supabase'
 import { getDeviceId } from '../lib/device'
 import { getTexto } from '../lib/i18n'
-import { AREAS_CADASTRO } from '../lib/areas'
-import { notificar } from '../lib/push'
 
-function getConvidadosLocal() {
-  try { return JSON.parse(localStorage.getItem('impulse_convidados')) || {} } catch { return {} }
-}
-
-function saveConvidado(nome, pin) {
-  const c = getConvidadosLocal()
-  c[nome] = pin
-  localStorage.setItem('impulse_convidados', JSON.stringify(c))
+function getStaffExtraLocal() {
+  try { return JSON.parse(localStorage.getItem('impulse_staff_extra')) || {} } catch { return {} }
 }
 
 const LIMITE_DEVICES = { maximo: 2, alto: 2, 'Alvarães': 4 }
@@ -62,58 +54,23 @@ async function verificarSessao(nome, nivel, tx) {
 
 export default function Login({ onLogin, mensagem, idioma }) {
   const tx = getTexto(idioma)
-  const [modo, setModo] = useState('login')
   const [entrando, setEntrando] = useState(false)
   const [erro, setErro] = useState('')
   const [bloqueadoInfo, setBloqueadoInfo] = useState(null)
-  const [convidados, setConvidados] = useState(getConvidadosLocal)
+  const [staffExtra, setStaffExtra] = useState(getStaffExtraLocal)
 
   const [nomeSel, setNomeSel] = useState('')
   const [pin, setPin] = useState('')
 
-  const [cadNome, setCadNome] = useState('')
-  const [cadPin, setCadPin] = useState('')
-  const [cadPin2, setCadPin2] = useState('')
-  const [cadAreas, setCadAreas] = useState([])
-
-  const [statusConvidados, setStatusConvidados] = useState({})
-  const [aguardandoAprovacao, setAguardandoAprovacao] = useState(false)
-  const [nomeAguardando, setNomeAguardando] = useState('')
-  const [verificandoAprovacao, setVerificandoAprovacao] = useState(false)
-  const [aindaPendente, setAindaPendente] = useState(false)
-
   useEffect(() => {
-    supabase.from('convidados').select('nome, pin, precisa_aprovacao, areas_aprovadas, acesso_geral').then(({ data }) => {
+    supabase.from('staff').select('nome, pin').then(({ data }) => {
       if (!data) return
       const obj = {}
-      const status = {}
-      data.forEach(d => {
-        obj[d.nome] = d.pin
-        status[d.nome] = {
-          precisaAprovacao: !!d.precisa_aprovacao,
-          liberado: (d.areas_aprovadas || []).length > 0 || !!d.acesso_geral,
-        }
-      })
-      setConvidados(obj)
-      setStatusConvidados(status)
-      localStorage.setItem('impulse_convidados', JSON.stringify(obj))
+      data.forEach(d => { obj[d.nome] = d.pin })
+      setStaffExtra(obj)
+      localStorage.setItem('impulse_staff_extra', JSON.stringify(obj))
     })
   }, [])
-
-  function pessoaPrecisaEsperar(nome) {
-    const st = statusConvidados[nome]
-    return st?.precisaAprovacao && !st?.liberado
-  }
-
-  function trocarModo(m) {
-    setModo(m); setErro('')
-    setNomeSel(''); setPin('')
-    setCadNome(''); setCadPin(''); setCadPin2(''); setCadAreas([])
-  }
-
-  function toggleArea(area) {
-    setCadAreas(prev => prev.includes(area) ? prev.filter(a => a !== area) : [...prev, area])
-  }
 
   async function entrar() {
     if (!nomeSel) { setErro(tx.selecioneSeuNome); return }
@@ -124,16 +81,9 @@ export default function Login({ onLogin, mensagem, idioma }) {
     if (dadosPinos) {
       if (pin !== dadosPinos.pin) { setErro(tx.pinIncorreto); return }
       nivel = dadosPinos.nivel
-    } else if (convidados[nomeSel] !== undefined) {
-      if (pin !== convidados[nomeSel]) { setErro(tx.pinIncorreto); return }
-      if (pessoaPrecisaEsperar(nomeSel)) {
-        setNomeAguardando(nomeSel)
-        setAguardandoAprovacao(true)
-        return
-      }
-      // Convidado ja aprovado (ou cadastro antigo, de antes da aprovacao existir) entra como staff normal
-      const st = statusConvidados[nomeSel]
-      nivel = (st?.precisaAprovacao && st?.liberado) ? 'staff' : 'convidado'
+    } else if (staffExtra[nomeSel] !== undefined) {
+      if (pin !== staffExtra[nomeSel]) { setErro(tx.pinIncorreto); return }
+      nivel = 'staff'
     } else {
       setErro(tx.nomeNaoEncontrado); return
     }
@@ -171,76 +121,8 @@ export default function Login({ onLogin, mensagem, idioma }) {
     }
   }
 
-  async function cadastrar() {
-    const nome = cadNome.trim()
-    if (!nome) { setErro(tx.digiteSeuNome); return }
-    if (PINOS[nome]) { setErro(tx.nomeJaPertenceStaff); return }
-    if (convidados[nome] !== undefined) { setErro(tx.nomeJaCadastrado); return }
-    if (cadPin.length < 5) { setErro(tx.pinDeveTerCincoDigitos); return }
-    if (cadPin !== cadPin2) { setErro(tx.pinsNaoCoincidem); return }
-    if (cadAreas.length === 0) { setErro(tx.selecioneAoMenosUmaArea); return }
-
-    const todosOsPins = [
-      ...Object.values(PINOS).map(d => d.pin),
-      ...Object.values(convidados)
-    ]
-    if (todosOsPins.includes(cadPin)) { setErro(tx.pinJaEmUso); return }
-
-    setEntrando(true)
-    try {
-      const { error } = await supabase.from('convidados').insert({ nome, pin: cadPin, areas_pedidas: cadAreas, areas_aprovadas: [], precisa_aprovacao: true })
-      if (error) {
-        if (error.code === '23505') { setErro(tx.nomeJaCadastrado) } else { setErro(tx.erroCadastrar) }
-        setEntrando(false)
-        return
-      }
-      notificar({ tipo: 'cadastro_area', areas: cadAreas })
-
-      const novo = { ...convidados, [nome]: cadPin }
-      localStorage.setItem('impulse_convidados', JSON.stringify(novo))
-      setConvidados(novo)
-      setStatusConvidados(prev => ({ ...prev, [nome]: { precisaAprovacao: true, liberado: false } }))
-
-      setEntrando(false)
-      setNomeAguardando(nome)
-      setAguardandoAprovacao(true)
-    } catch {
-      setErro(tx.erroConexaoLogin)
-      setEntrando(false)
-    }
-  }
-
-  async function verificarAprovacao() {
-    if (!nomeAguardando || verificandoAprovacao) return
-    setVerificandoAprovacao(true)
-    setAindaPendente(false)
-    try {
-      const { data } = await supabase.from('convidados').select('areas_aprovadas, acesso_geral').eq('nome', nomeAguardando).maybeSingle()
-      const liberado = data && ((data.areas_aprovadas || []).length > 0 || !!data.acesso_geral)
-      if (!liberado) { setVerificandoAprovacao(false); setAindaPendente(true); return }
-      const { bloqueado, msg } = await verificarSessao(nomeAguardando, 'staff', tx)
-      if (bloqueado) {
-        setAguardandoAprovacao(false)
-        setErro(msg)
-        setBloqueadoInfo({ nome: nomeAguardando, nivel: 'staff' })
-        return
-      }
-      onLogin({ nome: nomeAguardando, nivel: 'staff' })
-    } catch {
-      setVerificandoAprovacao(false)
-      setAindaPendente(true)
-    }
-  }
-
-  function voltarDaEspera() {
-    setAguardandoAprovacao(false)
-    setNomeAguardando('')
-    setAindaPendente(false)
-    trocarModo('login')
-  }
-
-  const nomesConvidados = Object.keys(convidados).sort((a, b) => a.localeCompare(b, 'pt-BR'))
-  const todosNomes = [...NOMES, ...nomesConvidados].sort((a, b) => a.localeCompare(b, 'pt-BR'))
+  const nomesStaffExtra = Object.keys(staffExtra).sort((a, b) => a.localeCompare(b, 'pt-BR'))
+  const todosNomes = [...NOMES, ...nomesStaffExtra].sort((a, b) => a.localeCompare(b, 'pt-BR'))
 
   return (
     <div style={{
@@ -268,174 +150,58 @@ export default function Login({ onLogin, mensagem, idioma }) {
           </div>
         )}
 
-        {aguardandoAprovacao ? (
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '32px 24px', textAlign: 'center' }}>
-            <div style={{ fontSize: 40, marginBottom: 14 }}>⏳</div>
-            <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 17, fontWeight: 700, marginBottom: 10 }}>{tx.aguardandoAprovacaoTitulo}</div>
-            <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 20 }}>{tx.aguardandoAprovacaoDesc}</div>
-            {aindaPendente && (
-              <div style={{ fontSize: 12, color: '#EAB308', marginBottom: 14 }}>{tx.aindaAguardandoAprovacao}</div>
-            )}
-            <button onClick={verificarAprovacao} disabled={verificandoAprovacao} style={{
-              width: '100%', padding: 15, border: 'none', borderRadius: 14, marginBottom: 10,
-              background: verificandoAprovacao ? 'var(--border-strong)' : 'var(--gradient)',
-              fontSize: 14, fontWeight: 700, cursor: verificandoAprovacao ? 'default' : 'pointer',
-              color: 'white', fontFamily: 'Syne, sans-serif', opacity: verificandoAprovacao ? 0.6 : 1
-            }}>
-              {verificandoAprovacao ? tx.verificando : tx.jaFuiAprovadoVerificar}
-            </button>
-            <button onClick={voltarDaEspera} style={{
-              width: '100%', padding: 12, borderRadius: 14, border: '1px solid var(--border)',
-              background: 'transparent', color: 'var(--text-muted)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
-            }}>{tx.voltarLogin}</button>
-          </div>
-        ) : (
-          <>
-        <div style={{ display: 'flex', background: 'var(--bg-card)', border: '1px solid var(--border-strong)', borderRadius: 16, padding: 4, marginBottom: 14 }}>
-          {[['login', tx.entrar], ['cadastro', tx.cadastrarBtn]].map(([m, label]) => (
-            <button
-              key={m}
-              onClick={() => trocarModo(m)}
-              style={{
-                flex: 1, padding: '10px', borderRadius: 12, border: 'none',
-                background: modo === m ? 'var(--gradient)' : 'transparent',
-                color: modo === m ? 'white' : 'var(--text-muted)',
-                fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                fontFamily: 'Syne, sans-serif', transition: 'all 0.2s'
-              }}
-            >{label}</button>
-          ))}
-        </div>
-
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '28px 24px' }}>
-          {modo === 'login' ? (
-            <>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 20, textAlign: 'center' }}>
-                {tx.identificacao}
-              </div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 20, textAlign: 'center' }}>
+            {tx.identificacao}
+          </div>
 
-              <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>{tx.seuNome}</div>
-                <select
-                  value={nomeSel}
-                  onChange={e => { setNomeSel(e.target.value); setErro(''); setBloqueadoInfo(null) }}
-                  style={{ ...inputStyle, color: nomeSel ? 'var(--text)' : 'var(--text-faint)', appearance: 'none', cursor: 'pointer' }}
-                >
-                  <option value="">{tx.selecioneSeuNomeOpcao}</option>
-                  {todosNomes.map(n => (
-                    <option key={n} value={n}>{n}{convidados[n] !== undefined ? ' · convidado' : ''}</option>
-                  ))}
-                </select>
-              </div>
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>{tx.seuNome}</div>
+            <select
+              value={nomeSel}
+              onChange={e => { setNomeSel(e.target.value); setErro(''); setBloqueadoInfo(null) }}
+              style={{ ...inputStyle, color: nomeSel ? 'var(--text)' : 'var(--text-faint)', appearance: 'none', cursor: 'pointer' }}
+            >
+              <option value="">{tx.selecioneSeuNomeOpcao}</option>
+              {todosNomes.map(n => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </div>
 
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>{tx.pinPessoal}</div>
-                <input
-                  type="password" value={pin}
-                  onChange={e => { setPin(e.target.value); setErro(''); setBloqueadoInfo(null) }}
-                  onKeyDown={e => e.key === 'Enter' && entrar()}
-                  placeholder="••••" maxLength={6} inputMode="numeric"
-                  style={pinStyle}
-                />
-              </div>
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>{tx.pinPessoal}</div>
+            <input
+              type="password" value={pin}
+              onChange={e => { setPin(e.target.value); setErro(''); setBloqueadoInfo(null) }}
+              onKeyDown={e => e.key === 'Enter' && entrar()}
+              placeholder="••••" maxLength={6} inputMode="numeric"
+              style={pinStyle}
+            />
+          </div>
 
-              {erro && <div style={{ fontSize: 12, color: '#F87171', textAlign: 'center', marginBottom: 10 }}>{erro}</div>}
+          {erro && <div style={{ fontSize: 12, color: '#F87171', textAlign: 'center', marginBottom: 10 }}>{erro}</div>}
 
-              {bloqueadoInfo && (
-                <button onClick={forcarLogin} disabled={entrando} style={{
-                  width: '100%', padding: 12, borderRadius: 14, marginBottom: 14,
-                  border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)',
-                  color: '#F87171', fontSize: 13, fontWeight: 700,
-                  cursor: entrando ? 'default' : 'pointer', fontFamily: 'Syne, sans-serif'
-                }}>
-                  {entrando ? tx.entrandoAcao : tx.souEuEntrarMesmoAssim}
-                </button>
-              )}
-
-              <button onClick={entrar} disabled={entrando} style={{
-                width: '100%', padding: 15, border: 'none', borderRadius: 14,
-                background: entrando ? 'var(--border-strong)' : 'var(--gradient)',
-                fontSize: 15, fontWeight: 700, cursor: entrando ? 'default' : 'pointer',
-                color: 'white', fontFamily: 'Syne, sans-serif', opacity: entrando ? 0.6 : 1
-              }}>
-                {entrando ? tx.verificando : tx.entrar}
-              </button>
-            </>
-          ) : (
-            <>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 20, textAlign: 'center' }}>
-                {tx.novoAcesso}
-              </div>
-
-              <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>{tx.seuNome}</div>
-                <input
-                  type="text" value={cadNome}
-                  onChange={e => { setCadNome(e.target.value); setErro('') }}
-                  placeholder={tx.comoVoceQuerSerChamado}
-                  maxLength={30} style={inputStyle}
-                />
-              </div>
-
-              <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>{tx.criePin5Digitos}</div>
-                <input
-                  type="password" value={cadPin}
-                  onChange={e => { setCadPin(e.target.value.replace(/\D/g, '')); setErro('') }}
-                  placeholder="•••••" maxLength={5} inputMode="numeric"
-                  style={pinStyle}
-                />
-              </div>
-
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>{tx.confirmePin}</div>
-                <input
-                  type="password" value={cadPin2}
-                  onChange={e => { setCadPin2(e.target.value.replace(/\D/g, '')); setErro('') }}
-                  onKeyDown={e => e.key === 'Enter' && cadastrar()}
-                  placeholder="•••••" maxLength={5} inputMode="numeric"
-                  style={pinStyle}
-                />
-              </div>
-
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>{tx.areasDeInteresse}</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
-                  {AREAS_CADASTRO.map(area => (
-                    <button
-                      key={area}
-                      type="button"
-                      onClick={() => toggleArea(area)}
-                      style={{
-                        padding: '7px 13px', borderRadius: 20,
-                        border: cadAreas.includes(area) ? '1px solid var(--accent-border)' : '1px solid var(--border-strong)',
-                        background: cadAreas.includes(area) ? 'var(--accent-bg)' : 'var(--bg-card)',
-                        color: cadAreas.includes(area) ? 'var(--accent-light)' : 'var(--text-secondary)',
-                        fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif'
-                      }}
-                    >{area}</button>
-                  ))}
-                </div>
-                {cadAreas.length > 0 && (
-                  <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>{tx.areasAprovacaoAviso}</div>
-                )}
-              </div>
-
-              {erro && <div style={{ fontSize: 12, color: '#F87171', textAlign: 'center', marginBottom: 14 }}>{erro}</div>}
-
-              <button onClick={cadastrar} disabled={entrando} style={{
-                width: '100%', padding: 15, border: 'none', borderRadius: 14,
-                background: entrando ? 'var(--border-strong)' : 'var(--gradient)',
-                fontSize: 15, fontWeight: 700, cursor: entrando ? 'default' : 'pointer',
-                color: 'white', fontFamily: 'Syne, sans-serif', opacity: entrando ? 0.6 : 1
-              }}>
-                {entrando ? tx.cadastrando : tx.cadastrarBtn}
-              </button>
-            </>
+          {bloqueadoInfo && (
+            <button onClick={forcarLogin} disabled={entrando} style={{
+              width: '100%', padding: 12, borderRadius: 14, marginBottom: 14,
+              border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)',
+              color: '#F87171', fontSize: 13, fontWeight: 700,
+              cursor: entrando ? 'default' : 'pointer', fontFamily: 'Syne, sans-serif'
+            }}>
+              {entrando ? tx.entrandoAcao : tx.souEuEntrarMesmoAssim}
+            </button>
           )}
+
+          <button onClick={entrar} disabled={entrando} style={{
+            width: '100%', padding: 15, border: 'none', borderRadius: 14,
+            background: entrando ? 'var(--border-strong)' : 'var(--gradient)',
+            fontSize: 15, fontWeight: 700, cursor: entrando ? 'default' : 'pointer',
+            color: 'white', fontFamily: 'Syne, sans-serif', opacity: entrando ? 0.6 : 1
+          }}>
+            {entrando ? tx.verificando : tx.entrar}
+          </button>
         </div>
-          </>
-        )}
 
         <div style={{ textAlign: 'center', marginTop: 20, fontSize: 11, color: 'var(--text-faint)' }}>
           {tx.dispositivoReconhecido}

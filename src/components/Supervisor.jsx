@@ -12,7 +12,7 @@ const CICLO = ['M','T','N','F']
 const TURNO_LABEL = { M:'Manhã', T:'Tarde', N:'Noite', F:'Folga' }
 const DIAS_C = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
 const INICIO = new Date(2026,6,15)
-const ABA_LABELS = { avisos:'📢 Avisos', chamada:'📋 Chamada', faltas:'❌ Faltas', senhas:'🔐 Senhas', aprovacoes:'✅ Aprovações' }
+const ABA_LABELS = { avisos:'📢 Avisos', chamada:'📋 Chamada', faltas:'❌ Faltas', senhas:'🔐 Senhas', aprovacoes:'👥 Equipes' }
 
 const NIVEL_COR = {
   maximo: { bg: 'rgba(124,58,237,0.18)', border: 'rgba(124,58,237,0.4)', text: '#A78BFA', label: 'Máximo' },
@@ -50,75 +50,63 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
   const [erroSalvar, setErroSalvar] = useState(false)
   const [publicandoAviso, setPublicandoAviso] = useState(false)
   const [erroAviso, setErroAviso] = useState(false)
-  const [convidados, setConvidados] = useState([])
-  const [loadingConvidados, setLoadingConvidados] = useState(false)
-  const [pendentes, setPendentes] = useState([])
-  const [loadingPendentes, setLoadingPendentes] = useState(false)
-  const [erroAprovacao, setErroAprovacao] = useState(false)
+  const [staffSenhas, setStaffSenhas] = useState([])
+  const [loadingStaffSenhas, setLoadingStaffSenhas] = useState(false)
+  const [staffGestao, setStaffGestao] = useState([])
+  const [loadingStaffGestao, setLoadingStaffGestao] = useState(false)
+  const [erroGestao, setErroGestao] = useState(false)
   const [rascunhos, setRascunhos] = useState({})
   const [confirmando, setConfirmando] = useState(null)
 
   useEffect(() => {
     if (aba === 'avisos') carregarAvisos()
     if (aba === 'faltas') carregarFaltas()
-    if (aba === 'senhas') carregarConvidados()
-    if (aba === 'aprovacoes') carregarPendentes()
+    if (aba === 'senhas') carregarStaffSenhas()
+    if (aba === 'aprovacoes') carregarStaffGestao()
   }, [aba])
 
-  async function carregarPendentes() {
-    setLoadingPendentes(true)
+  async function carregarStaffGestao() {
+    setLoadingStaffGestao(true)
     try {
-      const { data } = await supabase.from('convidados').select('nome, areas_pedidas, areas_aprovadas, equipe_atribuida, precisa_aprovacao, acesso_geral').order('nome')
-      const lista = (data || []).filter(c => c.precisa_aprovacao && !pessoaResolvida(c))
-      setPendentes(lista)
+      const { data } = await supabase.from('staff').select('nome, areas_aprovadas, equipe_atribuida').order('nome')
+      setStaffGestao(data || [])
     } catch {
-      setPendentes([])
+      setStaffGestao([])
     } finally {
-      setLoadingPendentes(false)
+      setLoadingStaffGestao(false)
     }
-  }
-
-  function pessoaResolvida(c) {
-    const liberado = (c.areas_aprovadas || []).length > 0 || c.acesso_geral
-    const faltaArea = (c.areas_pedidas || []).some(a => !(c.areas_aprovadas || []).includes(a))
-    return liberado && !faltaArea
   }
 
   // Enquanto nao confirma, as escolhas ficam so num rascunho local (nada e
   // salvo ainda) — assim da pra corrigir um clique errado antes de valer.
-  function getDraft(nomeConvidado) {
-    if (rascunhos[nomeConvidado]) return rascunhos[nomeConvidado]
-    const base = pendentes.find(c => c.nome === nomeConvidado)
-    return { areas_aprovadas: base?.areas_aprovadas || [], equipe_atribuida: base?.equipe_atribuida ?? null, acesso_geral: !!base?.acesso_geral }
+  function getDraft(nomeStaff) {
+    if (rascunhos[nomeStaff]) return rascunhos[nomeStaff]
+    const base = staffGestao.find(c => c.nome === nomeStaff)
+    return { areas_aprovadas: base?.areas_aprovadas || [], equipe_atribuida: base?.equipe_atribuida ?? null }
   }
 
-  function setDraft(nomeConvidado, patch) {
-    setRascunhos(prev => ({ ...prev, [nomeConvidado]: { ...getDraft(nomeConvidado), ...patch } }))
+  function setDraft(nomeStaff, patch) {
+    setRascunhos(prev => ({ ...prev, [nomeStaff]: { ...getDraft(nomeStaff), ...patch } }))
   }
 
-  function toggleAprovacao(nomeConvidado, area) {
-    const d = getDraft(nomeConvidado)
+  function toggleArea(nomeStaff, area) {
+    const d = getDraft(nomeStaff)
     const novoArray = d.areas_aprovadas.includes(area) ? d.areas_aprovadas.filter(a => a !== area) : [...d.areas_aprovadas, area]
-    setDraft(nomeConvidado, { areas_aprovadas: novoArray })
+    setDraft(nomeStaff, { areas_aprovadas: novoArray })
   }
 
-  function toggleAcessoGeral(nomeConvidado) {
-    const d = getDraft(nomeConvidado)
-    setDraft(nomeConvidado, { acesso_geral: !d.acesso_geral })
-  }
-
-  // Conta gente fixa (EQUIPES) + convidados ja aprovados no banco pra cada
+  // Conta gente fixa (EQUIPES) + staff ja atribuido no banco pra cada
   // equipe, e devolve o id da que tiver menos gente no momento do clique.
   async function equipeComMenosGente() {
-    const { data } = await supabase.from('convidados').select('equipe_atribuida')
+    const { data } = await supabase.from('staff').select('equipe_atribuida')
     const contagem = {}
     EQUIPES.forEach(eq => { contagem[eq.id] = eq.membros.length })
     ;(data || []).forEach(c => { if (contagem[c.equipe_atribuida] !== undefined) contagem[c.equipe_atribuida]++ })
     return EQUIPES.reduce((menor, eq) => contagem[eq.id] < contagem[menor.id] ? eq : menor, EQUIPES[0]).id
   }
 
-  async function definirApoio(nomeConvidado, equipeId) {
-    const d = getDraft(nomeConvidado)
+  async function definirApoio(nomeStaff, equipeId) {
+    const d = getDraft(nomeStaff)
     const areaApoio = AREAS[0]
     const aprovadoApoio = d.areas_aprovadas.includes(areaApoio)
     const atual = aprovadoApoio ? d.equipe_atribuida : null
@@ -128,25 +116,25 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
       ? d.areas_aprovadas.filter(a => a !== areaApoio)
       : (aprovadoApoio ? d.areas_aprovadas : [...d.areas_aprovadas, areaApoio])
     const novaEquipe = jaSelecionado ? null : alvo
-    setDraft(nomeConvidado, { areas_aprovadas: novasAreas, equipe_atribuida: novaEquipe })
+    setDraft(nomeStaff, { areas_aprovadas: novasAreas, equipe_atribuida: novaEquipe })
   }
 
-  async function confirmarAprovacao(nomeConvidado) {
-    const d = rascunhos[nomeConvidado]
+  async function confirmarGestao(nomeStaff) {
+    const d = rascunhos[nomeStaff]
     if (!d) return
-    setConfirmando(nomeConvidado)
-    const ok = await syncOp('update', 'convidados', { values: { areas_aprovadas: d.areas_aprovadas, equipe_atribuida: d.equipe_atribuida, acesso_geral: d.acesso_geral }, filters: { nome: nomeConvidado } })
+    setConfirmando(nomeStaff)
+    const ok = await syncOp('update', 'staff', { values: { areas_aprovadas: d.areas_aprovadas, equipe_atribuida: d.equipe_atribuida }, filters: { nome: nomeStaff } })
     setConfirmando(null)
-    if (!ok) { setErroAprovacao(true); return }
-    setPendentes(prev => prev.map(c => c.nome === nomeConvidado ? { ...c, ...d } : c))
-    setRascunhos(prev => { const cp = { ...prev }; delete cp[nomeConvidado]; return cp })
+    if (!ok) { setErroGestao(true); return }
+    setStaffGestao(prev => prev.map(c => c.nome === nomeStaff ? { ...c, ...d } : c))
+    setRascunhos(prev => { const cp = { ...prev }; delete cp[nomeStaff]; return cp })
   }
 
-  async function carregarConvidados() {
-    setLoadingConvidados(true)
-    const { data } = await supabase.from('convidados').select('nome, pin').order('nome')
-    setConvidados(data || [])
-    setLoadingConvidados(false)
+  async function carregarStaffSenhas() {
+    setLoadingStaffSenhas(true)
+    const { data } = await supabase.from('staff').select('nome, pin').order('nome')
+    setStaffSenhas(data || [])
+    setLoadingStaffSenhas(false)
   }
 
   async function carregarAvisos() {
@@ -404,16 +392,16 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
         {/* SENHAS */}
         {(aba === 'senhas' || abaSaindo === 'senhas') && (
           <div className={aba === 'senhas' ? `tab-entra-${direcaoAba.current}` : `tab-sai-${direcaoAba.current}`} style={aba === 'senhas' ? undefined : { position: 'absolute', inset: 0 }}>
-            {loadingConvidados ? (
+            {loadingStaffSenhas ? (
               <div style={{ fontSize: 13, color: 'var(--text-faint)', padding: '12px 0' }}>Carregando...</div>
             ) : ORDEM_NIVEL.map(nivel => {
               const doPinos = Object.entries(PINOS)
                 .filter(([, d]) => d.nivel === nivel)
                 .map(([nome, dados]) => ({ nome, pin: dados.pin }))
-              // Convidados aprovados viram nivel 'staff' na sessao (Login.jsx) —
-              // entram junto aqui, sem secao separada.
-              const doConvidados = nivel === 'staff' ? convidados.map(c => ({ nome: c.nome, pin: c.pin })) : []
-              const membros = [...doPinos, ...doConvidados].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+              // Todo mundo na tabela staff entra com nivel 'staff' na sessao
+              // (Login.jsx) — junto aqui, sem secao separada.
+              const doStaffExtra = nivel === 'staff' ? staffSenhas.map(c => ({ nome: c.nome, pin: c.pin })) : []
+              const membros = [...doPinos, ...doStaffExtra].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
               if (!membros.length) return null
               const cor = NIVEL_COR[nivel]
               return (
@@ -433,56 +421,41 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
           </div>
         )}
 
-        {/* APROVAÇÕES */}
+        {/* EQUIPES */}
         {(aba === 'aprovacoes' || abaSaindo === 'aprovacoes') && (
           <div className={aba === 'aprovacoes' ? `tab-entra-${direcaoAba.current}` : `tab-sai-${direcaoAba.current}`} style={aba === 'aprovacoes' ? undefined : { position: 'absolute', inset: 0 }}>
-            {erroAprovacao && (
+            {erroGestao && (
               <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 14, padding: '12px 16px', marginBottom: 16, fontSize: 12, color: '#F87171' }}>
                 ⚠️ Não foi possível salvar agora. Verifique sua internet e tente de novo.
               </div>
             )}
-            {loadingPendentes ? (
+            {loadingStaffGestao ? (
               <div style={{ textAlign: 'center', color: 'var(--text-faint)', fontSize: 13, padding: 40 }}>Carregando...</div>
-            ) : pendentes.length === 0 ? (
+            ) : staffGestao.length === 0 ? (
               <div style={{ textAlign: 'center', color: 'var(--text-faint)', fontSize: 13, padding: 40 }}>
                 <div style={{ fontSize: 36, marginBottom: 12 }}>📭</div>
-                Nenhum pedido de área ainda
+                Nenhum staff cadastrado ainda
               </div>
-            ) : pendentes.map(c => {
+            ) : staffGestao.map(c => {
               const d = getDraft(c.nome)
               const temRascunho = !!rascunhos[c.nome]
               return (
               <div key={c.nome} style={{
-                background: pessoaResolvida(c) ? 'rgba(16,185,129,0.05)' : 'var(--bg-card)',
-                border: pessoaResolvida(c) ? '1px solid rgba(16,185,129,0.3)' : temRascunho ? '1px solid rgba(234,179,8,0.4)' : '1px solid var(--border)',
+                background: temRascunho ? 'rgba(234,179,8,0.05)' : 'var(--bg-card)',
+                border: temRascunho ? '1px solid rgba(234,179,8,0.4)' : '1px solid var(--border)',
                 borderRadius: 20, padding: 16, marginBottom: 12
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                   <div style={{ fontSize: 14, fontWeight: 700 }}>{c.nome}</div>
-                  {pessoaResolvida(c) && !temRascunho && (
-                    <span style={{ fontSize: 11, fontWeight: 700, color: '#6EE7B7', background: 'rgba(16,185,129,0.15)', padding: '3px 10px', borderRadius: 20 }}>✓ Aprovado</span>
-                  )}
                   {temRascunho && (
-                    <span style={{ fontSize: 11, fontWeight: 700, color: '#EAB308', background: 'rgba(234,179,8,0.15)', padding: '3px 10px', borderRadius: 20 }}>Não confirmado</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#EAB308', background: 'rgba(234,179,8,0.15)', padding: '3px 10px', borderRadius: 20 }}>Não salvo</span>
                   )}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {c.areas_pedidas.length === 0 && (
-                    <div>
-                      <div style={{ fontSize: 11, color: 'var(--text-faint)', marginBottom: 6 }}>Não pediu nenhuma área — só precisa de acesso geral</div>
-                      <button onClick={() => toggleAcessoGeral(c.nome)} style={{
-                        alignSelf: 'flex-start',
-                        padding: '7px 13px', borderRadius: 20, cursor: 'pointer', fontSize: 12, fontWeight: 700,
-                        border: d.acesso_geral ? '1px solid rgba(167,139,250,0.5)' : '1px solid var(--border-strong)',
-                        background: d.acesso_geral ? 'rgba(167,139,250,0.15)' : 'var(--input-bg)',
-                        color: d.acesso_geral ? '#C4B5FD' : 'var(--text-muted)'
-                      }}>{d.acesso_geral ? '✓ ' : ''}✅ Liberar acesso</button>
-                    </div>
-                  )}
-                  {c.areas_pedidas.map(area => {
+                  {AREAS.map(area => {
                     if (area === AREAS[0]) {
-                      const aprovadoApoio = d.areas_aprovadas.includes(area)
-                      const equipeAtual = aprovadoApoio ? d.equipe_atribuida : null
+                      const naApoio = d.areas_aprovadas.includes(area)
+                      const equipeAtual = naApoio ? d.equipe_atribuida : null
                       return (
                         <div key={area}>
                           <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', marginBottom: 6 }}>{area}</div>
@@ -511,24 +484,24 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
                         </div>
                       )
                     }
-                    const aprovado = d.areas_aprovadas.includes(area)
+                    const naArea = d.areas_aprovadas.includes(area)
                     return (
-                      <button key={area} onClick={() => toggleAprovacao(c.nome, area)} style={{
+                      <button key={area} onClick={() => toggleArea(c.nome, area)} style={{
                         alignSelf: 'flex-start',
                         padding: '7px 13px', borderRadius: 20, cursor: 'pointer', fontSize: 12, fontWeight: 700,
-                        border: aprovado ? '1px solid rgba(16,185,129,0.4)' : '1px solid var(--border-strong)',
-                        background: aprovado ? 'rgba(16,185,129,0.15)' : 'var(--input-bg)',
-                        color: aprovado ? '#6EE7B7' : 'var(--text-muted)'
-                      }}>{aprovado ? '✓ ' : ''}{area}</button>
+                        border: naArea ? '1px solid rgba(16,185,129,0.4)' : '1px solid var(--border-strong)',
+                        background: naArea ? 'rgba(16,185,129,0.15)' : 'var(--input-bg)',
+                        color: naArea ? '#6EE7B7' : 'var(--text-muted)'
+                      }}>{naArea ? '✓ ' : ''}{area}</button>
                     )
                   })}
                   {temRascunho && (
-                    <button onClick={() => confirmarAprovacao(c.nome)} disabled={confirmando === c.nome} style={{
+                    <button onClick={() => confirmarGestao(c.nome)} disabled={confirmando === c.nome} style={{
                       marginTop: 4, padding: '12px', borderRadius: 14, border: 'none',
                       background: confirmando === c.nome ? 'var(--input-bg)' : 'var(--gradient)',
                       color: confirmando === c.nome ? 'var(--text-faint)' : 'white',
                       fontSize: 13, fontWeight: 700, cursor: confirmando === c.nome ? 'default' : 'pointer', fontFamily: 'Syne, sans-serif'
-                    }}>{confirmando === c.nome ? 'Confirmando...' : '✅ Confirmar aprovação'}</button>
+                    }}>{confirmando === c.nome ? 'Salvando...' : '💾 Salvar'}</button>
                   )}
                 </div>
               </div>

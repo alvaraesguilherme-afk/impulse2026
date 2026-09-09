@@ -318,8 +318,8 @@ export default function App() {
   const podeSupervisor = NIVEIS_SUPERVISOR.includes(nivel)
 
   const abasSupervisorBase = ABAS_SUPERVISOR[supervisorNome] || []
-  const podeAprovarCadastros = ['alto', 'maximo'].includes(PINOS[supervisorNome]?.nivel)
-  const abasSupervisor = podeAprovarCadastros && !abasSupervisorBase.includes('aprovacoes')
+  const podeGerenciarEquipes = ['alto', 'maximo'].includes(PINOS[supervisorNome]?.nivel)
+  const abasSupervisor = podeGerenciarEquipes && !abasSupervisorBase.includes('aprovacoes')
     ? [...abasSupervisorBase, 'aprovacoes']
     : abasSupervisorBase
 

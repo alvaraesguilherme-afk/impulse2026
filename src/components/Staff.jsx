@@ -35,23 +35,23 @@ function BackBtn({ onVoltar, titulo, onAjuda, total }) {
 
 export default function Staff({ onVoltar, onAjuda }) {
   const tx = useTexto()
-  const [aprovados, setAprovados] = useState([])
+  const [staffExtra, setStaffExtra] = useState([])
 
   useEffect(() => {
-    supabase.from('convidados').select('nome, areas_aprovadas, equipe_atribuida').order('nome').then(({ data }) => {
-      if (data) setAprovados(data)
+    supabase.from('staff').select('nome, areas_aprovadas, equipe_atribuida').order('nome').then(({ data }) => {
+      if (data) setStaffExtra(data)
     })
   }, [])
 
-  const aprovadosComArea = aprovados.filter(c => (c.areas_aprovadas || []).length > 0)
-  const totalStaff = new Set([...STAFF_AREAS.flatMap(s => s.nomes), ...aprovadosComArea.map(c => c.nome)]).size
+  const staffExtraComArea = staffExtra.filter(c => (c.areas_aprovadas || []).length > 0)
+  const totalStaff = new Set([...STAFF_AREAS.flatMap(s => s.nomes), ...staffExtraComArea.map(c => c.nome)]).size
 
   return (
     <div style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
       <BackBtn onVoltar={onVoltar} titulo={tx.staff} onAjuda={onAjuda} total={totalStaff} />
       <div style={{ padding: '24px 22px 100px' }}>
         {STAFF_AREAS.map(s => {
-          const extras = aprovados.filter(c => (c.areas_aprovadas || []).includes(s.area))
+          const extras = staffExtra.filter(c => (c.areas_aprovadas || []).includes(s.area))
           if (s.nomes.length === 0 && extras.length === 0) return null
           return (
             <div key={s.area} style={{ marginBottom: 24 }}>
