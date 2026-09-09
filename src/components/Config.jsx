@@ -319,7 +319,7 @@ export default function Config({ onVoltar, tema, setTema, idioma, setIdioma, ses
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{tx.logadoNesteDispositivo}</div>
               </div>
               <button
-                onClick={onLogout}
+                onClick={() => onLogout()}
                 style={{
                   padding: '8px 16px', borderRadius: 12,
                   border: '1px solid rgba(239,68,68,0.35)',
