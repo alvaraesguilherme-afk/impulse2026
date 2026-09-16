@@ -265,10 +265,10 @@ export default function Login({ onLogin, mensagem, idioma }) {
               <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>{tx.pinPessoal}</div>
               <input
                 type="password" value={pin}
-                onChange={e => { setPin(e.target.value); setErro(''); setBloqueadoInfo(null) }}
+                onChange={e => { setPin(e.target.value.toUpperCase()); setErro(''); setBloqueadoInfo(null) }}
                 onKeyDown={e => e.key === 'Enter' && !precisaDeclararArea && entrar()}
-                placeholder="••••" maxLength={6} inputMode="numeric"
-                style={pinStyle}
+                placeholder="•••••" maxLength={6}
+                style={{ ...pinStyle, textTransform: 'uppercase' }}
               />
             </div>
 
