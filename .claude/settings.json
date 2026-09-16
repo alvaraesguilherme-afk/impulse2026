@@ -8,5 +8,20 @@
       "Bash(npx oxlint *)",
       "Bash(curl -sf http://localhost:*)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \".claude/hooks/notify-integration.cjs\"",
+            "shell": "bash",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
   }
 }
