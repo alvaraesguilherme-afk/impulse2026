@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react'
 import { useTexto } from '../lib/i18n'
 import { supabase } from '../lib/supabase'
 import { syncOp } from '../lib/offlineSync'
-import { EQUIPES } from '../lib/equipes'
+import { EQUIPES, lideresDe } from '../lib/equipes'
 import { notificar } from '../lib/push'
 import { useAbaDirecao, abaAdjacente, useSwipeHandlers } from '../lib/useAbaDirecao'
+import { getCache, setCache } from '../lib/dataCache'
 
 const ORDEM_ABAS = ['times', 'escalas', 'chamada', 'mensagens']
 
@@ -21,13 +22,10 @@ const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Ag
 const INICIO = new Date(2026,6,15)
 const FIM = new Date(2026,6,25)
 
-const LIDERES_CHAMADA = [
-  { nome: 'Alvarães', senha: '2306', equipeId: '' },
-  { nome: 'Jhony', senha: '7780', equipeId: 'verde' },
-  { nome: 'Gustavo Massay', senha: '1121', equipeId: 'amarelo' },
-  { nome: 'Walterley', senha: '3123', equipeId: 'azul' },
-  { nome: 'Francisco', senha: '6689', equipeId: 'vermelho' },
-]
+// Zerado no reset pos-evento (mesmo padrao de EQUIPES[].membros e
+// STAFF_AREAS) -- acesso a chamada volta a ser atribuido via convocacao
+// do ic-coordenacao, nao mais hardcoded aqui.
+const LIDERES_CHAMADA = []
 
 function getTurno(eq, data) {
   const diff = Math.round((data.getTime() - INICIO.getTime()) / 86400000)
@@ -55,11 +53,11 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
   const tx = useTexto()
   const [aba, setAba, direcaoAba, abaSaindo] = useAbaDirecao('times', ORDEM_ABAS)
   const [lider] = useState(() => LIDERES_CHAMADA.find(l => l.nome === sessao?.nome) || null)
-  const [staffComEquipe, setStaffComEquipe] = useState([])
+  const [staffComEquipe, setStaffComEquipe] = useState(() => getCache('apoio:staffComEquipe') ?? [])
 
   useEffect(() => {
     supabase.from('staff').select('nome, equipe_atribuida').not('equipe_atribuida', 'is', null).then(({ data }) => {
-      if (data) setStaffComEquipe(data)
+      if (data) { setStaffComEquipe(data); setCache('apoio:staffComEquipe', data) }
     })
   }, [])
   const [diaSel, setDiaSel] = useState('')
@@ -102,15 +100,14 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
 
   function isMinhaEquipe(eq) {
     if (!sessao?.nome) return false
-    const lideres = eq.lideres.split(' e ').map(l => l.trim())
     const minhaEquipeAprovada = staffComEquipe.find(c => c.nome === sessao.nome)?.equipe_atribuida
-    return eq.membros.includes(sessao.nome) || lideres.includes(sessao.nome) || minhaEquipeAprovada === eq.id
+    return eq.membros.includes(sessao.nome) || lideresDe(eq).includes(sessao.nome) || minhaEquipeAprovada === eq.id
   }
 
   const minhaEquipeId = lider ? lider.equipeId : (EQUIPES.find(eq => isMinhaEquipe(eq))?.id ?? null)
-  // Cada equipe tem 2 lideres (ex: "Jhony e Linda"); LIDERES_CHAMADA so lista 1 por equipe
-  // (o que tem acesso a chamada). Pra mensagens, os 2 lideres podem escrever.
-  const equipeComoCoLider = EQUIPES.find(eq => eq.lideres.split(' e ').map(l => l.trim()).includes(sessao?.nome))
+  // Cada equipe tem ate 2 lideres (eq.lideres, formato "Nome e Nome"); LIDERES_CHAMADA
+  // so lista quem tem acesso a chamada. Pra mensagens, os 2 lideres podem escrever.
+  const equipeComoCoLider = EQUIPES.find(eq => lideresDe(eq).includes(sessao?.nome))
   const podeEnviarMensagem = !!lider || !!equipeComoCoLider
   const [mensagens, setMensagens] = useState([])
   const [msgTexto, setMsgTexto] = useState('')
@@ -168,7 +165,7 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
                   <div style={{ width: 44, height: 44, borderRadius: 14, background: eq.grad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{eq.emoji}</div>
                   <div>
                     <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 15, fontWeight: 700, color: eq.cor }}>{eq.nome}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>👑 {eq.lideres}</div>
+                    {eq.lideres && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>👑 {eq.lideres}</div>}
                   </div>
                 </div>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8 }}>{tx.membros}</div>
@@ -276,7 +273,7 @@ export default function Apoio({ onVoltar, sessao, onAjuda }) {
             {diaSel && turnoSel && equipesFiltradas.map(eq => {
               const t = getTurno(eq, new Date(parseInt(diaSel)))
               if (t !== turnoSel) return null
-              const todosMembros = [...eq.lideres.split(' e ').map(l => ({ nome: l.trim(), lider: true })), ...eq.membros.map(m => ({ nome: m, lider: false }))]
+              const todosMembros = [...lideresDe(eq).map(l => ({ nome: l, lider: true })), ...eq.membros.map(m => ({ nome: m, lider: false }))]
               return (
                 <div key={eq.id} style={{ marginBottom: 16 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: eq.cor, textTransform: 'uppercase', marginBottom: 10, letterSpacing: 1 }}>{eq.emoji} {eq.nome}</div>

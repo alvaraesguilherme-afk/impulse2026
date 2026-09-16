@@ -3,6 +3,7 @@ import { useTexto } from '../lib/i18n'
 import { supabase } from '../lib/supabase'
 import { syncOp } from '../lib/offlineSync'
 import { blobToBase64, enqueueFotoPendente, getFotoPendingCount, processFotoQueue } from '../lib/fotoSync'
+import { thumbUrl, onThumbError } from '../lib/imageThumb'
 
 // Dia 0 junta 13 e 14/07 (dias de chegada, antes do evento comecar de
 // verdade) — a partir dai cada dia vira sua propria aba, Dia 1 = 15/07.
@@ -59,16 +60,6 @@ const MURAL_FIM = new Date(2026, 6, 27)
 const RECAP_INICIO = new Date(2026, 6, 28)
 function isRecapDisponivel() { return new Date() >= RECAP_INICIO }
 
-const STAFF_NOMES = [
-  'Pr. Júnior','Pra. Stephanie',
-  'Alvarães','Alyson','Caetano','Clara Cunha','Daniel','Danilo','Edson Jr.',
-  'Eliel','Emanuel','Francisco','Gabriel Gomes','Gustavo Borges','Gustavo Massay',
-  'Hadstton Capell','Hellen Borges','Hugo Lacroix','Isabely Matos','Jerônimo',
-  'Jhony','Joel Marcos','Joyce','Juliana','Letícia','Linda','Lívia Andréa',
-  'Lorena','Ludmyla','Maria Clara','Maria Júlia','Mariana Gabrielle',
-  'Matheus Almeida','Maurício','Nicoly','Paula','Rafael Chaves','Rennan',
-  'Ryan Guedes','Samuel Lopes','Sthefany','Victória','Walterley'
-]
 
 const MOSAICO_GLOB = import.meta.glob('/src/assets/mosaico/*.{jpg,jpeg,jfif,png,webp,JPG,JPEG,JFIF,PNG,WEBP}', { eager: true })
 const MOSAICO_FOTOS = Object.values(MOSAICO_GLOB).map(m => m.default)
@@ -474,7 +465,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
             <>
               {fotos[0] && (
                 <div className="recap-card" style={{ animationDelay: '0s', position: 'relative', borderRadius: 18, overflow: 'hidden', marginBottom: 8, cursor: 'pointer', border: '2px solid #FFD700', boxShadow: '0 0 28px rgba(255,215,0,0.25)' }} onClick={() => { setFotoAberta(fotos[0]); setConfirmDelete(false) }}>
-                  <img src={fotos[0].url} alt="" loading="eager" style={{ width: '100%', display: 'block', maxHeight: 300, objectFit: 'cover' }} />
+                  <img src={thumbUrl(fotos[0].url, { width: 800, height: 300 })} onError={onThumbError(fotos[0].url)} alt="" loading="eager" style={{ width: '100%', display: 'block', maxHeight: 300, objectFit: 'cover' }} />
                   <div style={{ position: 'absolute', top: 10, left: 10, background: '#FFD700', borderRadius: 10, padding: '4px 10px', fontSize: 12, fontWeight: 800, color: '#000', boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>🥇 #1</div>
                   <div style={{ padding: '10px 14px', background: 'linear-gradient(0deg,rgba(0,0,0,0.85),rgba(0,0,0,0.4))' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -495,7 +486,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
                     const CORES = ['#C0C0C0', '#CD7F32']
                     return (
                       <div key={foto.id} className="recap-card" style={{ animationDelay: `${(i + 1) * 0.09}s`, position: 'relative', borderRadius: 16, overflow: 'hidden', cursor: 'pointer', border: `2px solid ${CORES[i]}`, boxShadow: `0 0 16px ${CORES[i]}55` }} onClick={() => { setFotoAberta(foto); setConfirmDelete(false) }}>
-                        <img src={foto.url} alt="" loading="eager" style={{ width: '100%', display: 'block', height: 150, objectFit: 'cover' }} />
+                        <img src={thumbUrl(foto.url, { width: 500, height: 300 })} onError={onThumbError(foto.url)} alt="" loading="eager" style={{ width: '100%', display: 'block', height: 150, objectFit: 'cover' }} />
                         <div style={{ position: 'absolute', top: 7, left: 7, background: CORES[i], borderRadius: 8, padding: '3px 8px', fontSize: 11, fontWeight: 800, color: '#000' }}>{MEDALS[i]} #{i + 2}</div>
                         <div style={{ padding: '8px 10px', background: 'rgba(0,0,0,0.7)' }}>
                           <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', fontWeight: 600, marginBottom: 2 }}>{foto.autor}</div>
@@ -511,7 +502,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                   {fotos.slice(3).map((foto, i) => (
                     <div key={foto.id} className="recap-card" style={{ animationDelay: `${(i + 3) * 0.05}s`, position: 'relative', borderRadius: 14, overflow: 'hidden', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }} onClick={() => { setFotoAberta(foto); setConfirmDelete(false) }}>
-                      <img src={foto.url} alt="" loading="lazy" style={{ width: '100%', display: 'block' }} />
+                      <img src={thumbUrl(foto.url, { width: 480 })} onError={onThumbError(foto.url)} alt="" loading="lazy" style={{ width: '100%', display: 'block' }} />
                       <div style={{ position: 'absolute', top: 6, left: 6, background: 'rgba(0,0,0,0.72)', borderRadius: 6, padding: '2px 7px', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.85)' }}>#{i + 4}</div>
                       <div style={{ padding: '6px 8px', background: 'rgba(0,0,0,0.65)' }}>
                         <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{foto.autor}</div>
@@ -545,7 +536,7 @@ export default function Mural({ onVoltar, autor, onAjuda }) {
                 cursor: 'pointer', position: 'relative', animationDelay: `${Math.min(i, 12) * 0.04}s`,
                 border: '1px solid var(--border)', background: 'var(--bg-card)'
               }}>
-                <img src={foto.url} alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block' }} />
+                <img src={thumbUrl(foto.url, { width: 480 })} onError={onThumbError(foto.url)} alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block' }} />
                 <div style={{ padding: '6px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ flex: 1, minWidth: 0, marginRight: 4 }}>
                     {foto.legenda && <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginBottom: 2, lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{foto.legenda}</div>}

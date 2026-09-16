@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { AREAS } from '../lib/areas'
 import { EQUIPES } from '../lib/equipes'
 const STAFF_AREAS = [
-  { area: '⛪ Liderança Pastoral', nomes: ['Pr. Júnior Bandeira', 'Pra. Stephanie Bandeira'] },
+  { area: '⛪ Liderança Pastoral', nomes: [] },
   { area: AREAS[0], nomes: [] },
   { area: AREAS[1], nomes: [] },
   { area: AREAS[2], nomes: [] },

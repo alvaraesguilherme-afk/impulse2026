@@ -1,6 +1,6 @@
 import { syncOp } from './offlineSync'
 import { getDeviceId } from './device'
-import { EQUIPES } from './equipes'
+import { EQUIPES, lideresDe } from './equipes'
 import { MEMBROS_FIXOS as MIDIA_FIXOS, MEMBROS_EXTRAS as MIDIA_EXTRAS } from './midia'
 import { VAPID_PUBLIC_KEY } from './vapid-public-key'
 
@@ -14,7 +14,7 @@ function urlBase64ToUint8Array(base64String) {
 export function detectarEquipe(nome) {
   if (!nome) return null
   const eq = EQUIPES.find(e =>
-    e.membros.includes(nome) || e.lideres.split(' e ').map(l => l.trim()).includes(nome)
+    e.membros.includes(nome) || lideresDe(e).includes(nome)
   )
   if (eq) return eq.id
   if (MIDIA_FIXOS.includes(nome) || MIDIA_EXTRAS.includes(nome)) return 'midia'

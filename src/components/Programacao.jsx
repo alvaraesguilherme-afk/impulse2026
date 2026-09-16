@@ -129,7 +129,7 @@ export default function Programacao({ onVoltar, sessao, onAjuda }) {
     carregarCadastros()
   }
 
-  const podeVerPreletores = sessao?.nivel === 'maximo' || sessao?.nome === 'Paula'
+  const podeVerPreletores = sessao?.nivel === 'maximo'
 
   const ABAS = [
     { id: 'louvor', label: '🎵 Louvor' },

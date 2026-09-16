@@ -3,7 +3,9 @@ import { supabase } from '../lib/supabase'
 import { syncOp } from '../lib/offlineSync'
 
 const NIVEIS_SUPERVISOR = ['maximo', 'alto', 'medio', 'basico']
-const NOMES_VALIDADORES_EXTRA = ['Rennan', 'Victória', 'Sthefany', 'Guilherme Valentim']
+// Zerado -- acesso extra nominal nao usa mais nomes fixos, vem do
+// cadastro/convocacao do ic-coordenacao.
+const NOMES_VALIDADORES_EXTRA = []
 
 function CartaoAdv({ adv, onToggle, onConfirmar, onNegar, onExcluir, isSupervisor }) {
   const [confirmExcluir, setConfirmExcluir] = useState(false)

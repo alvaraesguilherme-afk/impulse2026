@@ -5,6 +5,7 @@ import { useTexto } from '../lib/i18n'
 import { vibrar } from '../lib/haptics'
 import { notificar } from '../lib/push'
 import { rotuloRelativo, horasDesde } from '../lib/tempo'
+import { getCache, setCache } from '../lib/dataCache'
 
 const INICIO = new Date(2026, 6, 15)
 const FIM = new Date(2026, 6, 25, 23, 59, 59)
@@ -35,19 +36,22 @@ function isPosEventoFinal() {
 }
 
 // A partir de 28/07/2026 o contador vira pra frente, contando pro
-// proximo Impulse (14/07/2027) em vez de continuar preso ao evento
-// que ja passou.
+// proximo Impulse em vez de continuar preso ao evento que ja passou.
+// A data em si (14/07/2027 por padrao) vem do Supabase — tabela
+// "configuracao_escola", compartilhada com o app ic-coordenacao, pra
+// nunca desalinhar se só um dos dois apps mudar a data (ver Home()).
 const REVELAR_PROXIMO = new Date(2026, 6, 27)
-const INICIO_PROXIMO = new Date(2027, 6, 14)
+const INICIO_PROXIMO_PADRAO = new Date(2027, 6, 14)
 
-function useContador() {
+function useContador(dataProximo) {
   const [agora, setAgora] = useState(new Date())
   useEffect(() => {
     const t = setInterval(() => setAgora(new Date()), 1000)
     return () => clearInterval(t)
   }, [])
 
-  const alvo = agora >= REVELAR_PROXIMO ? INICIO_PROXIMO : INICIO
+  const inicioProximo = dataProximo ? new Date(dataProximo) : INICIO_PROXIMO_PADRAO
+  const alvo = agora >= REVELAR_PROXIMO ? inicioProximo : INICIO
   const diff = alvo.getTime() - agora.getTime()
   if (diff > 0) {
     const d = Math.floor(diff / 86400000)
@@ -62,9 +66,9 @@ function useContador() {
   return { fase: 'depois' }
 }
 
-function ContadorSection() {
+function ContadorSection({ dataProximo }) {
   const tx = useTexto()
-  const contador = useContador()
+  const contador = useContador(dataProximo)
   if (contador.fase === 'antes') {
     return (
       <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 20, padding: '18px 16px', textAlign: 'center' }}>
@@ -113,13 +117,14 @@ function ContadorSection() {
 
 export default function Home({ onNavegar, sessao }) {
   const tx = useTexto()
-  const [avisos, setAvisos] = useState([])
-  const [frase, setFrase] = useState(null)
+  const [avisos, setAvisos] = useState(() => getCache('home:avisos') ?? [])
+  const [frase, setFrase] = useState(() => getCache('home:frase') ?? null)
   const [showFraseModal, setShowFraseModal] = useState(false)
   const [fraseInput, setFraseInput] = useState('')
   const [fraseErro, setFraseErro] = useState('')
   const [salvandoFrase, setSalvandoFrase] = useState(false)
-  const [fotoDestaque, setFotoDestaque] = useState(null)
+  const [fotoDestaque, setFotoDestaque] = useState(() => getCache('home:fotoDestaque') ?? null)
+  const [dataProximoEscola, setDataProximoEscola] = useState(() => getCache('home:dataProximoEscola') ?? null)
 
   const nivelSupervisor = NIVEIS_SUPERVISOR.includes(sessao?.nivel)
   const podeEscreverFrase = !frase
@@ -134,10 +139,10 @@ export default function Home({ onNavegar, sessao }) {
 
   useEffect(() => {
     supabase.from('avisos').select('*').order('created_at', { ascending: false }).then(({ data }) => {
-      if (data) setAvisos(data)
+      if (data) { setAvisos(data); setCache('home:avisos', data) }
     })
     supabase.from('frase_do_dia').select('*').eq('dia', diaFrase).maybeSingle().then(({ data }) => {
-      setFrase(data || null)
+      setFrase(data || null); setCache('home:frase', data || null)
     })
     // mural_fotos.dia guarda o dia real do mes (13-27), nao o "dia do evento"
     // (1-11) — precisa comparar com o mesmo tipo de valor, senao nunca bate.
@@ -145,7 +150,13 @@ export default function Home({ onNavegar, sessao }) {
     ontem.setHours(0, 0, 0, 0)
     ontem.setDate(ontem.getDate() - 1)
     supabase.from('mural_fotos').select('*').eq('dia', ontem.getDate()).order('curtidas', { ascending: false }).limit(1).then(({ data }) => {
-      if (data && data.length > 0 && (data[0].curtidas || 0) > 0) setFotoDestaque(data[0])
+      if (data && data.length > 0 && (data[0].curtidas || 0) > 0) { setFotoDestaque(data[0]); setCache('home:fotoDestaque', data[0]) }
+    })
+    // Fonte única com o app ic-coordenacao (tabela "configuracao_escola") —
+    // se a tabela ainda não existir ou a leitura falhar, o hook cai no
+    // padrão hardcoded (INICIO_PROXIMO_PADRAO), sem quebrar a tela.
+    supabase.from('configuracao_escola').select('data_inicio').eq('id', 1).maybeSingle().then(({ data }) => {
+      if (data?.data_inicio) { setDataProximoEscola(data.data_inicio); setCache('home:dataProximoEscola', data.data_inicio) }
     })
   }, [])
 
@@ -221,7 +232,7 @@ export default function Home({ onNavegar, sessao }) {
             </div>
           )}
 
-          <ContadorSection />
+          <ContadorSection dataProximo={dataProximoEscola} />
         </div>
 
         {!modoRestrito && diaEvento && (

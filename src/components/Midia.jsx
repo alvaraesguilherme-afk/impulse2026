@@ -6,6 +6,7 @@ import { notificar } from '../lib/push'
 import { MEMBROS_FIXOS, MEMBROS_EXTRAS } from '../lib/midia'
 import { AREAS } from '../lib/areas'
 import { useAbaDirecao, abaAdjacente, useSwipeHandlers } from '../lib/useAbaDirecao'
+import { getCache, setCache } from '../lib/dataCache'
 
 const ORDEM_ABAS = ['escalas', 'mensagens']
 
@@ -39,11 +40,8 @@ const SENHAS_COORD = { '0404': 'Caetano', '2121': 'Alyson', '2306': 'Alvarães',
 
 const CICLO_APOIO = ['M', 'T', 'N', 'F']
 const TURNO_NOME = { M: 'Manhã', T: 'Tarde', N: 'Noite', F: 'Folga' }
-const EQUIPE_MEMBRO = {
-  'Sthefany': { equipeId: 'azul', offset: 2 },
-  'Maria Clara': { equipeId: 'verde', offset: 0 },
-  'Victória': { equipeId: 'amarelo', offset: 1 },
-}
+// Zerado -- atribuicao de equipe nao usa mais nomes fixos aqui.
+const EQUIPE_MEMBRO = {}
 
 function getTurnoApoio(nome, diaNum) {
   const eq = EQUIPE_MEMBRO[nome]
@@ -78,11 +76,14 @@ export default function Midia({ onVoltar, sessao, onAjuda }) {
   const [msgTexto, setMsgTexto] = useState('')
   const [enviandoMsg, setEnviandoMsg] = useState(false)
 
-  const [staffMidia, setStaffMidia] = useState([])
+  const [staffMidia, setStaffMidia] = useState(() => getCache('midia:staffMidia') ?? [])
 
   useEffect(() => {
     supabase.from('staff').select('nome, areas_aprovadas').then(({ data }) => {
-      if (data) setStaffMidia(data.filter(c => (c.areas_aprovadas || []).includes(AREAS[1])).map(c => c.nome))
+      if (data) {
+        const nomes = data.filter(c => (c.areas_aprovadas || []).includes(AREAS[1])).map(c => c.nome)
+        setStaffMidia(nomes); setCache('midia:staffMidia', nomes)
+      }
     })
   }, [])
 

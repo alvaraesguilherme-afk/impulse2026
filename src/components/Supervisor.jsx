@@ -3,7 +3,7 @@ import { useTexto } from '../lib/i18n'
 import { supabase } from '../lib/supabase'
 import { syncOp } from '../lib/offlineSync'
 import { PINOS } from '../lib/pinos'
-import { EQUIPES } from '../lib/equipes'
+import { EQUIPES, lideresDe } from '../lib/equipes'
 import { AREAS } from '../lib/areas'
 import { rotuloRelativo } from '../lib/tempo'
 import { notificar } from '../lib/push'
@@ -204,7 +204,7 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
       const ts = partes[0], turno = partes[1], n = partes.slice(2).join(' ')
       const dt = new Date(parseInt(ts))
       for (const eq of EQUIPES) {
-        const todos = [...eq.membros, ...eq.lideres.split(' e ').map(l => l.trim())]
+        const todos = [...eq.membros, ...lideresDe(eq)]
         if (todos.includes(n)) { por[eq.id].push({ nome: n, turno, data: dt, obs: r.obs || '' }); break }
       }
     })
@@ -321,7 +321,7 @@ export default function Supervisor({ onVoltar, nome, abas, onAjuda }) {
             {diaSel && turnoSel && EQUIPES.map(eq => {
               const t = getTurno(eq, new Date(parseInt(diaSel)))
               if (t !== turnoSel) return null
-              const todosMembros = [...eq.lideres.split(' e ').map(l => ({ nome: l.trim(), lider: true })), ...eq.membros.map(m => ({ nome: m, lider: false }))]
+              const todosMembros = [...lideresDe(eq).map(l => ({ nome: l, lider: true })), ...eq.membros.map(m => ({ nome: m, lider: false }))]
               return (
                 <div key={eq.id} style={{ marginBottom: 16 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: eq.cor, textTransform: 'uppercase', marginBottom: 10, letterSpacing: 1 }}>{eq.emoji} {eq.nome}</div>
