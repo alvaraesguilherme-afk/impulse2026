@@ -1,3 +1,5 @@
+'use client'
+
 import { createContext, useContext } from 'react'
 
 const textos = {
@@ -27,7 +29,7 @@ const textos = {
     toquePraEditar: 'toque para editar', toquePraDefinir2: 'Toque para definir',
     galeria: 'Galeria', camera: 'Câmera', enviandoFoto: 'Enviando foto...',
     fotos: 'fotos', foto: 'foto', nenhumaFoto: 'Nenhuma foto ainda',
-    primeiroPosta: 'Seja o primeiro a postar no Dia', uploadDisponivel: 'Upload disponível de 14 a 27 de julho',
+    primeiroPosta: 'Seja o primeiro a postar no Dia', uploadDisponivel: 'Upload liberado só durante o evento',
     quemEVoce: 'Quem é você?', selecioneNome: 'Selecione seu nome para identificar suas fotos',
     todos: 'Todos', manha: 'Manhã', tarde: 'Tarde', noite: 'Noite', folga: 'Folga',
     times: 'Times', escalas: 'Escalas', chamada: 'Chamada', calendario: 'Calendário',
@@ -151,7 +153,7 @@ const textos = {
     toquePraEditar: 'tap to edit', toquePraDefinir2: 'Tap to set',
     galeria: 'Gallery', camera: 'Camera', enviandoFoto: 'Uploading photo...',
     fotos: 'photos', foto: 'photo', nenhumaFoto: 'No photos yet',
-    primeiroPosta: 'Be the first to post on Day', uploadDisponivel: 'Upload available from July 14 to 27',
+    primeiroPosta: 'Be the first to post on Day', uploadDisponivel: 'Upload opens only during the event',
     quemEVoce: 'Who are you?', selecioneNome: 'Select your name to identify your photos',
     todos: 'All', manha: 'Morning', tarde: 'Afternoon', noite: 'Night', folga: 'Day off',
     times: 'Teams', escalas: 'Shifts', chamada: 'Roll call', calendario: 'Calendar',

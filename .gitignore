@@ -26,3 +26,9 @@ dist-ssr
 .vercel
 .env*
 supabase/.temp
+
+# Next.js
+.next
+next-env.d.ts
+/src/generated/prisma
+*.tsbuildinfo

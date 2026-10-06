@@ -1,0 +1,185 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Check_in {
+  id         BigInt   @id @default(autoincrement())
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  chave      String?
+  status     String?
+  Acomoda__o String?  @map("Acomodação")
+
+  @@map("Check-in")
+}
+
+model advertencias {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  aluno      String
+  motivo     String?
+  pago       Boolean   @default(false)
+  status     String    @default("aguardando")
+  autor      String?
+}
+
+model alunos {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  nome       String
+}
+
+model avisos {
+  id         BigInt   @id @default(autoincrement())
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  texto      String?
+  data       String?
+  hora       String?
+}
+
+model bug_reports {
+  id         BigInt    @id @default(autoincrement())
+  texto      String
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  lido       Boolean   @default(false)
+}
+
+model chamada {
+  id         BigInt   @id @default(autoincrement())
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  chave      String?
+  status     String?
+  obs        String?
+}
+
+model check_in_alunos {
+  id         BigInt   @id @default(autoincrement())
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  nome       String?
+  status     String?
+  Acomoda__o String?  @map("Acomodação")
+
+  @@map("check-in alunos")
+}
+
+model configuracao_escola {
+  id          Int      @id
+  data_inicio DateTime @db.Date
+}
+
+model foto_votacao {
+  id         BigInt    @id @default(autoincrement())
+  dia        Int
+  foto_url   String
+  votos      Int       @default(0)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+model frase_do_dia {
+  id         BigInt    @id @default(autoincrement())
+  dia        Int
+  frase      String
+  autor      String
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+model lista_compras {
+  id                 BigInt   @id @default(autoincrement())
+  item               String
+  quantidade         String?
+  categoria          String
+  comprado           Boolean  @default(false)
+  criado_por         String?
+  created_at         DateTime @default(now()) @db.Timestamptz(6)
+  lista_id           String?
+  quantidade_num     Decimal? @db.Decimal
+  quantidade_unidade String?
+}
+
+model mensagens_equipe {
+  id         BigInt   @id @default(autoincrement())
+  equipe_id  String
+  autor      String
+  texto      String
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+}
+
+model midia_escalas {
+  id         BigInt    @id @default(autoincrement())
+  dia        Int
+  turno      String
+  funcao     String
+  pessoa     String?
+  fixo       Boolean   @default(false)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+model mural_fotos {
+  id         BigInt    @id @default(autoincrement())
+  dia        Int
+  url        String
+  arquivo    String
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  autor      String?
+  curtidas   Int?      @default(0)
+  legenda    String?
+}
+
+model programacao {
+  id         BigInt    @id @default(autoincrement())
+  dia        Int
+  turno      String
+  tipo       String
+  titulo     String?
+  membros    String?
+  tema       String?
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+model programacao_cadastro {
+  id         BigInt    @id @default(autoincrement())
+  tipo       String
+  nome       String
+  membros    String?
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+model push_subscriptions {
+  id         BigInt   @id @default(autoincrement())
+  endpoint   String
+  p256dh     String
+  auth       String
+  nome       String?
+  equipe_id  String?
+  device_id  String?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+}
+
+model sessoes_ativas {
+  nome       String
+  device_id  String
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@id([nome, device_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model staff {
+  nome             String    @id
+  pin              String
+  areas_aprovadas  String[]  @default([])
+  area_pendente    String?
+  created_at       DateTime  @default(now()) @db.Timestamptz(6)
+  equipe_atribuida String?
+  nivel            String    @default("staff")
+  nome_completo    String?
+  avatar_url       String?
+  rede             String?
+  ic               String?
+  cargo_impulse    String?
+  sincronizado_em  DateTime? @db.Timestamptz(6)
+}

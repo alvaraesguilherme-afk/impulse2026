@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useRef, useState } from 'react'
 
 export const DURACAO_TRANSICAO_MS = 2000
