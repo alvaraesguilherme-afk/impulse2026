@@ -21,6 +21,6 @@ export const config = {
   matcher: [
     // manifest e sw.js passam sem login: o Chrome busca o manifest sem cookies,
     // e redirecionado pro /login o app deixa de ser instalável.
-    "/((?!api|_next/static|_next/image|manifest.webmanifest|sw.js|mosaico/|.*\\.png$|.*\\.svg$|.*\\.jpg$|.*\\.jpeg$|.*\\.webp$|.*\\.ico$).*)",
+    "/((?!api|_next/static|_next/image|manifest.webmanifest|sw.js|.*\\.png$|.*\\.svg$|.*\\.jpg$|.*\\.jpeg$|.*\\.webp$|.*\\.ico$).*)",
   ],
 };

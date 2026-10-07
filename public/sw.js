@@ -1,4 +1,6 @@
-const CACHE_ESTATICO = 'escola-next-estatico-v1'
+// Subir a versão quando uma imagem de /public for trocada mantendo o mesmo nome:
+// o cache abaixo é "cache primeiro" e nunca confere se o arquivo mudou.
+const CACHE_ESTATICO = 'escola-next-estatico-v2'
 const CACHE_PAGINAS = 'escola-next-paginas-v1'
 const CACHES = [CACHE_ESTATICO, CACHE_PAGINAS]
 
@@ -20,7 +22,7 @@ self.addEventListener('fetch', e => {
   if (url.pathname.startsWith('/api/') || url.pathname === '/sair') return
 
   // Arquivos do build (nome muda a cada deploy) e imagens fixas: cache primeiro
-  if (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/mosaico/') || /\.(png|jpg|jpeg|svg|webp|woff2?)$/.test(url.pathname)) {
+  if (url.pathname.startsWith('/_next/static/') || /\.(png|jpg|jpeg|svg|webp|woff2?)$/.test(url.pathname)) {
     e.respondWith(
       caches.open(CACHE_ESTATICO).then(cache =>
         cache.match(req).then(hit => hit || fetch(req).then(res => {

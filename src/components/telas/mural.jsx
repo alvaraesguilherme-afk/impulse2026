@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import { useTexto } from '@/lib/i18n'
 import { thumbUrl, onThumbError } from '@/lib/imageThumb'
 import { ehAdmin, ehSupervisor } from '@/lib/permissoes'
@@ -14,7 +13,6 @@ import { guardarFoto, contarFotos, montarForm, processarFotos } from '@/lib/foto
 
 /* eslint-disable @next/next/no-img-element -- fotos do Supabase: miniatura via render do Storage */
 
-const MOSAICO_FOTOS = Array.from({ length: 48 }, (_, i) => `/mosaico/m${String(i + 1).padStart(2, '0')}.jpg`)
 
 function montarDias(inicioISO) {
   const inicio = dataLocal(inicioISO)
@@ -67,25 +65,6 @@ function lerCurtidas() {
   return set
 }
 
-function buildMosaico(fotos) {
-  const COLUNAS = 3
-  const alvo = 180
-  const distMin = Math.max(Math.ceil(alvo / COLUNAS), fotos.length)
-  const result = []
-  const ultimaPos = new Array(fotos.length).fill(-distMin - 1)
-  while (result.length < alvo) {
-    const pos = result.length
-    let candidatos = fotos.map((f, i) => ({ f, i })).filter(({ i }) => pos - ultimaPos[i] >= distMin)
-    if (candidatos.length === 0) {
-      candidatos = fotos.map((f, i) => ({ f, i })).sort((a, b) => ultimaPos[a.i] - ultimaPos[b.i]).slice(0, Math.max(1, Math.ceil(fotos.length * 0.2)))
-    }
-    const { f, i } = candidatos[Math.floor(Math.random() * candidatos.length)]
-    result.push(f)
-    ultimaPos[i] = pos
-  }
-  return result
-}
-
 const chipBase = ativo => ({
   flexShrink: 0, padding: '8px 14px', borderRadius: 16,
   border: ativo ? '1px solid var(--accent-border)' : '1px solid rgba(255,255,255,0.2)',
@@ -123,7 +102,6 @@ export function Mural({ sessao, inicio, dia, diaHoje, recap, recapLiberado, filt
   const [pendingFile, setPendingFile] = useState(null)
   const [pendingPreview, setPendingPreview] = useState(null)
   const [pendingLegenda, setPendingLegenda] = useState('')
-  const mosaico = useMemo(() => (montado ? buildMosaico(MOSAICO_FOTOS) : []), [montado])
   const inputGaleria = useRef(null)
   const inputCamera = useRef(null)
 
@@ -243,13 +221,6 @@ export function Mural({ sessao, inicio, dia, diaHoje, recap, recapLiberado, filt
 
   return (
     <div style={{ background: '#05051a', minHeight: '100vh', position: 'relative' }} className="tela-enter-mural">
-      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', columnCount: 3, columnGap: 3, zIndex: 0 }}>
-        {mosaico.map((src, i) => (
-          <Image key={i} src={src} alt="" width={300} height={300} sizes="34vw" loading={i < 9 ? 'eager' : 'lazy'}
-            style={{ width: '100%', height: 'auto', display: 'block', marginBottom: 3, breakInside: 'avoid' }} />
-        ))}
-      </div>
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(5,5,20,0.70)', zIndex: 0 }} />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
