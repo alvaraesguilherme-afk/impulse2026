@@ -21,6 +21,7 @@ export const ICONE_AREA: Record<string, string> = {
   Mídia: "/icons/midia.png",
   Cozinha: "/icons/cozinha.png",
   Cantina: "/icons/cantina.png",
+  Secretário: "/icons/secretario.png",
   Iluminação: "/icons/iluminacao.png",
   Logística: "/icons/logistica.png",
 };
