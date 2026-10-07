@@ -24,6 +24,9 @@ export function coordenaArea(s: Sessao | null | undefined, area: string) {
   return s?.nivel === "basico" && (s?.areas ?? []).includes(area);
 }
 
+// Aba Programação: só coordenação geral e supervisores editam.
+export const editaProgramacao = (s: Pick<Sessao, "nivel"> | null | undefined) => ["maximo", "alto"].includes(s?.nivel ?? "");
+
 export const acessaCompras = (s: Sessao | null | undefined) =>
   ehAdmin(s) || (s?.areas ?? []).some((a) => AREAS_COMPRAS.includes(a));
 

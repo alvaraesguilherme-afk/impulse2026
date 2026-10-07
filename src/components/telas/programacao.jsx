@@ -2,8 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useTexto } from '@/lib/i18n'
-import { AREA_PROGRAMACAO } from '@/lib/areas'
-import { coordenaArea, ehAdmin } from '@/lib/permissoes'
+import { editaProgramacao, ehAdmin } from '@/lib/permissoes'
 import { useAbaDirecao, abaAdjacente, useSwipeHandlers } from '@/lib/useAbaDirecao'
 import { diasDoEvento, idxHoje, hojeLocal, MESES, MESES_C, DIAS_SEMANA } from '@/lib/calendario'
 import { executar } from '@/lib/offline'
@@ -105,7 +104,7 @@ export function Programacao({ sessao, inicio, dados: dadosServidor, cadastros: c
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
         <BotaoVoltar />
         <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 18, fontWeight: 700 }}>{tx.programacao}</h2>
-        {coordenaArea(sessao, AREA_PROGRAMACAO) && (
+        {editaProgramacao(sessao) && (
           <button onClick={() => { if (coordenador) { setEditando(null); setAba('louvor') } setCoordenador(c => !c) }} style={{
             marginLeft: 'auto', padding: '6px 14px', borderRadius: 20,
             border: coordenador ? '1px solid var(--accent-border)' : '1px solid var(--border-strong)',

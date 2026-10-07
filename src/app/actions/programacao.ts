@@ -3,15 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { getSessao } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { coordenaArea } from "@/lib/permissoes";
-import { AREA_PROGRAMACAO } from "@/lib/areas";
+import { editaProgramacao } from "@/lib/permissoes";
 import { notificarProgramacao } from "@/lib/push";
 
 const TIPOS = ["louvor", "ministro"];
 
 async function exigirCoordenador() {
   const sessao = await getSessao();
-  if (!coordenaArea(sessao, AREA_PROGRAMACAO)) throw new Error("Sem permissão");
+  if (!editaProgramacao(sessao)) throw new Error("Sem permissão");
 }
 
 export async function salvarEscala(dia: number, turno: string, tipo: string, titulo: string, tema: string) {
