@@ -466,10 +466,9 @@ body.foto-aberta .nav-mobile {
 .bilhete-vazio { color: #A79FB8; font-size: 23px; }
 
 /* ===================== Mural (Feed) =====================
-   Mural de madeira (public/mural-madeira.jpg) com polaroids presas, ligadas
-   por raízes (src/components/telas/mural.jsx). */
-/* Madeira: foto de carvalho emendada com uma cópia espelhada embaixo, então repete na vertical sem costura. */
-.mural { position: relative; min-height: 100vh; background: #e2b98d url("/mural-madeira.jpg") center top / 100% auto repeat-y; }
+   Mural de madeira com polaroids presas, ligadas por raízes. A madeira é
+   desenhada no canvas (src/components/telas/mural.jsx); aqui ficam as peças. */
+.mural { position: relative; min-height: 100vh; background-color: #6f4628; background-size: 360px auto; }
 .mural::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(0,0,0,0.35), transparent 10%, transparent 90%, rgba(0,0,0,0.35)); }
 .mural-cab { position: relative; z-index: 3; display: flex; align-items: center; gap: 12px; padding: 14px 22px 0; }
 .mural-cab h2 { font-family: var(--font-syne), sans-serif; font-size: 18px; font-weight: 700; color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,0.7); }
@@ -501,9 +500,9 @@ body.foto-aberta .nav-mobile {
 .polaroid .rabisco { position: absolute; bottom: 30px; z-index: 3; font-family: var(--font-caveat), cursive; font-weight: 700; font-size: 20px; color: #C0392B; transform: rotate(-12deg); pointer-events: none; }
 /* pontinha dobrada: o canto "some" na cor da madeira e aparece a aba do papel */
 .polaroid.dobra-tr::after, .polaroid.dobra-br::after, .polaroid.dobra-bl::after { content: ""; position: absolute; width: 20px; height: 20px; z-index: 3; }
-.polaroid.dobra-tr::after { top: 0; right: 0; background: linear-gradient(225deg, #d2a675 50%, #e7dfcf 50%, #fffdf7 100%); box-shadow: -2px 2px 3px rgba(0,0,0,0.25); }
-.polaroid.dobra-br::after { bottom: 0; right: 0; background: linear-gradient(315deg, #d2a675 50%, #e7dfcf 50%, #fffdf7 100%); box-shadow: -2px -2px 3px rgba(0,0,0,0.22); }
-.polaroid.dobra-bl::after { bottom: 0; left: 0; background: linear-gradient(45deg, #d2a675 50%, #e7dfcf 50%, #fffdf7 100%); box-shadow: 2px -2px 3px rgba(0,0,0,0.22); }
+.polaroid.dobra-tr::after { top: 0; right: 0; background: linear-gradient(225deg, #6b4526 50%, #e7dfcf 50%, #fffdf7 100%); box-shadow: -2px 2px 3px rgba(0,0,0,0.25); }
+.polaroid.dobra-br::after { bottom: 0; right: 0; background: linear-gradient(315deg, #6b4526 50%, #e7dfcf 50%, #fffdf7 100%); box-shadow: -2px -2px 3px rgba(0,0,0,0.22); }
+.polaroid.dobra-bl::after { bottom: 0; left: 0; background: linear-gradient(45deg, #6b4526 50%, #e7dfcf 50%, #fffdf7 100%); box-shadow: 2px -2px 3px rgba(0,0,0,0.22); }
 
 /* foto presa só por um ponto às vezes fica balançando pra sempre */
 .polaroid.balanca { animation: muralBalanca var(--dur, 4s) ease-in-out infinite; }
