@@ -208,7 +208,7 @@ export function Supervisor({ nome, abas, inicio, avisos: avisosServidor, chamada
             const membros = membrosDe(eq.id)
             return (
               <div key={eq.id} style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: eq.cor, textTransform: 'uppercase', marginBottom: 10, letterSpacing: 1 }}><img src={eq.icone} alt="" style={{ width: 14, height: 14, objectFit: 'contain', borderRadius: '50%', verticalAlign: -3 }} /> {eq.nome}</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: eq.cor, textTransform: 'uppercase', marginBottom: 10, letterSpacing: 1 }}><img src={eq.icone} alt="" style={{ width: 19, height: 19, objectFit: 'contain', verticalAlign: -5 }} /> {eq.nome}</div>
                 {membros.length === 0 && <p style={{ fontSize: 12, color: 'var(--text-faint)', fontStyle: 'italic' }}>Ninguém nesta equipe ainda (defina na aba Equipes).</p>}
                 {membros.map(n => {
                   const chKey = `${diaSel}_${turnoSel}_${n}`
@@ -244,7 +244,7 @@ export function Supervisor({ nome, abas, inicio, avisos: avisosServidor, chamada
             return (
               <div key={eq.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, marginBottom: 14, overflow: 'hidden' }}>
                 <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }}>
-                  <div style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 15, fontWeight: 700, color: eq.cor }}><img src={eq.icone} alt="" style={{ width: 18, height: 18, objectFit: 'contain', borderRadius: '50%', verticalAlign: -4 }} /> {eq.nome}</div>
+                  <div style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 15, fontWeight: 700, color: eq.cor }}><img src={eq.icone} alt="" style={{ width: 24, height: 24, objectFit: 'contain', verticalAlign: -6 }} /> {eq.nome}</div>
                   <div style={{ fontSize: 12, fontWeight: 700, padding: '4px 12px', borderRadius: 20, background: 'rgba(239,68,68,0.2)', color: '#F87171' }}>{lista.length} {lista.length === 1 ? 'falta' : 'faltas'}</div>
                 </div>
                 <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -320,7 +320,7 @@ export function Supervisor({ nome, abas, inicio, avisos: avisosServidor, chamada
                           <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', marginBottom: 6 }}><RotuloArea area={area} /></div>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                             {EQUIPES.map(eq => (
-                              <button key={eq.id} onClick={() => definirApoio(c.nome, eq.id)} style={{ padding: '6px 12px', borderRadius: 20, cursor: 'pointer', fontSize: 11, fontWeight: 700, border: equipeAtual === eq.id ? `1px solid ${eq.cor}` : '1px solid var(--border-strong)', background: equipeAtual === eq.id ? `${eq.cor}26` : 'var(--input-bg)', color: equipeAtual === eq.id ? eq.cor : 'var(--text-muted)' }}><img src={eq.icone} alt="" style={{ width: 13, height: 13, objectFit: 'contain', borderRadius: '50%', verticalAlign: -3 }} /> {eq.nome.replace('Equipe ', '')}</button>
+                              <button key={eq.id} onClick={() => definirApoio(c.nome, eq.id)} style={{ padding: '6px 12px', borderRadius: 20, cursor: 'pointer', fontSize: 11, fontWeight: 700, border: equipeAtual === eq.id ? `1px solid ${eq.cor}` : '1px solid var(--border-strong)', background: equipeAtual === eq.id ? `${eq.cor}26` : 'var(--input-bg)', color: equipeAtual === eq.id ? eq.cor : 'var(--text-muted)' }}><img src={eq.icone} alt="" style={{ width: 18, height: 18, objectFit: 'contain', verticalAlign: -5 }} /> {eq.nome.replace('Equipe ', '')}</button>
                             ))}
                             <button onClick={() => definirApoio(c.nome, 'sem_escala')} style={{ padding: '6px 12px', borderRadius: 20, cursor: 'pointer', fontSize: 11, fontWeight: 700, border: equipeAtual === 'sem_escala' ? '1px solid var(--text-faint)' : '1px solid var(--border-strong)', background: equipeAtual === 'sem_escala' ? 'var(--bg-card)' : 'var(--input-bg)', color: equipeAtual === 'sem_escala' ? 'var(--text-secondary)' : 'var(--text-muted)' }}>🚫 Sem escala</button>
                             <button onClick={() => definirApoio(c.nome, 'aleatorio')} style={{ padding: '6px 12px', borderRadius: 20, cursor: 'pointer', fontSize: 11, fontWeight: 700, border: '1px solid rgba(167,139,250,0.5)', background: 'rgba(167,139,250,0.15)', color: '#C4B5FD' }}>🎲 Aleatório</button>
