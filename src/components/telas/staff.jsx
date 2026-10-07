@@ -96,7 +96,7 @@ export function Staff({ staff }) {
     // Quem tem área aparece só na área dela; Liderança fica com quem não tem.
     { area: LIDERANCA, pessoas: staff.filter(p => ehLideranca(p) && p.areas.length === 0).sort(comparar) },
     ...AREAS.map(a => ({ area: a, pessoas: staff.filter(p => p.areas.includes(a)).sort(comparar) })),
-  ].filter(s => s.pessoas.length > 0), [staff])
+  ], [staff])
 
   function limpar() { setArea(''); setNivel(''); setEquipe('') }
 
@@ -183,7 +183,7 @@ export function Staff({ staff }) {
                 <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>{s.pessoas.length} {s.pessoas.length === 1 ? 'pessoa' : 'pessoas'}</p>
               </div>
             </div>
-            <div style={grade}>{s.pessoas.map(p => <Cartao key={p.nome} pessoa={p} />)}</div>
+            {s.pessoas.length > 0 && <div style={grade}>{s.pessoas.map(p => <Cartao key={p.nome} pessoa={p} />)}</div>}
           </section>
         ))}
       </div>
