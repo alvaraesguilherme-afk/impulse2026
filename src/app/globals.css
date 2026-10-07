@@ -464,3 +464,95 @@ body.foto-aberta .nav-mobile {
 .bilhete-etiqueta { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #8B7FA6; }
 .bilhete-texto { font-family: var(--font-caveat), "Segoe Print", cursive; font-weight: 700; font-size: 27px; line-height: 1.12; margin-top: 6px; overflow-wrap: anywhere; }
 .bilhete-vazio { color: #A79FB8; font-size: 23px; }
+
+/* ===================== Mural (Feed) =====================
+   Mural de madeira com polaroids presas, ligadas por raízes. A madeira é
+   desenhada no canvas (src/components/telas/mural.jsx); aqui ficam as peças. */
+.mural { position: relative; min-height: 100vh; background-color: #6f4628; background-size: 360px auto; }
+.mural::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(0,0,0,0.35), transparent 10%, transparent 90%, rgba(0,0,0,0.35)); }
+.mural-cab { position: relative; z-index: 3; display: flex; align-items: center; gap: 12px; padding: 14px 22px 0; }
+.mural-cab h2 { font-family: var(--font-syne), sans-serif; font-size: 18px; font-weight: 700; color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,0.7); }
+.mural-cab span { margin-left: auto; font-size: 11px; font-weight: 600; color: rgba(255,240,220,0.85); text-shadow: 0 1px 4px rgba(0,0,0,0.7); }
+.mural-avisos { position: relative; z-index: 3; display: flex; flex-direction: column; gap: 8px; padding: 12px 22px 0; }
+.mural-aviso { background: rgba(20,12,6,0.82); border: 1px solid rgba(255,230,200,0.18); border-radius: 12px; padding: 10px 12px; font-size: 12px; font-weight: 600; color: #FDEBD3; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.mural-aviso.erro { color: #FCA5A5; border-color: rgba(239,68,68,0.4); }
+.mural-aviso.atencao { color: #FCD34D; border-color: rgba(245,158,11,0.4); }
+.mural-quadro { position: relative; z-index: 1; margin: 0 auto; }
+.mural-raizes { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+
+.mural-bilhete { position: absolute; left: 50%; width: 220px; margin-left: -110px; z-index: 2; background: #FFF6D8; color: #2A2238; padding: 24px 16px 18px; transform: rotate(-3deg); text-align: center; box-shadow: 0 14px 22px -8px rgba(0,0,0,0.65); font-family: var(--font-caveat), "Segoe Print", cursive; font-weight: 700; font-size: 23px; line-height: 1.15; }
+.mural-bilhete small { display: block; font-size: 19px; color: #7C3AED; margin-top: 8px; }
+.mural-bilhete button { margin-top: 12px; background: none; border: none; font: 600 11px var(--font-inter), sans-serif; color: #8B7FA6; text-decoration: underline; cursor: pointer; }
+
+.polaroid { position: absolute; z-index: 2; padding: 7px 7px 28px; border: none; border-radius: 2px; background: #FBF8F1; cursor: pointer; font: inherit; color: inherit;
+  box-shadow: 0 2px 0 rgba(0,0,0,0.12), 0 14px 22px -6px rgba(0,0,0,0.65);
+  transform: rotate(var(--g, 0deg)); transform-origin: var(--origem, 50% 0); transition: box-shadow 0.2s ease; }
+.polaroid:focus-visible { outline: 3px solid var(--accent-light); outline-offset: 3px; }
+.polaroid .foto { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; background: #ddd5c4; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08); }
+.polaroid .leg { position: absolute; left: 0; right: 0; bottom: 5px; padding: 0 8px; text-align: center; font-family: var(--font-caveat), "Segoe Print", cursive; font-weight: 700; font-size: 16px; color: #5b5168; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.polaroid .tacha { position: absolute; top: -7px; left: 50%; width: 15px; height: 15px; margin-left: -7.5px; border-radius: 50%; z-index: 3; box-shadow: 0 3px 4px rgba(0,0,0,0.55), inset -2px -2px 3px rgba(0,0,0,0.35), inset 2px 2px 3px rgba(255,255,255,0.45); }
+.polaroid .fita { position: absolute; top: -10px; left: 50%; width: 58px; height: 20px; margin-left: -29px; z-index: 3; background: rgba(250,240,210,0.6); border-left: 1px dashed rgba(255,255,255,0.5); border-right: 1px dashed rgba(255,255,255,0.5); box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+.polaroid .fita.esq { left: -8px; top: -6px; margin: 0; width: 46px; transform: rotate(-38deg); }
+.polaroid .fita.dir { left: auto; right: -8px; top: -6px; margin: 0; width: 46px; transform: rotate(38deg); }
+.polaroid .fita.baixo { top: auto; bottom: -8px; left: auto; right: -10px; margin: 0; width: 44px; transform: rotate(-40deg); }
+.polaroid .clipe { position: absolute; top: -16px; right: 18px; width: 16px; height: 40px; z-index: 3; border: 2.5px solid #B8C0CC; border-radius: 9px; box-shadow: 1px 2px 2px rgba(0,0,0,0.4); }
+.polaroid .clipe::after { content: ""; position: absolute; inset: 5px 3px 9px; border: 2px solid #9AA3B0; border-radius: 6px; }
+.polaroid .rabisco { position: absolute; bottom: 30px; z-index: 3; font-family: var(--font-caveat), cursive; font-weight: 700; font-size: 20px; color: #C0392B; transform: rotate(-12deg); pointer-events: none; }
+/* pontinha dobrada: o canto "some" na cor da madeira e aparece a aba do papel */
+.polaroid.dobra-tr::after, .polaroid.dobra-br::after, .polaroid.dobra-bl::after { content: ""; position: absolute; width: 20px; height: 20px; z-index: 3; }
+.polaroid.dobra-tr::after { top: 0; right: 0; background: linear-gradient(225deg, #6b4526 50%, #e7dfcf 50%, #fffdf7 100%); box-shadow: -2px 2px 3px rgba(0,0,0,0.25); }
+.polaroid.dobra-br::after { bottom: 0; right: 0; background: linear-gradient(315deg, #6b4526 50%, #e7dfcf 50%, #fffdf7 100%); box-shadow: -2px -2px 3px rgba(0,0,0,0.22); }
+.polaroid.dobra-bl::after { bottom: 0; left: 0; background: linear-gradient(45deg, #6b4526 50%, #e7dfcf 50%, #fffdf7 100%); box-shadow: 2px -2px 3px rgba(0,0,0,0.22); }
+
+/* foto presa só por um ponto às vezes fica balançando pra sempre */
+.polaroid.balanca { animation: muralBalanca var(--dur, 4s) ease-in-out infinite; }
+@keyframes muralBalanca { 0%, 100% { transform: rotate(var(--g)); } 50% { transform: rotate(calc(var(--g) + var(--amp, 4deg))); } }
+
+/* foto nova sendo colada: a raiz cresce primeiro, depois a polaroid desce
+   grande e "levantada", bate no mural, assenta e é presa */
+.polaroid.chegando { animation: muralColar 0.95s 0.55s cubic-bezier(.25,.8,.3,1) both; }
+@keyframes muralColar {
+  0%   { transform: translateY(-120px) rotate(calc(var(--g) - 14deg)) scale(1.35); opacity: 0; box-shadow: 0 60px 60px -10px rgba(0,0,0,0.5); }
+  25%  { opacity: 1; }
+  62%  { transform: translateY(0) rotate(var(--g)) scale(1.04); box-shadow: 0 30px 34px -8px rgba(0,0,0,0.6); }
+  76%  { transform: translateY(0) rotate(var(--g)) scale(0.96, 0.98); box-shadow: 0 6px 10px -4px rgba(0,0,0,0.7); }
+  100% { transform: translateY(0) rotate(var(--g)) scale(1); }
+}
+.polaroid.chegando .fita { animation: muralFita 0.35s 1.35s cubic-bezier(.2,.8,.3,1) both; }
+@keyframes muralFita { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.polaroid.chegando .tacha { animation: muralTacha 0.45s 1.33s cubic-bezier(.3,1.6,.5,1) both; }
+@keyframes muralTacha { 0% { transform: translateY(-34px) scale(1.5); opacity: 0; } 60% { transform: translateY(2px) scale(0.92); opacity: 1; } 100% { transform: none; } }
+.polaroid.chegando .clipe { animation: muralClipe 0.4s 1.35s cubic-bezier(.2,.9,.3,1.2) both; }
+@keyframes muralClipe { from { transform: translateY(-26px); opacity: 0; } to { transform: none; opacity: 1; } }
+.raiz-nova .raiz-linha { stroke-dasharray: 1; animation: muralRaiz 0.75s ease-out both; }
+.raiz-nova .raiz-folha { animation: muralFolha 0.4s 0.55s both; }
+@keyframes muralRaiz { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes muralFolha { from { opacity: 0; } to { opacity: 1; } }
+
+/* botão de colocar foto */
+.mural-fab { position: fixed; right: 18px; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); z-index: 30; width: 58px; height: 58px; border-radius: 50%; border: none; cursor: pointer; background: var(--gradient); color: #fff; font-size: 30px; line-height: 1; box-shadow: 0 10px 24px rgba(0,0,0,0.55); display: flex; align-items: center; justify-content: center; }
+.mural-fab:disabled { opacity: 0.6; cursor: wait; }
+.mural-escolha { position: fixed; right: 18px; bottom: calc(90px + env(safe-area-inset-bottom, 0px)); z-index: 30; display: flex; flex-direction: column; gap: 8px; }
+.mural-escolha button { border: 1px solid rgba(255,230,200,0.2); border-radius: 999px; padding: 11px 16px; background: rgba(20,12,6,0.92); color: #fff; font: 600 13px var(--font-inter), sans-serif; cursor: pointer; box-shadow: 0 8px 18px rgba(0,0,0,0.5); text-align: left; }
+
+/* polaroid aberta */
+.mural-modal { position: fixed; inset: 0; z-index: 400; background: rgba(8,5,3,0.86); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 20px 16px; overflow-y: auto; }
+.mural-grande { width: min(340px, 100%); background: #FBF8F1; color: #2A2238; padding: 14px 14px 18px; border-radius: 3px; box-shadow: 0 30px 60px rgba(0,0,0,0.7); transform: rotate(-1.5deg); animation: muralAbre 0.35s cubic-bezier(.2,.9,.3,1.2); position: relative; flex-shrink: 0; }
+@keyframes muralAbre { from { transform: rotate(-8deg) scale(0.7); opacity: 0; } to { transform: rotate(-1.5deg) scale(1); opacity: 1; } }
+.mural-grande .fita { position: absolute; top: -12px; left: 50%; width: 90px; height: 26px; margin-left: -45px; background: rgba(250,240,210,0.6); border-left: 1px dashed rgba(255,255,255,0.5); border-right: 1px dashed rgba(255,255,255,0.5); }
+.mural-grande img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; background: #ddd5c4; }
+.mural-grande .diaesc { font-family: var(--font-caveat), cursive; font-weight: 700; font-size: 34px; line-height: 1; margin-top: 14px; text-align: center; }
+.mural-grande .dados { display: flex; justify-content: center; gap: 18px; margin-top: 10px; font-family: var(--font-caveat), cursive; font-size: 21px; font-weight: 700; color: #4b4258; }
+.mural-grande .dados b { font: 700 10px var(--font-inter), sans-serif; letter-spacing: 1px; text-transform: uppercase; color: #9a90aa; margin-right: 4px; }
+.mural-grande .autor { text-align: center; margin-top: 8px; font: 600 11px var(--font-inter), sans-serif; color: #9a90aa; }
+.mural-grande .autor span { font-family: var(--font-caveat), cursive; font-size: 21px; font-weight: 700; color: #7C3AED; margin-left: 4px; }
+.mural-grande .legenda { text-align: center; margin-top: 6px; font-size: 12px; color: #5b5168; }
+.mural-acoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.mural-acoes button { min-width: 42px; height: 42px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.25); background: rgba(20,14,10,0.85); color: #fff; font: 600 13px var(--font-inter), sans-serif; cursor: pointer; }
+.mural-acoes button.perigo { color: #FCA5A5; border-color: rgba(239,68,68,0.45); }
+.mural-acoes button.perigo-forte { background: #EF4444; border-color: #EF4444; color: #fff; }
+
+@media (prefers-reduced-motion: reduce) {
+  .polaroid.balanca, .polaroid.chegando, .polaroid.chegando .fita, .polaroid.chegando .tacha, .polaroid.chegando .clipe,
+  .raiz-nova .raiz-linha, .raiz-nova .raiz-folha, .mural-grande { animation: none; }
+}

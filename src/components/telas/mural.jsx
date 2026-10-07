@@ -1,28 +1,149 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTexto } from '@/lib/i18n'
 import { thumbUrl, onThumbError } from '@/lib/imageThumb'
 import { ehAdmin, ehSupervisor } from '@/lib/permissoes'
-import { dataLocal, addDias, MESES_C } from '@/lib/calendario'
+import { TOTAL_DIAS } from '@/lib/calendario'
 import { executar } from '@/lib/offline'
-import { useMontado, useEstadoServidor } from '@/lib/hooks'
+import { useEstadoServidor } from '@/lib/hooks'
 import { enviarFoto } from '@/app/actions/mural'
 import { guardarFoto, contarFotos, montarForm, processarFotos } from '@/lib/fotos-offline'
 
 /* eslint-disable @next/next/no-img-element -- fotos do Supabase: miniatura via render do Storage */
 
+// Mural de madeira com polaroids presas, em zigue-zague (uma por vez, alternando
+// os lados) e ligadas por raízes. Cada foto tem um jeito fixo de ser presa,
+// inclinação, dobra e balanço sorteados a partir do id, então não mudam entre
+// visitas. Foto nova (do próprio usuário ou que chegou ao atualizar) é colada
+// com animação: a raiz cresce, a polaroid desce e é presa. Estilos em
+// globals.css (.mural, .polaroid, .mural-*).
 
-function montarDias(inicioISO) {
-  const inicio = dataLocal(inicioISO)
-  const rot = d => `${d.getDate()} ${MESES_C[d.getMonth()]}`
-  const chegada1 = addDias(inicio, -2), chegada2 = addDias(inicio, -1)
-  return [
-    { label: `${chegada1.getDate()}-${chegada2.getDate()} ${MESES_C[chegada2.getMonth()]}`, labelDia: 'Dia 0' },
-    ...Array.from({ length: 13 }, (_, i) => ({ label: rot(addDias(inicio, i)), labelDia: `Dia ${i + 1}` })),
-  ]
+const LARGURA_MAX = 520
+const PRENDEDORES = ['tacha', 'fitas', 'clipe', 'fita', 'tacha', 'fita-canto', 'clipe']
+const DOBRAS = ['', 'tr', '', 'br', '', '', 'bl']
+const RABISCOS = ['♥', '★', ':)', '♥♥']
+const TACHAS = ['#EF4444', '#F59E0B', '#22C55E', '#3B82F6', '#A855F7', '#EC4899']
+
+// Aleatório com semente; descarta as primeiras saídas (com semente pequena elas
+// saem quase iguais e todas as fotos tombavam pro mesmo lado).
+function rng(seed) {
+  let s = (Math.abs(seed) % 2147483646) + 1
+  const r = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646 }
+  r(); r(); r()
+  return r
 }
+
+function gerarMadeira() {
+  const W = 360, H = 720, c = document.createElement('canvas')
+  c.width = W * 2; c.height = H * 2
+  const g = c.getContext('2d'); g.scale(2, 2)
+  const r = rng(7)
+  const tons = ['#8A5A32', '#7E5230', '#93613A', '#845634', '#7A4F2D']
+  const alt = 90
+  for (let y = 0, k = 0; y < H; y += alt, k++) {
+    g.fillStyle = tons[k % tons.length]; g.fillRect(0, y, W, alt)
+    for (let v = 0; v < 26; v++) {
+      const base = y + r() * alt, amp = 1 + r() * 4, freq = 0.01 + r() * 0.03, fase = r() * 10
+      g.beginPath()
+      for (let x = 0; x <= W; x += 6) g.lineTo(x, base + Math.sin(x * freq + fase) * amp + Math.sin(x * 0.07 + fase) * 0.8)
+      g.strokeStyle = r() > 0.5 ? 'rgba(60,32,14,0.22)' : 'rgba(190,140,90,0.12)'
+      g.lineWidth = 0.6 + r() * 1.4; g.stroke()
+    }
+    if (r() > 0.35) {
+      const nx = 30 + r() * (W - 60), ny = y + 20 + r() * (alt - 40)
+      for (let a = 7; a > 0; a--) { g.beginPath(); g.ellipse(nx, ny, a * 3.2, a * 1.6, 0, 0, Math.PI * 2); g.strokeStyle = `rgba(55,28,12,${0.12 + a * 0.02})`; g.lineWidth = 1; g.stroke() }
+      g.beginPath(); g.ellipse(nx, ny, 4, 2.2, 0, 0, Math.PI * 2); g.fillStyle = 'rgba(45,22,10,0.55)'; g.fill()
+    }
+    g.fillStyle = 'rgba(25,12,5,0.75)'; g.fillRect(0, y + alt - 2, W, 2)
+    g.fillStyle = 'rgba(255,220,180,0.08)'; g.fillRect(0, y, W, 1)
+    const junta = 40 + r() * (W - 80); g.fillStyle = 'rgba(25,12,5,0.6)'; g.fillRect(junta, y, 2, alt)
+    ;[[junta - 9, y + 12], [junta + 11, y + 12], [junta - 9, y + alt - 14], [junta + 11, y + alt - 14]].forEach(([px, py]) => {
+      g.beginPath(); g.arc(px, py, 2.2, 0, Math.PI * 2); g.fillStyle = '#3b2a1e'; g.fill()
+      g.beginPath(); g.arc(px - 0.6, py - 0.6, 0.9, 0, Math.PI * 2); g.fillStyle = 'rgba(255,240,220,0.35)'; g.fill()
+    })
+  }
+  return c.toDataURL('image/jpeg', 0.85)
+}
+
+// Posição e "personalidade" de cada polaroid
+function montarLayout(fotos, largura) {
+  const w = Math.round(Math.min(160, Math.max(118, largura * 0.38)))
+  let y = 34
+  return fotos.map((f, k) => {
+    const r = rng(f.id * 7919 + 13)
+    const x = k % 2 === 0 ? 18 + r() * 28 : largura - w - 18 - r() * 28
+    const prendedor = PRENDEDORES[f.id % PRENDEDORES.length]
+    const giro = (r() < 0.5 ? -1 : 1) * (1.5 + r() * 7)
+    const balanca = (prendedor === 'tacha' || prendedor === 'clipe') && r() < 0.45
+    const item = {
+      foto: f, x, y, w, giro, prendedor, balanca,
+      dobra: DOBRAS[(f.id * 3) % DOBRAS.length],
+      rabisco: f.id % 4 === 2 ? { txt: RABISCOS[f.id % RABISCOS.length], lado: k % 2 ? 'left' : 'right' } : null,
+      amp: (r() < 0.5 ? -1 : 1) * (3 + r() * 3), dur: 3 + r() * 2.2,
+      cor: TACHAS[f.id % TACHAS.length],
+    }
+    y += w * 0.9 + r() * 28
+    return item
+  })
+}
+
+function bez(p0, p1, p2, p3, t) { const u = 1 - t; return u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3 }
+
+// Raiz entre duas fotos: caminho principal, raizinhas e folhinhas
+function gerarRaiz(a, b, seed) {
+  const r = rng(seed)
+  const dx = b.x - a.x, dy = b.y - a.y
+  const c1 = { x: a.x + dx * 0.15 + (r() - 0.5) * 70, y: a.y + Math.max(40, dy * 0.45) }
+  const c2 = { x: b.x - dx * 0.15 + (r() - 0.5) * 70, y: b.y - Math.max(40, dy * 0.45) }
+  const d = `M${a.x} ${a.y} C${c1.x} ${c1.y} ${c2.x} ${c2.y} ${b.x} ${b.y}`
+  const ramos = []
+  for (let k = 0, n = 3 + Math.floor(r() * 3); k < n; k++) {
+    const t = 0.15 + r() * 0.7
+    const x = bez(a.x, c1.x, c2.x, b.x, t), y = bez(a.y, c1.y, c2.y, b.y, t)
+    const lado = r() > 0.5 ? 1 : -1, comp = 16 + r() * 26
+    const ex = x + lado * comp, ey = y + (r() - 0.3) * comp
+    ramos.push({ d: `M${x} ${y} Q${x + lado * comp * 0.5} ${y + (r() - 0.5) * 14} ${ex} ${ey}`, w: 1.2 + r() * 1.4 })
+    if (r() > 0.4) ramos.push({ d: `M${ex} ${ey} q${lado * 6} ${4 + r() * 6} ${lado * (8 + r() * 6)} ${2 + r() * 8}`, w: 0.9, escuro: true })
+  }
+  const folhas = []
+  for (let k = 0, n = 1 + Math.floor(r() * 3); k < n; k++) {
+    const t = 0.2 + r() * 0.6
+    const x = a.x + dx * t + (r() - 0.5) * 30, y = a.y + dy * t
+    folhas.push({ x, y, ang: r() * 120 - 60, cor: '#6BA34E' }, { x, y, ang: r() * 120 + 120, cor: '#4D7C3A' })
+  }
+  return { d, ramos, folhas }
+}
+
+function Raiz({ raiz, nova }) {
+  return (
+    <g className={nova ? 'raiz-nova' : undefined}>
+      <path className="raiz-linha" pathLength={1} d={raiz.d} fill="none" stroke="rgba(0,0,0,0.45)" strokeWidth={7.5} strokeLinecap="round" transform="translate(2 4)" />
+      <path className="raiz-linha" pathLength={1} d={raiz.d} fill="none" stroke="#2B1A0F" strokeWidth={6.5} strokeLinecap="round" />
+      <path className="raiz-linha" pathLength={1} d={raiz.d} fill="none" stroke="#7A4E26" strokeWidth={4.5} strokeLinecap="round" />
+      <path className="raiz-linha" pathLength={1} d={raiz.d} fill="none" stroke="#A87443" strokeWidth={1.3} strokeLinecap="round" opacity={0.8} transform="translate(-1 -1)" />
+      {raiz.ramos.map((m, i) => <path key={i} className="raiz-linha" pathLength={1} d={m.d} fill="none" stroke={m.escuro ? '#2B1A0F' : '#7A4E26'} strokeWidth={m.w} strokeLinecap="round" />)}
+      {raiz.folhas.map((f, i) => <ellipse key={i} className="raiz-folha" cx={f.x} cy={f.y} rx={7} ry={3.2} fill={f.cor} transform={`rotate(${f.ang} ${f.x} ${f.y}) translate(7 0)`} />)}
+    </g>
+  )
+}
+
+function Prendedor({ tipo, cor }) {
+  if (tipo === 'tacha') return <span className="tacha" style={{ background: `radial-gradient(circle at 35% 35%, #fff8, ${cor} 45%)` }} />
+  if (tipo === 'fita') return <span className="fita" />
+  if (tipo === 'fitas') return <><span className="fita esq" /><span className="fita dir" /></>
+  if (tipo === 'fita-canto') return <><span className="fita esq" /><span className="fita baixo" /></>
+  return <span className="clipe" />
+}
+
+const fmt = (iso, op) => new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', ...op })
+function rotuloDia(dia) {
+  if (dia === 0) return 'Chegada'
+  if (dia <= TOTAL_DIAS) return `Dia ${dia} da Escola`
+  return 'Depois da Escola'
+}
+const dataBR = iso => iso.split('-').reverse().join('/')
 
 function comprimirImagem(file, maxKB = 500) {
   return new Promise((resolve, reject) => {
@@ -54,135 +175,125 @@ function comprimirImagem(file, maxKB = 500) {
   })
 }
 
-function lerCurtidas() {
-  const set = new Set()
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i)
-      if (k?.startsWith('curtiu_')) set.add(k.replace('curtiu_', ''))
-    }
-  } catch { /* ignora */ }
-  return set
-}
-
-const chipBase = ativo => ({
-  flexShrink: 0, padding: '8px 14px', borderRadius: 16,
-  border: ativo ? '1px solid var(--accent-border)' : '1px solid rgba(255,255,255,0.2)',
-  background: ativo ? 'var(--accent-bg)' : 'rgba(8,8,20,0.88)',
-  color: ativo ? 'var(--accent-light)' : 'rgba(255,255,255,0.9)',
-  fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
-  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2
-})
-const chipAutor = ativo => ({
-  flexShrink: 0, padding: '5px 12px', borderRadius: 14, fontSize: 10, fontWeight: 700, cursor: 'pointer',
-  border: ativo ? '1px solid var(--accent-border)' : '1px solid rgba(255,255,255,0.2)',
-  background: ativo ? 'var(--accent-bg)' : 'rgba(8,8,20,0.88)',
-  color: ativo ? 'var(--accent-light)' : 'rgba(255,255,255,0.9)', fontFamily: 'var(--font-inter), sans-serif'
-})
-const aviso = (bg, borda, cor) => ({ background: bg, border: `1px solid ${borda}`, borderRadius: 14, padding: '12px', fontSize: 13, color: cor, textAlign: 'center' })
-
-export function Mural({ sessao, inicio, dia, diaHoje, recap, recapLiberado, filtroAutor, todosOsDias, autores, fotos: fotosServidor }) {
+export function Mural({ sessao, fase, liberaEm, fotos: fotosServidor }) {
   const tx = useTexto()
   const router = useRouter()
-  const autor = sessao.nome
-  const DIAS = useMemo(() => montarDias(inicio), [inicio])
-  const [carregando, startNavegar] = useTransition()
-  const montado = useMontado()
   const [fotos, setFotos] = useEstadoServidor(fotosServidor)
-  const [uploading, setUploading] = useState(false)
-  const [erroUpload, setErroUpload] = useState(false)
-  const [fotoPendenteAvisada, setFotoPendenteAvisada] = useState(false)
-  const [pendingFotos, setPendingFotos] = useState(0)
-  const [fotoAberta, setFotoAberta] = useState(null)
-  const [confirmDelete, setConfirmDelete] = useState(false)
-  const [curtidasEscolhidas, setCurtidas] = useState(null)
-  const curtidasSalvas = useMemo(() => (montado ? lerCurtidas() : new Set()), [montado])
-  const curtidas = curtidasEscolhidas ?? curtidasSalvas
+  const [madeira, setMadeira] = useState(null)
+  const [largura, setLargura] = useState(360)
+  const [aberta, setAberta] = useState(null)        // índice da foto aberta
+  const [confirmarExclusao, setConfirmarExclusao] = useState(false)
+  const [chegando, setChegando] = useState(() => new Set())
+  const [escolhendo, setEscolhendo] = useState(false)
   const [modoTeste, setModoTeste] = useState(false)
-  const [pendingFile, setPendingFile] = useState(null)
-  const [pendingPreview, setPendingPreview] = useState(null)
-  const [pendingLegenda, setPendingLegenda] = useState('')
+  const [pendente, setPendente] = useState(null)    // { file, preview }
+  const [enviando, setEnviando] = useState(false)
+  const [erroEnvio, setErroEnvio] = useState(false)
+  const [guardadaOffline, setGuardadaOffline] = useState(false)
+  const [naFila, setNaFila] = useState(0)
+  const quadro = useRef(null)
+  const conhecidas = useRef(null)
   const inputGaleria = useRef(null)
   const inputCamera = useRef(null)
 
+  const podePostar = fase === 'aberto' || modoTeste
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- canvas só existe no navegador
+  useEffect(() => { setMadeira(gerarMadeira()) }, [])
+
+  useLayoutEffect(() => {
+    const el = quadro.current?.parentElement
+    if (!el) return
+    const medir = () => setLargura(Math.min(LARGURA_MAX, el.clientWidth))
+    medir()
+    const ro = new ResizeObserver(medir)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
   useEffect(() => {
-    contarFotos().then(setPendingFotos)
-    const atualizar = () => contarFotos().then(setPendingFotos)
+    contarFotos().then(setNaFila)
+    const atualizar = () => contarFotos().then(setNaFila)
     window.addEventListener('impulse-fila', atualizar)
     return () => window.removeEventListener('impulse-fila', atualizar)
   }, [])
 
   useEffect(() => {
-    document.body.classList.toggle('foto-aberta', !!fotoAberta)
+    document.body.classList.toggle('foto-aberta', aberta !== null)
     return () => document.body.classList.remove('foto-aberta')
-  }, [fotoAberta])
+  }, [aberta])
 
-  function navegar(params) {
-    const q = new URLSearchParams()
-    Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== '' && v !== false) q.set(k, v === true ? '1' : String(v)) })
-    startNavegar(() => router.push(`/mural?${q.toString()}`, { scroll: false }))
-  }
+  const layout = useMemo(() => montarLayout(fotos, largura), [fotos, largura])
+  const raizes = useMemo(() => layout.slice(1).map((p, k) => {
+    const ant = layout[k]
+    return { id: p.foto.id, raiz: gerarRaiz({ x: ant.x + ant.w / 2, y: ant.y + ant.w + 16 }, { x: p.x + p.w / 2, y: p.y + 4 }, p.foto.id * 53 + 1) }
+  }), [layout])
+  const ultimo = layout[layout.length - 1]
+  const altura = ultimo ? ultimo.y + ultimo.w + 200 : 460
 
-  const podePostar = diaHoje !== null || modoTeste
+  // Foto que não estava no mural quando a tela abriu é "colada" com animação
+  useEffect(() => {
+    if (conhecidas.current === null) { conhecidas.current = new Set(fotos.map(f => f.id)); return }
+    const novas = fotos.filter(f => !conhecidas.current.has(f.id))
+    if (novas.length === 0) return
+    novas.forEach(f => conhecidas.current.add(f.id))
+    setChegando(new Set(novas.map(f => f.id)))
+    const alvo = layout.find(p => p.foto.id === novas[novas.length - 1].id)
+    if (alvo && quadro.current) {
+      const topo = quadro.current.getBoundingClientRect().top + window.scrollY
+      window.scrollTo({ top: Math.max(0, topo + alvo.y - 180), behavior: 'smooth' })
+    }
+    const t = setTimeout(() => setChegando(new Set()), 1900)
+    return () => clearTimeout(t)
+  }, [fotos, layout])
 
-  function handleFileSelect(e) {
+  function escolherArquivo(e) {
     const file = e.target.files?.[0]
-    if (!file) return
     e.target.value = ''
-    setPendingFile(file)
-    setPendingPreview(URL.createObjectURL(file))
-    setPendingLegenda('')
+    setEscolhendo(false)
+    if (!file) return
+    setPendente({ file, preview: URL.createObjectURL(file) })
   }
 
-  function cancelarUpload() {
-    if (pendingPreview) URL.revokeObjectURL(pendingPreview)
-    setPendingFile(null)
-    setPendingPreview(null)
-    setPendingLegenda('')
+  function cancelarEnvio() {
+    if (pendente) URL.revokeObjectURL(pendente.preview)
+    setPendente(null)
   }
 
-  async function publicarFoto() {
-    if (!pendingFile) return
-    const file = pendingFile
-    const legenda = pendingLegenda.trim()
-    cancelarUpload()
-    setUploading(true)
-    setErroUpload(false)
-    setFotoPendenteAvisada(false)
-    const arquivo = `dia${diaHoje ?? 0}_${Date.now()}.jpg`
+  async function colarFoto() {
+    if (!pendente) return
+    const file = pendente.file
+    cancelarEnvio()
+    setEnviando(true)
+    setErroEnvio(false)
+    setGuardadaOffline(false)
+    const arquivo = `dia0_${Date.now()}.jpg`
     let blob
-    try { blob = await comprimirImagem(file) } catch { setErroUpload(true); setUploading(false); return }
-    const item = { blob, arquivo, legenda }
+    try { blob = await comprimirImagem(file) } catch { setErroEnvio(true); setEnviando(false); return }
+    const item = { blob, arquivo, legenda: '' }
 
     for (let tentativa = 0; tentativa < 3; tentativa++) {
       try {
         if (!navigator.onLine) break
         await enviarFoto(montarForm(item))
-        setUploading(false)
+        setEnviando(false)
         router.refresh()
         return
       } catch (err) {
-        if (!(err instanceof TypeError)) { setErroUpload(true); setUploading(false); return }
+        if (!(err instanceof TypeError)) { setErroEnvio(true); setEnviando(false); return }
         if (tentativa < 2) await new Promise(r => setTimeout(r, 1200))
       }
     }
     // Sem sinal: guarda no aparelho e sobe sozinha quando a conexão voltar
     try {
       await guardarFoto(item)
-      setPendingFotos(await contarFotos())
-      setFotoPendenteAvisada(true)
+      setNaFila(await contarFotos())
+      setGuardadaOffline(true)
       processarFotos()
     } catch {
-      setErroUpload(true)
+      setErroEnvio(true)
     }
-    setUploading(false)
-  }
-
-  function deletarFoto(foto) {
-    setFotoAberta(null)
-    setConfirmDelete(false)
-    setFotos(prev => prev.filter(f => f.id !== foto.id))
-    executar('mural.deletarFoto', foto.id)
+    setEnviando(false)
   }
 
   async function baixarFoto(url) {
@@ -201,245 +312,125 @@ export function Mural({ sessao, inicio, dia, diaHoje, recap, recapLiberado, filt
     }
   }
 
-  function curtirFoto(foto) {
-    const id = String(foto.id)
-    const jaCurtiu = curtidas.has(id)
-    const novas = jaCurtiu ? Math.max(0, foto.curtidas - 1) : foto.curtidas + 1
-    try {
-      if (jaCurtiu) localStorage.removeItem(`curtiu_${id}`)
-      else localStorage.setItem(`curtiu_${id}`, '1')
-    } catch { /* ignora */ }
-    setCurtidas(() => { const s = new Set(curtidas); if (jaCurtiu) s.delete(id); else s.add(id); return s })
-    setFotos(prev => prev.map(f => f.id === foto.id ? { ...f, curtidas: novas } : f))
-    if (fotoAberta?.id === foto.id) setFotoAberta(prev => ({ ...prev, curtidas: novas }))
-    executar('mural.curtirFoto', foto.id, jaCurtiu ? -1 : 1)
+  function apagarFoto(foto) {
+    setAberta(null)
+    setConfirmarExclusao(false)
+    setFotos(prev => prev.filter(f => f.id !== foto.id))
+    executar('mural.deletarFoto', foto.id)
   }
 
-  const podeDeletar = fotoAberta && (fotoAberta.autor === autor || ehSupervisor(sessao))
-  const autoresUnicos = [...new Set(autores)]
-  const rotuloDiaFoto = f => DIAS[f.dia]?.labelDia ?? ''
+  const fotoAberta = aberta !== null ? fotos[aberta] : null
+  const podeApagar = fotoAberta && (fotoAberta.autor === sessao.nome || ehSupervisor(sessao))
+  const mudarAberta = passo => { setConfirmarExclusao(false); setAberta(i => (i + passo + fotos.length) % fotos.length) }
 
   return (
-    <div style={{ background: '#05051a', minHeight: '100vh', position: 'relative' }} className="tela-enter-mural">
-
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 18, fontWeight: 700, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>{tx.feedImpulse}</h2>
-          <div style={{ marginLeft: 'auto', padding: '4px 10px', borderRadius: 10, background: 'var(--accent-bg)', border: '1px solid var(--accent-glow)', color: 'var(--accent-light)', fontSize: 10, fontWeight: 600 }}>{autor}</div>
-        </div>
-
-        <div style={{ display: 'flex', gap: 6, padding: '16px 22px', overflowX: 'auto', scrollbarWidth: 'none' }}>
-          {filtroAutor && (
-            <button onClick={() => navegar({ autor: filtroAutor, todos: true })} style={chipBase(todosOsDias)}>
-              <span style={{ fontSize: 13, fontWeight: 800 }}>📅 Todos</span>
-              <span style={{ fontSize: 9, opacity: 0.65 }}>os dias</span>
-            </button>
-          )}
-          {DIAS.map((d, i) => (
-            <button key={i} onClick={() => navegar({ dia: i })} style={chipBase(!todosOsDias && !recap && dia === i)}>
-              <span style={{ fontSize: 13, fontWeight: 800 }}>{d.label}</span>
-              <span style={{ fontSize: 9, opacity: 0.65 }}>{d.labelDia}</span>
-            </button>
-          ))}
-          {recapLiberado && (
-            <button onClick={() => navegar({ recap: true })} style={{
-              ...chipBase(false),
-              border: recap ? '1px solid #FFD700' : '1px solid rgba(255,215,0,0.35)',
-              background: recap ? 'rgba(255,215,0,0.18)' : 'rgba(8,8,20,0.88)',
-              color: recap ? '#FFD700' : 'rgba(255,215,0,0.7)'
-            }}>
-              <span style={{ fontSize: 13, fontWeight: 800 }}>🏆 Recap</span>
-              <span style={{ fontSize: 9, opacity: 0.8 }}>Top 100</span>
-            </button>
-          )}
-        </div>
-
-        {!recap && (podePostar ? (
-          <div style={{ display: 'flex', gap: 10, padding: '0 22px 16px' }}>
-            <button onClick={() => inputGaleria.current?.click()} disabled={uploading} style={{ flex: 1, padding: '14px', borderRadius: 16, border: '1px solid var(--border-strong)', background: 'var(--bg-card)', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600, cursor: uploading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: uploading ? 0.5 : 1 }}>🖼️ Galeria</button>
-            <button onClick={() => inputCamera.current?.click()} disabled={uploading} style={{ flex: 1, padding: '14px', borderRadius: 16, border: '1px solid var(--accent-border)', background: 'var(--accent-bg)', color: 'var(--accent-light)', fontSize: 13, fontWeight: 600, cursor: uploading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: uploading ? 0.5 : 1 }}>📷 Câmera</button>
-            <input ref={inputGaleria} type="file" accept="image/*" onChange={handleFileSelect} style={{ display: 'none' }} />
-            <input ref={inputCamera} type="file" accept="image/*" capture="environment" onChange={handleFileSelect} style={{ display: 'none' }} />
-          </div>
-        ) : (
-          <div style={{ padding: '0 22px 16px' }}>
-            <div style={{ padding: '12px 14px', borderRadius: 14, background: 'rgba(8,8,20,0.88)', border: '1px solid rgba(255,255,255,0.2)', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.9)', textAlign: 'center' }}>📷 {tx.uploadDisponivel}</div>
-            {ehAdmin(sessao) && (
-              <div style={{ textAlign: 'center', marginTop: 8 }}>
-                <button onClick={() => setModoTeste(true)} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 10, cursor: 'pointer', textDecoration: 'underline' }}>🔓 Liberar postagem</button>
-              </div>
-            )}
-          </div>
-        ))}
-
-        {!recap && uploading && (
-          <div style={{ padding: '0 22px 16px' }}>
-            <div style={{ ...aviso('var(--accent-bg)', 'var(--accent-glow)', 'var(--accent-light)'), display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <div style={{ width: 16, height: 16, border: '2px solid #C4B5FD', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-              Enviando foto...
-            </div>
-          </div>
-        )}
-        {!recap && erroUpload && <div style={{ padding: '0 22px 16px' }}><div style={aviso('rgba(239,68,68,0.1)', 'rgba(239,68,68,0.3)', '#F87171')}>⚠️ Não foi possível enviar a foto. Tente de novo.</div></div>}
-        {!recap && fotoPendenteAvisada && <div style={{ padding: '0 22px 16px' }}><div style={aviso('rgba(245,158,11,0.1)', 'rgba(245,158,11,0.3)', '#FBBF24')}>📶 Sinal fraco — sua foto foi guardada no aparelho e será enviada automaticamente assim que a conexão melhorar.</div></div>}
-        {!recap && !uploading && pendingFotos > 0 && (
-          <div style={{ padding: '0 22px 16px' }}>
-            <div style={{ ...aviso('rgba(245,158,11,0.08)', 'rgba(245,158,11,0.25)', '#FBBF24'), padding: '10px 12px', fontSize: 12 }}>⏳ {pendingFotos} foto{pendingFotos > 1 ? 's' : ''} aguardando conexão pra enviar</div>
-          </div>
-        )}
-
-        {!recap && (
-          <div style={{ display: 'flex', gap: 6, padding: '0 22px 12px', overflowX: 'auto', scrollbarWidth: 'none' }}>
-            <button onClick={() => navegar({ dia })} style={chipAutor(!filtroAutor)}>{tx.todos}</button>
-            <button onClick={() => navegar({ dia, autor })} style={chipAutor(filtroAutor === autor)}>👤 Minhas</button>
-            {autoresUnicos.filter(a => a !== autor).map(a => (
-              <button key={a} onClick={() => navegar({ dia, autor: a })} style={chipAutor(filtroAutor === a)}>{a}</button>
-            ))}
-          </div>
-        )}
-
-        {recap ? (
-          <div style={{ padding: '0 16px 100px', opacity: carregando ? 0.5 : 1, transition: 'opacity .2s' }}>
-            <div style={{ textAlign: 'center', padding: '18px 0 28px' }}>
-              <div style={{ fontSize: 44, marginBottom: 10 }}>🏆</div>
-              <div style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 21, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Top 100 do Impulso</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', letterSpacing: 0.4 }}>as fotos mais curtidas do evento</div>
-            </div>
-            {fotos.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '60px 22px', color: 'rgba(255,255,255,0.35)', fontSize: 14 }}>Nenhuma foto ainda</div>
-            ) : (
-              <>
-                {fotos[0] && (
-                  <div className="recap-card" style={{ position: 'relative', borderRadius: 18, overflow: 'hidden', marginBottom: 8, cursor: 'pointer', border: '2px solid #FFD700', boxShadow: '0 0 28px rgba(255,215,0,0.25)' }} onClick={() => { setFotoAberta(fotos[0]); setConfirmDelete(false) }}>
-                    <img src={thumbUrl(fotos[0].url, { width: 800, height: 300 })} onError={onThumbError(fotos[0].url)} alt="" style={{ width: '100%', display: 'block', maxHeight: 300, objectFit: 'cover' }} />
-                    <div style={{ position: 'absolute', top: 10, left: 10, background: '#FFD700', borderRadius: 10, padding: '4px 10px', fontSize: 12, fontWeight: 800, color: '#000' }}>🥇 #1</div>
-                    <div style={{ padding: '10px 14px', background: 'linear-gradient(0deg,rgba(0,0,0,0.85),rgba(0,0,0,0.4))', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div>
-                        {fotos[0].legenda && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', marginBottom: 2 }}>{fotos[0].legenda}</div>}
-                        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>{fotos[0].autor}</div>
-                      </div>
-                      <div style={{ fontSize: 15, color: '#FFD700', fontWeight: 800 }}>❤️ {fotos[0].curtidas}</div>
-                    </div>
-                  </div>
-                )}
-                {fotos.slice(1, 3).length > 0 && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
-                    {fotos.slice(1, 3).map((foto, i) => {
-                      const CORES = ['#C0C0C0', '#CD7F32']
-                      return (
-                        <div key={foto.id} className="recap-card" style={{ animationDelay: `${(i + 1) * 0.09}s`, position: 'relative', borderRadius: 16, overflow: 'hidden', cursor: 'pointer', border: `2px solid ${CORES[i]}` }} onClick={() => { setFotoAberta(foto); setConfirmDelete(false) }}>
-                          <img src={thumbUrl(foto.url, { width: 500, height: 300 })} onError={onThumbError(foto.url)} alt="" style={{ width: '100%', display: 'block', height: 150, objectFit: 'cover' }} />
-                          <div style={{ position: 'absolute', top: 7, left: 7, background: CORES[i], borderRadius: 8, padding: '3px 8px', fontSize: 11, fontWeight: 800, color: '#000' }}>{['🥈', '🥉'][i]} #{i + 2}</div>
-                          <div style={{ padding: '8px 10px', background: 'rgba(0,0,0,0.7)' }}>
-                            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', fontWeight: 600, marginBottom: 2 }}>{foto.autor}</div>
-                            <div style={{ fontSize: 11, color: CORES[i], fontWeight: 800 }}>❤️ {foto.curtidas}</div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                  {fotos.slice(3).map((foto, i) => (
-                    <div key={foto.id} className="recap-card" style={{ animationDelay: `${(i + 3) * 0.05}s`, position: 'relative', borderRadius: 14, overflow: 'hidden', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }} onClick={() => { setFotoAberta(foto); setConfirmDelete(false) }}>
-                      <img src={thumbUrl(foto.url, { width: 480 })} onError={onThumbError(foto.url)} alt="" loading="lazy" style={{ width: '100%', display: 'block' }} />
-                      <div style={{ position: 'absolute', top: 6, left: 6, background: 'rgba(0,0,0,0.72)', borderRadius: 6, padding: '2px 7px', fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.85)' }}>#{i + 4}</div>
-                      <div style={{ padding: '6px 8px', background: 'rgba(0,0,0,0.65)' }}>
-                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{foto.autor}</div>
-                        <div style={{ fontSize: 10, color: 'rgba(239,68,68,0.9)', fontWeight: 700 }}>❤️ {foto.curtidas}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        ) : (
-          <>
-            <div style={{ padding: '0 22px 12px', fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>
-              {carregando ? 'Carregando...' : `${fotos.length} foto${fotos.length !== 1 ? 's' : ''}${filtroAutor ? ` · ${filtroAutor}${todosOsDias ? ' · todos os dias' : ` · ${DIAS[dia].labelDia}`}` : ` · ${DIAS[dia].labelDia}`}`}
-            </div>
-
-            {!carregando && fotos.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '60px 22px' }}>
-                <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.85 }}>📷</div>
-                <div style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 16, fontWeight: 700, marginBottom: 6, color: '#fff' }}>{tx.nenhumaFoto}</div>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)' }}>Seja o primeiro a postar em {DIAS[dia].label}!</div>
-              </div>
-            )}
-
-            <div style={{ padding: '0 22px 100px', columnCount: 2, columnGap: 8, opacity: carregando ? 0.5 : 1, transition: 'opacity .2s' }}>
-              {fotos.map((foto, i) => (
-                <div key={foto.id} className="recap-card" onClick={() => { setFotoAberta(foto); setConfirmDelete(false) }} style={{ breakInside: 'avoid', marginBottom: 8, borderRadius: 14, overflow: 'hidden', cursor: 'pointer', position: 'relative', animationDelay: `${Math.min(i, 12) * 0.04}s`, border: '1px solid var(--border)', background: 'var(--bg-card)' }}>
-                  <img src={thumbUrl(foto.url, { width: 480 })} onError={onThumbError(foto.url)} alt="" loading="lazy" decoding="async" style={{ width: '100%', display: 'block' }} />
-                  <div style={{ padding: '6px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ flex: 1, minWidth: 0, marginRight: 4 }}>
-                      {foto.legenda && <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginBottom: 2, lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{foto.legenda}</div>}
-                      {foto.autor && <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 1 }}>{foto.autor}</div>}
-                      <div style={{ fontSize: 10, color: 'var(--text-faint)' }} suppressHydrationWarning>
-                        {todosOsDias || dia === 0
-                          ? new Date(foto.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
-                          : new Date(foto.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                    </div>
-                    <button onClick={e => { e.stopPropagation(); curtirFoto(foto) }} className="btn-curtida" style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, padding: '6px 4px', flexShrink: 0 }}>
-                      <span style={{ fontSize: 22 }}>{curtidas.has(String(foto.id)) ? '❤️' : '🤍'}</span>
-                      {foto.curtidas > 0 && <span style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 700 }}>{foto.curtidas}</span>}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        {fotoAberta && (
-          <div className="overlay-bg" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 400, display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, padding: '14px 16px 0', flexShrink: 0 }}>
-              <button onClick={() => baixarFoto(fotoAberta.url)} style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.1)', borderRadius: 12, border: 'none', color: 'white', fontSize: 17, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>⬇️</button>
-              <button onClick={() => { setFotoAberta(null); setConfirmDelete(false) }} style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.1)', borderRadius: 12, border: 'none', color: 'white', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
-            </div>
-            <div onClick={() => { setFotoAberta(null); setConfirmDelete(false) }} style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '12px 20px 48px', gap: 12 }}>
-              <img src={fotoAberta.url} alt="" decoding="async" onClick={e => e.stopPropagation()} style={{ maxWidth: '100%', maxHeight: '60vh', borderRadius: 12, objectFit: 'contain' }} />
-              <div onClick={e => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 16, width: '100%', maxWidth: 380 }}>
-                {fotoAberta.autor && <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>📸 {fotoAberta.autor}</div>}
-                <button onClick={() => curtirFoto(fotoAberta)} className="btn-curtida" style={{
-                  marginLeft: 'auto', background: curtidas.has(String(fotoAberta.id)) ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.1)',
-                  border: curtidas.has(String(fotoAberta.id)) ? '1px solid rgba(239,68,68,0.4)' : '1px solid rgba(255,255,255,0.2)',
-                  borderRadius: 14, padding: '12px 22px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, color: 'white', fontSize: 18, fontWeight: 600
-                }}>
-                  <span style={{ fontSize: 22 }}>{curtidas.has(String(fotoAberta.id)) ? '❤️' : '🤍'}</span>
-                  <span>{fotoAberta.curtidas}</span>
-                </button>
-              </div>
-              {fotoAberta.legenda && <div onClick={e => e.stopPropagation()} style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', textAlign: 'center', maxWidth: 300, lineHeight: 1.5 }}>{fotoAberta.legenda}</div>}
-              {podeDeletar && (
-                <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: 12 }}>
-                  {!confirmDelete ? (
-                    <button onClick={() => setConfirmDelete(true)} style={{ padding: '10px 20px', borderRadius: 14, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.15)', color: '#F87171', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>🗑️ Excluir</button>
-                  ) : (
-                    <>
-                      <button onClick={() => deletarFoto(fotoAberta)} style={{ padding: '10px 20px', borderRadius: 14, border: 'none', background: '#EF4444', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{tx.confirmarExclusao}</button>
-                      <button onClick={() => setConfirmDelete(false)} style={{ padding: '10px 20px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.08)', color: 'white', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{tx.cancelar}</button>
-                    </>
-                  )}
-                </div>
-              )}
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }} suppressHydrationWarning>{rotuloDiaFoto(fotoAberta)} · {new Date(fotoAberta.created_at).toLocaleString('pt-BR')}</div>
-            </div>
-          </div>
-        )}
+    <div className="mural tela-enter-mural" style={madeira ? { backgroundImage: `url(${madeira})` } : undefined}>
+      <div className="mural-cab">
+        <h2>{tx.feedImpulse}</h2>
+        <span>{fotos.length} {fotos.length === 1 ? tx.foto : tx.fotos}</span>
       </div>
 
-      {pendingPreview && (
-        <div className="overlay-bg" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 20px' }}>
-          <div className="overlay-enter" style={{ width: '100%', maxWidth: 340, background: 'rgba(8,8,20,0.98)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 24, padding: '24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 16, fontWeight: 700, color: '#fff', textAlign: 'center' }}>Nova foto</div>
-            <img src={pendingPreview} alt="" style={{ width: '100%', borderRadius: 14, maxHeight: 220, objectFit: 'cover' }} />
-            <textarea value={pendingLegenda} onChange={e => setPendingLegenda(e.target.value)} placeholder="Adicione uma legenda... (opcional)" maxLength={200} rows={3}
-              style={{ width: '100%', padding: '12px 14px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 14, fontSize: 13, color: '#fff', outline: 'none', resize: 'none', fontFamily: 'var(--font-inter), sans-serif' }} />
-            <button onClick={publicarFoto} style={{ padding: 14, background: 'var(--gradient)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', color: 'white', fontFamily: 'var(--font-syne), sans-serif' }}>Publicar</button>
-            <button onClick={cancelarUpload} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: 13, cursor: 'pointer' }}>Cancelar</button>
+      <div className="mural-avisos">
+        {fase === 'antes' && fotos.length > 0 && !modoTeste && <div className="mural-aviso">📷 As fotos serão liberadas em {dataBR(liberaEm)}</div>}
+        {fase === 'depois' && fotos.length > 0 && !modoTeste && <div className="mural-aviso">O mural foi fechado pra novas fotos</div>}
+        {enviando && <div className="mural-aviso"><span style={{ width: 14, height: 14, border: '2px solid #FDEBD3', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />Colando sua foto...</div>}
+        {erroEnvio && <div className="mural-aviso erro">Não deu pra enviar a foto. Tente de novo.</div>}
+        {guardadaOffline && <div className="mural-aviso atencao">Sinal fraco: sua foto ficou guardada no aparelho e vai pro mural sozinha quando a conexão voltar.</div>}
+        {!enviando && naFila > 0 && <div className="mural-aviso atencao">{naFila} foto{naFila > 1 ? 's' : ''} esperando conexão pra ir pro mural</div>}
+      </div>
+
+      <div className="mural-quadro" ref={quadro} style={{ width: largura, height: altura }}>
+        <svg className="mural-raizes" viewBox={`0 0 ${largura} ${altura}`} aria-hidden="true">
+          {raizes.map(({ id, raiz }) => <Raiz key={id} raiz={raiz} nova={chegando.has(id)} />)}
+        </svg>
+
+        {fotos.length === 0 && (
+          <div className="mural-bilhete" style={{ top: 70 }}>
+            {fase === 'antes' && !modoTeste ? (
+              <>As fotos serão liberadas em {dataBR(liberaEm)}<small>a partir da chegada na Escola</small></>
+            ) : fase === 'depois' && !modoTeste ? (
+              <>O mural foi fechado<small>obrigado por cada momento ♥</small></>
+            ) : (
+              <>Ainda não tem fotos no mural<small>coloque a primeira!</small></>
+            )}
+            {fase !== 'aberto' && !modoTeste && ehAdmin(sessao) && (
+              <div><button type="button" onClick={() => setModoTeste(true)}>Liberar postagem</button></div>
+            )}
+          </div>
+        )}
+
+        {layout.map((p, k) => {
+          const nova = chegando.has(p.foto.id)
+          const classe = ['polaroid', nova ? 'chegando' : p.balanca ? 'balanca' : '', p.dobra ? `dobra-${p.dobra}` : ''].filter(Boolean).join(' ')
+          return (
+            <button key={p.foto.id} type="button" className={classe}
+              aria-label={`Abrir foto de ${p.foto.autor ?? 'alguém'}`}
+              onClick={() => { setAberta(k); setConfirmarExclusao(false) }}
+              style={{ left: p.x, top: p.y, width: p.w, '--g': `${p.giro}deg`, '--amp': `${p.amp}deg`, '--dur': `${p.dur}s` }}>
+              <Prendedor tipo={p.prendedor} cor={p.cor} />
+              <img className="foto" src={thumbUrl(p.foto.url, { width: 320, height: 320 })} onError={onThumbError(p.foto.url)} alt="" loading="lazy" decoding="async" />
+              <span className="leg">{p.foto.autor ?? ''}</span>
+              {p.rabisco && <span className="rabisco" style={{ [p.rabisco.lado]: -5 }}>{p.rabisco.txt}</span>}
+            </button>
+          )
+        })}
+      </div>
+
+      {podePostar && (
+        <>
+          {escolhendo && (
+            <div className="mural-escolha">
+              <button type="button" onClick={() => inputCamera.current?.click()}>📷 Tirar foto</button>
+              <button type="button" onClick={() => inputGaleria.current?.click()}>🖼️ Escolher da galeria</button>
+            </div>
+          )}
+          <button type="button" className="mural-fab" aria-label="Colocar foto no mural" aria-expanded={escolhendo} disabled={enviando}
+            onClick={() => setEscolhendo(v => !v)}>{escolhendo ? '×' : '+'}</button>
+          <input ref={inputGaleria} type="file" accept="image/*" onChange={escolherArquivo} hidden />
+          <input ref={inputCamera} type="file" accept="image/*" capture="environment" onChange={escolherArquivo} hidden />
+        </>
+      )}
+
+      {pendente && (
+        <div className="mural-modal">
+          <div className="mural-grande">
+            <span className="fita" />
+            <img src={pendente.preview} alt="Foto que vai pro mural" />
+            <div className="autor">vai pro mural com o nome<span>{sessao.nome}</span></div>
+          </div>
+          <div className="mural-acoes">
+            <button type="button" onClick={cancelarEnvio}>Cancelar</button>
+            <button type="button" className="perigo-forte" style={{ background: 'var(--accent)', borderColor: 'var(--accent)' }} onClick={colarFoto}>Colar no mural</button>
+          </div>
+        </div>
+      )}
+
+      {fotoAberta && (
+        <div className="mural-modal" onClick={e => { if (e.target === e.currentTarget) setAberta(null) }}>
+          <div className="mural-grande" key={fotoAberta.id}>
+            <span className="fita" />
+            <img src={thumbUrl(fotoAberta.url, { width: 800, height: 800 })} onError={onThumbError(fotoAberta.url)} alt="" decoding="async" />
+            <div className="diaesc">{rotuloDia(fotoAberta.dia)}</div>
+            <div className="dados">
+              <span><b>Hora</b>{fmt(fotoAberta.created_at, { hour: '2-digit', minute: '2-digit' })}</span>
+              <span><b>Dia</b>{fmt(fotoAberta.created_at, { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+            </div>
+            {fotoAberta.autor && <div className="autor">postada por<span>{fotoAberta.autor}</span></div>}
+            {fotoAberta.legenda && <div className="legenda">{fotoAberta.legenda}</div>}
+          </div>
+          <div className="mural-acoes">
+            {fotos.length > 1 && <button type="button" aria-label="Foto anterior" onClick={() => mudarAberta(-1)}>‹</button>}
+            <button type="button" onClick={() => setAberta(null)}>Fechar</button>
+            {fotos.length > 1 && <button type="button" aria-label="Próxima foto" onClick={() => mudarAberta(1)}>›</button>}
+          </div>
+          <div className="mural-acoes">
+            <button type="button" onClick={() => baixarFoto(fotoAberta.url)}>Baixar</button>
+            {podeApagar && (!confirmarExclusao
+              ? <button type="button" className="perigo" onClick={() => setConfirmarExclusao(true)}>Excluir</button>
+              : <>
+                  <button type="button" className="perigo-forte" onClick={() => apagarFoto(fotoAberta)}>{tx.confirmarExclusao}</button>
+                  <button type="button" onClick={() => setConfirmarExclusao(false)}>{tx.cancelar}</button>
+                </>)}
           </div>
         </div>
       )}
