@@ -62,10 +62,9 @@ function ContadorSection({ inicio }) {
   if (!contador) return <div style={{ height: 150 }} />
   if (contador.fase === 'antes') {
     return (
-      <div className="cartao-relevo" style={{ borderRadius: 20, padding: '18px 16px', textAlign: 'center' }}>
+      <div style={{ textAlign: 'center', padding: '4px 0' }}>
         <div style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 14, fontWeight: 700, fontStyle: 'italic', color: 'var(--accent-light)', textAlign: 'center' }}>&quot;{tx.naoAndeisAnsiosos}&quot;</div>
-        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textAlign: 'center', marginBottom: 12 }}>Fp 4:6</div>
-        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-light)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>{tx.faltam}</div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textAlign: 'center', marginBottom: 16 }}>Fp 4:6</div>
         <PlacasContador grupos={[[contador.dias, 3, tx.dias], [contador.horas, 2, tx.hrs], [contador.minutos, 2, tx.min], [contador.segundos, 2, tx.seg]]} />
       </div>
     )
