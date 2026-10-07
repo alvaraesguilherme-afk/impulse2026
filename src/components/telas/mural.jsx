@@ -13,7 +13,7 @@ import { guardarFoto, contarFotos, montarForm, processarFotos } from '@/lib/foto
 
 /* eslint-disable @next/next/no-img-element -- fotos do Supabase: miniatura via render do Storage */
 
-// Mural de madeira com polaroids presas, em zigue-zague (uma por vez, alternando
+// Mural de madeira (public/mural-madeira.jpg) com polaroids presas, em zigue-zague (uma por vez, alternando
 // os lados) e ligadas por raízes. Cada foto tem um jeito fixo de ser presa,
 // inclinação, dobra e balanço sorteados a partir do id, então não mudam entre
 // visitas. Foto nova (do próprio usuário ou que chegou ao atualizar) é colada
@@ -33,38 +33,6 @@ function rng(seed) {
   const r = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646 }
   r(); r(); r()
   return r
-}
-
-function gerarMadeira() {
-  const W = 360, H = 720, c = document.createElement('canvas')
-  c.width = W * 2; c.height = H * 2
-  const g = c.getContext('2d'); g.scale(2, 2)
-  const r = rng(7)
-  const tons = ['#8A5A32', '#7E5230', '#93613A', '#845634', '#7A4F2D']
-  const alt = 90
-  for (let y = 0, k = 0; y < H; y += alt, k++) {
-    g.fillStyle = tons[k % tons.length]; g.fillRect(0, y, W, alt)
-    for (let v = 0; v < 26; v++) {
-      const base = y + r() * alt, amp = 1 + r() * 4, freq = 0.01 + r() * 0.03, fase = r() * 10
-      g.beginPath()
-      for (let x = 0; x <= W; x += 6) g.lineTo(x, base + Math.sin(x * freq + fase) * amp + Math.sin(x * 0.07 + fase) * 0.8)
-      g.strokeStyle = r() > 0.5 ? 'rgba(60,32,14,0.22)' : 'rgba(190,140,90,0.12)'
-      g.lineWidth = 0.6 + r() * 1.4; g.stroke()
-    }
-    if (r() > 0.35) {
-      const nx = 30 + r() * (W - 60), ny = y + 20 + r() * (alt - 40)
-      for (let a = 7; a > 0; a--) { g.beginPath(); g.ellipse(nx, ny, a * 3.2, a * 1.6, 0, 0, Math.PI * 2); g.strokeStyle = `rgba(55,28,12,${0.12 + a * 0.02})`; g.lineWidth = 1; g.stroke() }
-      g.beginPath(); g.ellipse(nx, ny, 4, 2.2, 0, 0, Math.PI * 2); g.fillStyle = 'rgba(45,22,10,0.55)'; g.fill()
-    }
-    g.fillStyle = 'rgba(25,12,5,0.75)'; g.fillRect(0, y + alt - 2, W, 2)
-    g.fillStyle = 'rgba(255,220,180,0.08)'; g.fillRect(0, y, W, 1)
-    const junta = 40 + r() * (W - 80); g.fillStyle = 'rgba(25,12,5,0.6)'; g.fillRect(junta, y, 2, alt)
-    ;[[junta - 9, y + 12], [junta + 11, y + 12], [junta - 9, y + alt - 14], [junta + 11, y + alt - 14]].forEach(([px, py]) => {
-      g.beginPath(); g.arc(px, py, 2.2, 0, Math.PI * 2); g.fillStyle = '#3b2a1e'; g.fill()
-      g.beginPath(); g.arc(px - 0.6, py - 0.6, 0.9, 0, Math.PI * 2); g.fillStyle = 'rgba(255,240,220,0.35)'; g.fill()
-    })
-  }
-  return c.toDataURL('image/jpeg', 0.85)
 }
 
 // Posição e "personalidade" de cada polaroid
@@ -179,7 +147,6 @@ export function Mural({ sessao, fase, liberaEm, fotos: fotosServidor }) {
   const tx = useTexto()
   const router = useRouter()
   const [fotos, setFotos] = useEstadoServidor(fotosServidor)
-  const [madeira, setMadeira] = useState(null)
   const [largura, setLargura] = useState(360)
   const [aberta, setAberta] = useState(null)        // índice da foto aberta
   const [confirmarExclusao, setConfirmarExclusao] = useState(false)
@@ -197,9 +164,6 @@ export function Mural({ sessao, fase, liberaEm, fotos: fotosServidor }) {
   const inputCamera = useRef(null)
 
   const podePostar = fase === 'aberto' || modoTeste
-
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- canvas só existe no navegador
-  useEffect(() => { setMadeira(gerarMadeira()) }, [])
 
   useLayoutEffect(() => {
     const el = quadro.current?.parentElement
@@ -324,7 +288,7 @@ export function Mural({ sessao, fase, liberaEm, fotos: fotosServidor }) {
   const mudarAberta = passo => { setConfirmarExclusao(false); setAberta(i => (i + passo + fotos.length) % fotos.length) }
 
   return (
-    <div className="mural tela-enter-mural" style={madeira ? { backgroundImage: `url(${madeira})` } : undefined}>
+    <div className="mural tela-enter-mural">
       <div className="mural-cab">
         <h2>{tx.feedImpulse}</h2>
         <span>{fotos.length} {fotos.length === 1 ? tx.foto : tx.fotos}</span>
