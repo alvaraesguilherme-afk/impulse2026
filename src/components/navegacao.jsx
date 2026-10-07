@@ -36,16 +36,17 @@ function ConteudoSidebar({ podeSupervisor, onNavegar }) {
 
   return (
     <>
-      <div style={{ padding: '0 10px', marginBottom: 36 }}>
+      <div className="item-cascata" style={{ padding: '0 10px', marginBottom: 36, '--i': 0 }}>
         <Logo />
         <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 5, letterSpacing: 1.5, textTransform: 'uppercase' }}>{tx.datasEvento}</div>
       </div>
 
       {itens.map((item, idx) => {
-        if (!item) return <div key={'sep-' + idx} style={{ height: 1, background: 'var(--border)', margin: '6px 10px 10px' }} />
+        if (!item) return <div key={'sep-' + idx} className="item-cascata" style={{ '--i': idx + 1, height: 1, background: 'var(--border)', margin: '6px 10px 10px' }} />
         const active = ativo(item.id)
         return (
-          <Link key={item.id} href={HREF[item.id]} onClick={onNavegar} className="sidebar-item" data-ativo={active ? '1' : undefined} style={{
+          <Link key={item.id} href={HREF[item.id]} onClick={onNavegar} className="sidebar-item item-cascata" data-ativo={active ? '1' : undefined} style={{
+            '--i': idx + 1,
             display: 'flex', alignItems: 'center', gap: 12,
             padding: '10px 14px', borderRadius: 12, marginBottom: 2,
             background: active ? 'var(--accent-bg)' : undefined,
@@ -102,10 +103,10 @@ export function NavMobile({ podeSupervisor }) {
         borderBottom: '1px solid var(--border)'
       }}>
         <button onClick={() => setAberta(true)} aria-label="Abrir menu" aria-expanded={aberta} style={{
-          width: 40, height: 40, borderRadius: 12, border: 'none', background: 'transparent', color: 'var(--text)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginLeft: -8
+          width: 42, height: 42, borderRadius: 12, border: '1px solid var(--border-strong)', background: 'var(--input-bg)', color: 'var(--text)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginLeft: -4, flexShrink: 0
         }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><line x1="4" y1="7" x2="20" y2="7" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="17" x2="20" y2="17" /></svg>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round"><line x1="4" y1="7" x2="20" y2="7" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="17" x2="20" y2="17" /></svg>
         </button>
         <Logo tamanho={17} />
       </header>
@@ -114,7 +115,7 @@ export function NavMobile({ podeSupervisor }) {
         position: 'fixed', inset: 0, zIndex: 49, background: 'rgba(0,0,0,0.55)',
         opacity: aberta ? 1 : 0, pointerEvents: aberta ? 'auto' : 'none', transition: 'opacity 0.25s ease'
       }} />
-      <nav aria-hidden={!aberta} inert={!aberta} style={{
+      <nav aria-hidden={!aberta} inert={!aberta} className={aberta ? 'gaveta-aberta' : undefined} style={{
         ...estiloSidebar, display: 'flex', width: 260, maxWidth: '82vw',
         transform: aberta ? 'translateX(0)' : 'translateX(-100%)', transition: 'transform 0.28s cubic-bezier(.16,1,.3,1)',
         boxShadow: aberta ? '8px 0 30px rgba(0,0,0,0.4)' : 'none'
