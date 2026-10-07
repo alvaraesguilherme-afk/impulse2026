@@ -143,6 +143,26 @@ function comprimirImagem(file, maxKB = 500) {
   })
 }
 
+// Bilhete do mural vazio, pendurado num barbante que vem de fora da tela.
+// Toda a animação (queda girando, tranco, balanço, rajadas) está no CSS
+// (.pendurado* no globals.css). A sombra é uma cópia escura do conjunto.
+function BilhetePendurado({ children }) {
+  return (
+    <div className="pendurado">
+      <div className="pendurado-queda">
+        <div className="pendurado-sombra" aria-hidden="true" inert>
+          <span className="barbante" /><span className="no-corda" />
+          <div className="mural-bilhete">{children}<span className="ponta esq" /><span className="ponta dir" /></div>
+        </div>
+        <div className="pendurado-balanco">
+          <span className="barbante" /><span className="no-corda" />
+          <div className="mural-bilhete">{children}<span className="ponta esq" /><span className="ponta dir" /></div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function Mural({ sessao, fase, liberaEm, fotos: fotosServidor }) {
   const tx = useTexto()
   const router = useRouter()
@@ -327,20 +347,7 @@ export function Mural({ sessao, fase, liberaEm, fotos: fotosServidor }) {
           // cai ao abrir o Feed, o barbante segura com um tranco e ele fica
           // balançando. A sombra é uma cópia escura, desfocada e deslocada, como
           // se o papel estivesse longe da madeira.
-          return (
-            <div className="pendurado">
-              <div className="pendurado-queda">
-                <div className="pendurado-sombra" aria-hidden="true" inert>
-                  <span className="barbante" />
-                  <div className="mural-bilhete">{conteudo}</div>
-                </div>
-                <div className="pendurado-balanco">
-                  <span className="barbante" />
-                  <div className="mural-bilhete">{conteudo}</div>
-                </div>
-              </div>
-            </div>
-          )
+          return <BilhetePendurado>{conteudo}</BilhetePendurado>
         })()}
 
         {layout.map((p, k) => {

@@ -564,27 +564,155 @@ body.foto-aberta .nav-mobile {
 .pendurado { position: absolute; left: 50%; top: -170px; width: 230px; margin-left: -115px; z-index: 2; pointer-events: none; }
 .pendurado .mural-bilhete { position: relative; left: auto; top: auto; width: 220px; margin: -3px auto 0; transform: rotate(-2deg); pointer-events: auto;
   box-shadow: 0 2px 3px rgba(0,0,0,0.18); }
-/* ilhós onde o barbante amarra no papel */
-.pendurado .mural-bilhete::before { content: ""; position: absolute; top: 7px; left: 50%; width: 9px; height: 9px; margin-left: -4.5px; border-radius: 50%; background: rgba(0,0,0,0.12); box-shadow: inset 0 0 0 2px #b9996c; }
-.barbante { display: block; width: 3px; height: 240px; margin: 0 auto; border-radius: 2px;
-  background: repeating-linear-gradient(160deg, #d8bf96 0 3px, #a5865c 3px 5px); box-shadow: 1px 0 0 rgba(0,0,0,0.18); }
-.pendurado-queda { animation: penduradoCai 1.15s both; }
-@keyframes penduradoCai {
-  0%   { transform: translateY(-560px); animation-timing-function: cubic-bezier(.55,0,1,.45); }
-  58%  { transform: translateY(16px); animation-timing-function: ease-out; }
-  74%  { transform: translateY(-7px); animation-timing-function: ease-in-out; }
-  88%  { transform: translateY(3px); }
-  100% { transform: translateY(0); }
+/* furinho no papel por onde a corda passa */
+.pendurado .mural-bilhete::before { content: ""; position: absolute; top: 9px; left: 50%; width: 8px; height: 8px; margin-left: -4px; border-radius: 50%; background: #5a3a1f; box-shadow: inset 0 1px 2px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,0,0,0.08); }
+/* nó da corda logo acima do furo, com duas pontinhas soltas */
+.no-corda { position: relative; z-index: 2; display: block; width: 15px; height: 12px; margin: -3px auto -13px; border-radius: 7px;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.3), rgba(255,255,255,0) 40%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.35)),
+    repeating-linear-gradient(35deg, #dcc59f 0 3px, #b39466 3px 5px, #8f7148 5px 6px);
+  box-shadow: 1px 2px 2px rgba(0,0,0,0.3); }
+.no-corda::before, .no-corda::after { content: ""; position: absolute; top: 7px; width: 4px; height: 13px; border-radius: 2px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.25), rgba(0,0,0,0.3)), repeating-linear-gradient(-58deg, #dcc59f 0 3px, #b39466 3px 5px); }
+.no-corda::before { left: 1px; transform: rotate(28deg); }
+.no-corda::after { right: 1px; transform: rotate(-22deg); height: 10px; }
+.pendurado-sombra .no-corda, .pendurado-sombra .no-corda::before, .pendurado-sombra .no-corda::after { background: #1f1006; box-shadow: none; }
+
+/* Papel vivo: cada deformação tem uma causa.
+   - Queda: o papel vem curvado (luz de curva, --curva) e girando de leve
+     (rotação na .pendurado-queda).
+   - Tranco da corda (0,68s): a inércia chicoteia a base (transform) e as
+     pontas batem e assentam; a curva relaxa.
+   - Balanço calmo (a partir de 8,03s, junto com penduradoBalanco): ciclo de
+     11,4s = 3 balanços. Nos 2 primeiros, só a ponta de trás atrasa de leve
+     quando o papel passa rápido pelo meio; no 3º vem uma rajada curta (papel
+     curva, pontas tremulam, gira de leve) e acalma de novo. */
+@property --dobraE { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --dobraD { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --curva { syntax: "<number>"; inherits: true; initial-value: 0.35; }
+.pendurado .mural-bilhete { transform-origin: 50% 10px;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--dobraD)), calc(100% - var(--dobraD)) 100%, var(--dobraE) 100%, 0 calc(100% - var(--dobraE)));
+  scale: calc(1 - 0.035 * var(--curva)) 1;
+  animation:
+    papelTranco 1.4s 0.62s both, papelRajada 11.4s 8.03s infinite,
+    pontasQueda 2s both, pontasCiclo 11.4s 8.03s infinite,
+    curvaQueda 2s both, curvaCiclo 11.4s 8.03s infinite; }
+@keyframes papelTranco {
+  0%   { transform: perspective(520px) rotate(-2deg); animation-timing-function: cubic-bezier(.2,.6,.4,1); }
+  18%  { transform: perspective(520px) rotate(-2deg) rotateX(-26deg) skewX(2deg); animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  42%  { transform: perspective(520px) rotate(-2deg) rotateX(11deg) skewX(-1deg); animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  64%  { transform: perspective(520px) rotate(-2deg) rotateX(-5deg); animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  84%  { transform: perspective(520px) rotate(-2deg) rotateX(2deg); }
+  100% { transform: perspective(520px) rotate(-2deg) rotateX(0deg) rotateY(0deg); }
 }
+@keyframes papelRajada {
+  0%, 66.67%, 100% { transform: perspective(520px) rotate(-2deg) rotateX(0deg) rotateY(0deg); animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  72%  { transform: perspective(520px) rotate(-2deg) rotateX(-7deg) rotateY(5deg); animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  78%  { transform: perspective(520px) rotate(-2deg) rotateX(4deg) rotateY(-4deg); animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  84%  { transform: perspective(520px) rotate(-2deg) rotateX(-4deg) rotateY(3deg); animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  90%  { transform: perspective(520px) rotate(-2deg) rotateX(2deg) rotateY(-1.5deg); animation-timing-function: cubic-bezier(.45,0,.55,1); }
+}
+@keyframes pontasQueda {
+  0%, 34% { --dobraD: 0px; --dobraE: 0px; animation-timing-function: cubic-bezier(.2,.6,.4,1); }
+  45%  { --dobraD: 13px; --dobraE: 9px; animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  60%  { --dobraD: 1px; --dobraE: 1px; animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  75%  { --dobraD: 4px; --dobraE: 3px; animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  100% { --dobraD: 0px; --dobraE: 0px; }
+}
+@keyframes pontasCiclo {
+  0%, 16.67%, 33.33%, 50%, 66.67%, 100% { --dobraD: 0px; --dobraE: 0px; animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  8.33%, 41.67% { --dobraD: 5px; --dobraE: 0px; animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  25%, 58.33%   { --dobraD: 0px; --dobraE: 5px; animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  72%  { --dobraD: 14px; --dobraE: 9px; animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  77%  { --dobraD: 4px; --dobraE: 16px; animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  82%  { --dobraD: 18px; --dobraE: 6px; animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  88%  { --dobraD: 6px; --dobraE: 10px; animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  94%  { --dobraD: 2px; --dobraE: 2px; animation-timing-function: cubic-bezier(.45,0,.55,1); }
+}
+@keyframes curvaQueda {
+  0%, 34% { --curva: 1; animation-timing-function: cubic-bezier(.2,.6,.4,1); }
+  55%  { --curva: 0.15; animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  75%  { --curva: 0.55; animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  100% { --curva: 0.35; }
+}
+@keyframes curvaCiclo {
+  0%, 66.67%, 100% { --curva: 0.35; animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  74%  { --curva: 1; animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  84%  { --curva: 0.5; animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  92%  { --curva: 0.8; animation-timing-function: cubic-bezier(.45,0,.55,1); }
+}
+/* aba dobrada: o pedaço do canto virado por cima, mostrando o verso, com o vinco mais escuro */
+.pendurado .ponta { position: absolute; bottom: 0; z-index: 2; pointer-events: none; }
+.pendurado .ponta.dir { right: 0; width: var(--dobraD); height: var(--dobraD); clip-path: polygon(0 0, 100% 0, 0 100%);
+  background: linear-gradient(135deg, #f8efd6 0%, #e9d8ad 42%, #c3ac7c 50%); }
+.pendurado .ponta.esq { left: 0; width: var(--dobraE); height: var(--dobraE); clip-path: polygon(0 0, 100% 0, 100% 100%);
+  background: linear-gradient(225deg, #f8efd6 0%, #e9d8ad 42%, #c3ac7c 50%); }
+/* luz da curva: borda esquerda na sombra, brilho subindo no meio, borda direita na sombra */
+.pendurado-balanco .mural-bilhete::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background: linear-gradient(90deg,
+    rgba(70,45,15,calc(0.16 * var(--curva))) 0%, rgba(255,255,255,calc(0.38 * var(--curva))) 34%,
+    rgba(255,255,255,0) 60%, rgba(70,45,15,calc(0.2 * var(--curva))) 100%); }
+/* corda grossa: fibra torcida + sombreado de cilindro (claro à esquerda, escuro à direita) */
+.barbante { display: block; width: 6px; height: 240px; margin: 0 auto; border-radius: 3px; transform-origin: 50% 100%;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.28), rgba(255,255,255,0) 40%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.35)),
+    repeating-linear-gradient(-58deg, #dcc59f 0 4px, #b39466 4px 6px, #8f7148 6px 7px);
+  box-shadow: 1px 1px 1px rgba(0,0,0,0.25); }
+/* queda de papel leve: cai acelerando até a corda esticar (45%); a corda dá
+   um pouco (só ela se alonga, topo parado lá em cima: scaleY = 1 + desloc/240)
+   e devolve num quique curto que some rápido. */
+/* A queda também gira de leve: inclinado pra um lado e virado um pouco em
+   3D, vai endireitando enquanto cai e chega reto no tranco da corda (45%).
+   O giro é em torno do centro do papel (corda 240px + metade do papel). */
+.pendurado-queda { transform-origin: 50% 290px; animation: penduradoCai 1.5s both; }
+@keyframes penduradoCai {
+  0%   { transform: perspective(700px) translateY(-560px) rotate(-11deg) rotateY(-28deg); animation-timing-function: cubic-bezier(.45,0,.9,.6); }
+  25%  { transform: perspective(700px) translateY(-330px) rotate(-6deg) rotateY(-14deg); animation-timing-function: cubic-bezier(.45,0,.9,.6); }
+  45%  { transform: perspective(700px) translateY(0) rotate(0deg) rotateY(0deg); animation-timing-function: cubic-bezier(.2,.6,.4,1); }
+  58%  { transform: perspective(700px) translateY(16px) rotate(0deg) rotateY(0deg); animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  70%  { transform: perspective(700px) translateY(-5px) rotate(0deg) rotateY(0deg); animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  82%  { transform: perspective(700px) translateY(3px) rotate(0deg) rotateY(0deg); animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  92%  { transform: perspective(700px) translateY(-1px) rotate(0deg) rotateY(0deg); }
+  100% { transform: perspective(700px) translateY(0) rotate(0deg) rotateY(0deg); }
+}
+.pendurado-queda .barbante { animation: cordaEstica 1.5s both; }
+@keyframes cordaEstica {
+  0%, 45% { transform: scaleY(1); animation-timing-function: cubic-bezier(.2,.6,.4,1); }
+  58%  { transform: scaleY(1.067); animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  70%  { transform: scaleY(1); animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  82%  { transform: scaleY(1.0125); }
+  92%, 100% { transform: scaleY(1); }
+}
+/* Balanço: começa no tranco da corda (0,68s). Cada ida e volta é um pouco
+   menor e mais lenta que a anterior (meias-oscilações de 0,45s até 1,75s, em
+   7,35s) e emenda sem degrau no balanço leve contínuo (meia-oscilação de 1,9s).
+   Cada trecho vai de um extremo ao outro com ease-in-out: velocidade zero nas
+   viradas, como um pêndulo. */
 .pendurado-balanco, .pendurado-sombra { transform-origin: 50% 0;
-  animation: penduradoBalancoInicio 2.4s 0.7s ease-out both, penduradoBalanco 3.8s 3.1s ease-in-out infinite; }
-@keyframes penduradoBalancoInicio { 0% { transform: rotate(0); } 12% { transform: rotate(-9deg); } 30% { transform: rotate(7deg); } 50% { transform: rotate(-5deg); } 70% { transform: rotate(3.5deg); } 85% { transform: rotate(-2.5deg); } 100% { transform: rotate(2.5deg); } }
-@keyframes penduradoBalanco { 0%, 100% { transform: rotate(2.5deg); } 50% { transform: rotate(-2.5deg); } }
+  animation: penduradoBalancoInicio 7.35s 0.68s both, penduradoBalanco 3.8s 8.03s infinite; }
+@keyframes penduradoBalancoInicio {
+  0%     { transform: rotate(0); animation-timing-function: cubic-bezier(.2,.6,.4,1); }
+  6.1%   { transform: rotate(-8deg); animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  14.3%  { transform: rotate(6.5deg); animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  25.2%  { transform: rotate(-5deg); animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  38.8%  { transform: rotate(4deg); animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  55.8%  { transform: rotate(-3.2deg); animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  76.2%  { transform: rotate(2.8deg); animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  100%   { transform: rotate(-2.5deg); }
+}
+@keyframes penduradoBalanco {
+  0%, 100% { transform: rotate(-2.5deg); animation-timing-function: cubic-bezier(.45,0,.55,1); }
+  50%      { transform: rotate(2.5deg); animation-timing-function: cubic-bezier(.45,0,.55,1); }
+}
 /* sombra projetada lá atrás: deslocada (o papel está longe da madeira) e desfocada */
-.pendurado-sombra { position: absolute; inset: 0; translate: 20px 30px; filter: blur(7px); opacity: 0.45; pointer-events: none; }
+/* perto da tela e longe da madeira: sombra bem deslocada, maior, mais desfocada e mais fraca */
+.pendurado-sombra { position: absolute; inset: 0; translate: 38px 58px; scale: 1.07; filter: blur(13px); opacity: 0.36; pointer-events: none; }
+/* o papel (e a corda) ficam um pouco maiores, como quem está mais perto do olho, e mais iluminados que a madeira */
+.pendurado-balanco { scale: 1.08; }
+.pendurado-balanco .mural-bilhete { background: linear-gradient(160deg, #FFFBEA, #FFF3CF 60%, #F7E8BE); box-shadow: 0 1px 2px rgba(0,0,0,0.12), 0 0 0 1px rgba(255,255,255,0.4) inset; }
 .pendurado-sombra .barbante { background: #1f1006; box-shadow: none; }
 .pendurado-sombra .mural-bilhete, .pendurado-sombra .mural-bilhete * { background: #1f1006; color: transparent; border-color: transparent; box-shadow: none; text-decoration: none; }
 .pendurado-sombra .mural-bilhete::before { display: none; }
 @media (prefers-reduced-motion: reduce) {
-  .pendurado-queda, .pendurado-balanco, .pendurado-sombra { animation: none; }
+  .pendurado-queda, .pendurado-queda .barbante, .pendurado-balanco, .pendurado-sombra, .pendurado .mural-bilhete { animation: none; }
 }
