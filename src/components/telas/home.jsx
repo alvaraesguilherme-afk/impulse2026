@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { Fragment, useEffect, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useTexto } from '@/lib/i18n'
 import { rotuloRelativo, horasDesde } from '@/lib/tempo'
@@ -34,6 +34,28 @@ function useContador(inicioISO) {
   return { fase: 'depois' }
 }
 
+// Placas que viram (ver .placa no globals.css): a key muda junto com o dígito,
+// então só a placa que mudou é remontada e gira.
+function PlacasContador({ grupos }) {
+  return (
+    <div className="placas">
+      {grupos.map(([valor, casas, rotulo], g) => (
+        <Fragment key={rotulo}>
+          {g > 0 && <div className="placas-sep">:</div>}
+          <div className="placas-grupo">
+            <div className="placas-digitos">
+              {String(valor).padStart(casas, '0').slice(-casas).split('').map((d, i) => (
+                <div key={i + '-' + d} className="placa">{d}</div>
+              ))}
+            </div>
+            <div className="placas-rotulo">{rotulo}</div>
+          </div>
+        </Fragment>
+      ))}
+    </div>
+  )
+}
+
 function ContadorSection({ inicio }) {
   const tx = useTexto()
   const contador = useContador(inicio)
@@ -44,14 +66,7 @@ function ContadorSection({ inicio }) {
         <div style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 14, fontWeight: 700, fontStyle: 'italic', color: 'var(--accent-light)', textAlign: 'center' }}>&quot;{tx.naoAndeisAnsiosos}&quot;</div>
         <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textAlign: 'center', marginBottom: 12 }}>Fp 4:6</div>
         <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-light)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>{tx.faltam}</div>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
-          {[[contador.dias, tx.dias], [contador.horas, tx.hrs], [contador.minutos, tx.min], [contador.segundos, tx.seg]].map(([v, l]) => (
-            <div key={l} style={{ minWidth: 52, padding: '8px 4px', background: 'var(--bg-card)', borderRadius: 14, border: '1px solid var(--border)' }}>
-              <div style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 24, fontWeight: 800, color: 'var(--accent-light)' }}>{String(v).padStart(2, '0')}</div>
-              <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 2, textTransform: 'uppercase', fontWeight: 600 }}>{l}</div>
-            </div>
-          ))}
-        </div>
+        <PlacasContador grupos={[[contador.dias, 3, tx.dias], [contador.horas, 2, tx.hrs], [contador.minutos, 2, tx.min], [contador.segundos, 2, tx.seg]]} />
       </div>
     )
   }
