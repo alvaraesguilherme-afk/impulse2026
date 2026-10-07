@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { executar } from '@/lib/offline'
 import { useEstadoServidor } from '@/lib/hooks'
-import { BotaoVoltar } from '@/components/botao-voltar'
 
 function CartaoAdv({ adv, onToggle, onConfirmar, onNegar, onExcluir, isSupervisor }) {
   const [confirmExcluir, setConfirmExcluir] = useState(false)
@@ -186,7 +185,6 @@ export function Advertencias({ isSupervisor, alunos: alunosServidor, advertencia
 
       {/* Header */}
       <div style={{ padding: '14px 22px', display: 'flex', alignItems: 'center', gap: 14, borderBottom: '1px solid var(--border)', position: 'sticky', top: 'var(--topo-mobile, 0px)', background: 'var(--bg-tela)', zIndex: 10 }}>
-        <BotaoVoltar />
         <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>Advertências</h2>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
           {pendentes.length > 0 && (

@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTexto } from '@/lib/i18n'
 import { ehAdmin } from '@/lib/permissoes'
 import { executar } from '@/lib/offline'
 import { useMontado, useEstadoServidor, lerLocal } from '@/lib/hooks'
 import { usePreferencias } from '@/components/preferencias'
-import { BotaoVoltar } from '@/components/botao-voltar'
+import { RodaDeCores } from '@/components/roda-cores'
+import { aplicarCorPersonalizada, limparCorPersonalizada, CHAVE_COR, ID_PERSONALIZADA } from '@/lib/cor-personalizada'
 import { getStatusNotificacoes, ativarNotificacoes, desativarNotificacoes, suportaNotificacoes, sincronizarInscricao } from '@/lib/push-client'
 
 const CORES = [
@@ -17,14 +18,41 @@ const CORES = [
   { id: 'verde', label: 'Verde', cor: '#16A34A' },
 ]
 
+const ICONE_TEMA = { light: '/icons/config-tema-claro.png', dark: '/icons/config-tema-escuro.png' }
+
+// Ícone do tema como elevador (ver .elev-* no globals.css): pro claro a lua
+// desce e o sol vem de cima; pro escuro o sol sobe e a lua vem de baixo. Na
+// primeira renderização não anima.
+function IconeTema({ tema }) {
+  const claro = tema === 'light'
+  const src = ICONE_TEMA[claro ? 'light' : 'dark']
+  const ultimo = useRef(src)
+  const [troca, setTroca] = useState(null)
+  useEffect(() => {
+    if (ultimo.current === src) return
+    setTroca(t => ({ antigo: ultimo.current, paraClaro: claro, chave: (t?.chave ?? 0) + 1 }))
+    ultimo.current = src
+  }, [src, claro])
+  const estilo = { position: 'absolute', inset: 0, width: 26, height: 26, objectFit: 'contain' }
+  return (
+    <div style={{ position: 'relative', width: 26, height: 26, flexShrink: 0, overflow: 'hidden' }}>
+      {troca && <img key={'a' + troca.chave} src={troca.antigo} alt="" className={troca.paraClaro ? 'elev-sai-baixo' : 'elev-sai-cima'} style={estilo} onAnimationEnd={() => setTroca(null)} />}
+      <img key={'n' + (troca?.chave ?? 0)} src={src} alt="" className={troca ? (troca.paraClaro ? 'elev-chega-cima' : 'elev-chega-baixo') : undefined} style={estilo} />
+    </div>
+  )
+}
+
 export function Config({ sessao, vapidKey, relatos: relatosServidor }) {
   const tx = useTexto()
   const { tema, setTema, idioma, setIdioma } = usePreferencias()
   const montado = useMontado()
   const [fontEscolhida, setFontSize] = useState(null)
   const [accentEscolhido, setAccentState] = useState(null)
+  const [corEscolhida, setCorEscolhida] = useState(null)
   const fontSize = fontEscolhida ?? (montado ? parseInt(lerLocal('impulse_fontsize', '100')) || 100 : 100)
   const accent = accentEscolhido ?? (montado ? lerLocal('impulse_accent', 'roxo') : 'roxo')
+  // Sem cor própria ainda, a roleta começa na cor pronta que a pessoa tinha.
+  const corHex = corEscolhida ?? (accent === ID_PERSONALIZADA && montado ? lerLocal(CHAVE_COR, null) : null) ?? CORES.find(c => c.id === accent)?.cor ?? '#7C3AED'
   const ambiente = montado
     ? { isIOS: /iPad|iPhone|iPod/.test(navigator.userAgent), jaInstalado: window.matchMedia('(display-mode: standalone)').matches || !!navigator.standalone, suporta: suportaNotificacoes() }
     : { isIOS: false, jaInstalado: false, suporta: false }
@@ -65,6 +93,15 @@ export function Config({ sessao, vapidKey, relatos: relatosServidor }) {
     setAccentState(cor)
     localStorage.setItem('impulse_accent', cor)
     document.documentElement.setAttribute('data-accent', cor)
+    if (cor !== ID_PERSONALIZADA) limparCorPersonalizada()
+  }
+
+  // "Sua cor": aplica enquanto a pessoa arrasta no seletor e guarda no aparelho.
+  function escolherCor(hex) {
+    setCorEscolhida(hex)
+    localStorage.setItem(CHAVE_COR, hex)
+    aplicarCorPersonalizada(hex)
+    setAccent(ID_PERSONALIZADA)
   }
 
   function mudarFonte(valor) {
@@ -99,7 +136,6 @@ export function Config({ sessao, vapidKey, relatos: relatosServidor }) {
   return (
     <div className="tela-enter" style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
-        <BotaoVoltar />
         <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 18, fontWeight: 700 }}>{tx.configuracoes}</h2>
       </div>
 
@@ -110,10 +146,9 @@ export function Config({ sessao, vapidKey, relatos: relatosServidor }) {
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '16px 18px', marginBottom: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <img src={tema === 'light' ? '/icons/config-tema-claro.png' : '/icons/config-tema-escuro.png'} alt="" style={{ width: 26, height: 26, objectFit: 'contain' }} />
+              <IconeTema tema={tema} />
               <div>
                 <div style={{ fontSize: 14, fontWeight: 600 }}>{tema === 'light' ? tx.temaClaro : tx.temaEscuro}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{tema === 'light' ? tx.modoClaroAtivado : tx.modoEscuroAtivado}</div>
               </div>
             </div>
             <div className={`toggle-track ${tema === 'light' ? 'active' : ''}`} onClick={() => setTema(tema === 'light' ? 'dark' : 'light')}>
@@ -127,25 +162,9 @@ export function Config({ sessao, vapidKey, relatos: relatosServidor }) {
             <img src="/icons/config-cor.png" alt="" style={{ width: 26, height: 26, objectFit: 'contain' }} />
             <div>
               <div style={{ fontSize: 14, fontWeight: 600 }}>{tx.corDestaque}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{tx.personalizeVisual}</div>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-            {CORES.map(c => (
-              <div key={c.id} onClick={() => setAccent(c.id)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: 14, background: c.cor,
-                  border: accent === c.id ? '3px solid var(--text)' : '2px solid transparent',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: accent === c.id ? `0 0 16px ${c.cor}50` : 'none',
-                  transition: 'all 0.2s ease'
-                }}>
-                  {accent === c.id && <span style={{ color: 'white', fontSize: 16, fontWeight: 800 }}>✓</span>}
-                </div>
-                <span style={{ fontSize: 10, color: accent === c.id ? 'var(--text)' : 'var(--text-muted)', fontWeight: 600 }}>{c.label}</span>
-              </div>
-            ))}
-          </div>
+          <RodaDeCores cor={corHex} onMudar={escolherCor} />
         </div>
 
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '16px 18px', marginBottom: 10 }}>
@@ -204,9 +223,6 @@ export function Config({ sessao, vapidKey, relatos: relatosServidor }) {
                   <img src="/icons/config-notificacoes.png" alt="" style={{ width: 26, height: 26, objectFit: 'contain' }} />
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 600 }}>{tx.notificacoesPush}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                      {!ambiente.suporta ? tx.notifIndisponivel : statusNotif === 'granted' ? tx.notifAtivadas : statusNotif === 'denied' ? tx.notifBloqueadas : tx.notifDesc}
-                    </div>
                   </div>
                 </div>
                 {ambiente.suporta && statusNotif !== 'denied' && (

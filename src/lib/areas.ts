@@ -13,7 +13,6 @@ export const AREAS = [
 
 export const AREA_APOIO = "Apoio";
 export const AREA_MIDIA = "Mídia";
-export const AREAS_COMPRAS: readonly string[] = ["Cozinha", "Cantina"];
 
 // Icone de cada area em /public/icons. Area sem icone mostra so o nome.
 export const ICONE_AREA: Record<string, string> = {

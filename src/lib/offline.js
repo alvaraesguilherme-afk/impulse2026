@@ -6,7 +6,6 @@ import * as apoio from '@/app/actions/apoio'
 import * as midia from '@/app/actions/midia'
 import * as programacao from '@/app/actions/programacao'
 import * as advertencias from '@/app/actions/advertencias'
-import * as compras from '@/app/actions/compras'
 import * as mural from '@/app/actions/mural'
 import * as config from '@/app/actions/config'
 
@@ -14,7 +13,7 @@ import * as config from '@/app/actions/config'
 // (sem rede), ela fica guardada no aparelho e é reenviada quando a conexão
 // volta — igual ao syncOp do app antigo, mas passando pelas server actions
 // (que conferem a permissão de quem está logado) em vez de gravar direto.
-const ACOES = { home, supervisor, apoio, midia, programacao, advertencias, compras, mural, config }
+const ACOES = { home, supervisor, apoio, midia, programacao, advertencias, mural, config }
 const QUEUE_KEY = 'impulse_fila_acoes'
 
 function resolver(nome) {

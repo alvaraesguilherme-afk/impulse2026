@@ -372,3 +372,22 @@ body.foto-aberta .nav-mobile {
   :root { --topo-mobile: 0px; }
   .conteudo-app { margin-left: 240px; }
 }
+
+/* Troca de tema (Configurações): "elevador". Pro claro a lua desce e o sol
+   chega de cima; pro escuro o sol sobe e a lua chega de baixo. A janela do
+   ícone corta o que sai (overflow hidden no container). */
+@keyframes elevSaiBaixo { from { transform: translateY(0); } to { transform: translateY(115%); } }
+@keyframes elevSaiCima  { from { transform: translateY(0); } to { transform: translateY(-115%); } }
+@keyframes elevChegaDeCima  { 0% { transform: translateY(-115%); } 80% { transform: translateY(6%); } 100% { transform: translateY(0); } }
+@keyframes elevChegaDeBaixo { 0% { transform: translateY(115%); } 80% { transform: translateY(-6%); } 100% { transform: translateY(0); } }
+.elev-sai-baixo { animation: elevSaiBaixo 0.55s cubic-bezier(.6,0,.4,1) both; }
+.elev-sai-cima { animation: elevSaiCima 0.55s cubic-bezier(.6,0,.4,1) both; }
+.elev-chega-cima { animation: elevChegaDeCima 0.55s cubic-bezier(.6,0,.4,1) both; }
+.elev-chega-baixo { animation: elevChegaDeBaixo 0.55s cubic-bezier(.6,0,.4,1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .elev-sai-baixo, .elev-sai-cima, .elev-chega-cima, .elev-chega-baixo { animation-duration: 0.01ms; }
+}
+
+/* Barra de brilho da roleta de cores (Configurações) */
+.barra-brilho::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #fff; border: 2px solid rgba(0,0,0,0.25); box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+.barra-brilho::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 2px solid rgba(0,0,0,0.25); box-shadow: 0 2px 6px rgba(0,0,0,0.4); }

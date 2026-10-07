@@ -10,7 +10,6 @@ import { diasDoEvento, DIAS_C, MESES } from '@/lib/calendario'
 import { executar } from '@/lib/offline'
 import { useEstadoServidor } from '@/lib/hooks'
 import { equipeComMenosGente } from '@/app/actions/supervisor'
-import { BotaoVoltar } from '@/components/botao-voltar'
 import { BarraAbas, PainelAba } from '@/components/abas'
 import { RotuloArea } from '@/components/rotulo-area'
 
@@ -157,7 +156,6 @@ export function Supervisor({ nome, abas, inicio, avisos: avisosServidor, chamada
   return (
     <div className="tela-enter" style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
-        <BotaoVoltar />
         <div>
           <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 18, fontWeight: 700 }}>Supervisor</h2>
           <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 1 }}>Logado como {nome}</div>

@@ -11,7 +11,6 @@ import { executar } from '@/lib/offline'
 import { useMontado, useEstadoServidor } from '@/lib/hooks'
 import { enviarFoto } from '@/app/actions/mural'
 import { guardarFoto, contarFotos, montarForm, processarFotos } from '@/lib/fotos-offline'
-import { BotaoVoltar } from '@/components/botao-voltar'
 
 /* eslint-disable @next/next/no-img-element -- fotos do Supabase: miniatura via render do Storage */
 
@@ -254,7 +253,6 @@ export function Mural({ sessao, inicio, dia, diaHoje, recap, recapLiberado, filt
 
       <div style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <BotaoVoltar claro />
           <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 18, fontWeight: 700, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>{tx.feedImpulse}</h2>
           <div style={{ marginLeft: 'auto', padding: '4px 10px', borderRadius: 10, background: 'var(--accent-bg)', border: '1px solid var(--accent-glow)', color: 'var(--accent-light)', fontSize: 10, fontWeight: 600 }}>{autor}</div>
         </div>

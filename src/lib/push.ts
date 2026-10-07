@@ -2,7 +2,6 @@ import "server-only";
 import { after } from "next/server";
 import webpush from "web-push";
 import { prisma } from "@/lib/prisma";
-import { AREAS_COMPRAS } from "@/lib/areas";
 
 export const VAPID_PUBLIC_KEY = "BEkiqeRZsYy3A2GTOG7MH5Tk3nFABcSPz-szF5k6ctdYFhoS70H1buhkXhH1XSseYtZT8HWR5j9Xtn5K4peyysI";
 
@@ -62,14 +61,6 @@ export function notificarEquipe(equipeId: string, autor: string, texto: string) 
   enviar({ equipeId }, { title: "💬 Mensagem da sua equipe", body: corta(`${autor}: ${texto}`), tipo: "equipe" });
 }
 
-export async function notificarListaCompras() {
-  if (!configurado) return;
-  const staff = await prisma.staff.findMany({ select: { nome: true, nivel: true, areas_aprovadas: true } });
-  const nomes = staff
-    .filter((s) => s.nivel === "maximo" || s.areas_aprovadas.some((a) => AREAS_COMPRAS.includes(a)))
-    .map((s) => s.nome);
-  enviar({ nomes }, { title: "🛒 Nova lista de compras", body: "Uma nova lista de compras foi criada.", tipo: "lista_compras" });
-}
 
 // Quem aprova cadastro: nivel maximo/alto (aba Equipes do Supervisor)
 export async function notificarCadastroArea() {

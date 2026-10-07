@@ -9,7 +9,7 @@ import { useAbaDirecao, abaAdjacente, useSwipeHandlers } from '@/lib/useAbaDirec
 import { diasDoEvento, idxHoje, hojeLocal, MESES, MESES_C, DIAS_SEMANA } from '@/lib/calendario'
 import { executar } from '@/lib/offline'
 import { useMontado, useEstadoServidor } from '@/lib/hooks'
-import { BotaoVoltar } from '@/components/botao-voltar'
+import { IconeTurno } from '@/components/icone-turno'
 import { BarraAbas, PainelAba, GradeDias, CartaoHoje, ListaMensagens, CaixaMensagem } from '@/components/abas'
 
 const ORDEM_ABAS = ['escalas', 'mensagens']
@@ -120,7 +120,6 @@ export function Midia({ sessao, inicio, veMensagens, escalas: escalasServidor, e
   return (
     <div className="tela-enter-midia" style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
-        <BotaoVoltar />
         <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 18, fontWeight: 700 }}>{tx.midia}</h2>
         {podeCoordenar && (
           <button onClick={() => setCoordenador(c => !c)} style={{
@@ -155,7 +154,7 @@ export function Midia({ sessao, inicio, veMensagens, escalas: escalasServidor, e
               return (
                 <div key={turno.id} style={{ marginBottom: 24 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                    <span style={{ fontSize: 18 }}>{turno.icon}</span>
+                    <IconeTurno id={turno.id} emoji={turno.icon} />
                     <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 15, fontWeight: 700 }}>{turno.label}</span>
                     {!turno.temFixas && itens.length === 0 && (
                       <span style={{ fontSize: 11, color: 'var(--text-faint)', fontStyle: 'italic', marginLeft: 4 }}>{tx.semEscala}</span>

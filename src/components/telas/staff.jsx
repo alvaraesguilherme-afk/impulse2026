@@ -5,7 +5,6 @@ import Image from 'next/image'
 import { useTexto } from '@/lib/i18n'
 import { AREAS, ICONE_AREA } from '@/lib/areas'
 import { EQUIPES } from '@/lib/equipes'
-import { BotaoVoltar } from '@/components/botao-voltar'
 
 // Mesmo modelo da aba Membros do ic-coordenacao (cartões com foto, etiqueta de
 // cargo, busca e filtros), agrupado por área em vez de rede. Sem abrir perfil.
@@ -101,7 +100,6 @@ export function Staff({ staff }) {
     <div className="tela-enter-staff" style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
       <div style={{ maxWidth: 896, margin: '0 auto', padding: '14px 22px 100px', display: 'flex', flexDirection: 'column', gap: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <BotaoVoltar />
           <div>
             <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 24, fontWeight: 600 }}>{tx.staff}</h2>
             <p style={{ fontSize: 14, color: 'var(--text-muted)' }}>{staff.length} {staff.length === 1 ? 'pessoa' : 'pessoas'} na Escola Impulse</p>

@@ -1,5 +1,3 @@
-import { AREAS_COMPRAS } from "./areas";
-
 // Permissões vêm do login (staff.nivel + staff.areas_aprovadas), nunca de nome
 // fixo no código. O nível é gravado no banco por quem libera o acesso.
 export const NIVEIS = ["maximo", "alto", "basico", "staff"] as const;
@@ -27,8 +25,6 @@ export function coordenaArea(s: Sessao | null | undefined, area: string) {
 // Aba Programação: só coordenação geral e supervisores editam.
 export const editaProgramacao = (s: Pick<Sessao, "nivel"> | null | undefined) => ["maximo", "alto"].includes(s?.nivel ?? "");
 
-export const acessaCompras = (s: Sessao | null | undefined) =>
-  ehAdmin(s) || (s?.areas ?? []).some((a) => AREAS_COMPRAS.includes(a));
 
 // Coordenação geral (máximo) entra em quantos aparelhos quiser; supervisor em 2;
 // o resto em 1.

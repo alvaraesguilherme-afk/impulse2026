@@ -7,7 +7,6 @@ import { useAbaDirecao, abaAdjacente, useSwipeHandlers } from '@/lib/useAbaDirec
 import { diasDoEvento, idxHoje, hojeLocal, MESES, MESES_C, DIAS_SEMANA } from '@/lib/calendario'
 import { executar } from '@/lib/offline'
 import { useMontado, useEstadoServidor } from '@/lib/hooks'
-import { BotaoVoltar } from '@/components/botao-voltar'
 import { BarraAbas, PainelAba, GradeDias, CartaoHoje } from '@/components/abas'
 
 const ORDEM_ABAS = ['louvor', 'ministro', 'cadastro']
@@ -102,7 +101,6 @@ export function Programacao({ sessao, inicio, dados: dadosServidor, cadastros: c
   return (
     <div className="tela-enter" style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
-        <BotaoVoltar />
         <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 18, fontWeight: 700 }}>{tx.programacao}</h2>
         {editaProgramacao(sessao) && (
           <button onClick={() => { if (coordenador) { setEditando(null); setAba('louvor') } setCoordenador(c => !c) }} style={{

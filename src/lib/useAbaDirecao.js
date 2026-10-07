@@ -9,8 +9,12 @@ export function useAbaDirecao(inicial, ordem, duracaoMs = DURACAO_TRANSICAO_MS) 
   const [abaSaindo, setAbaSaindo] = useState(null)
   const direcaoRef = useRef('direita')
   const timeoutRef = useRef(null)
+  const abaRef = useRef(inicial)
 
   function setAba(novaAba) {
+    // Aba nova abre no topo, seja trocando pelo botão ou arrastando pro lado.
+    if (novaAba !== abaRef.current) window.scrollTo(0, 0)
+    abaRef.current = novaAba
     setAbaState(atual => {
       if (novaAba === atual) return atual
       const idxAtual = ordem.indexOf(atual)

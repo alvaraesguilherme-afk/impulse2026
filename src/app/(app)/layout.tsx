@@ -4,6 +4,7 @@ import { getSessao } from "@/lib/dal";
 import { ehSupervisor } from "@/lib/permissoes";
 import { Sidebar, NavMobile } from "@/components/navegacao";
 import { SyncOffline } from "@/components/sync-offline";
+import { RolarProTopo } from "@/components/rolar-topo";
 
 async function NavComSessao() {
   const sessao = await getSessao();
@@ -31,6 +32,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <NavComSessao />
       </Suspense>
       <SyncOffline />
+      <RolarProTopo />
       <main className="conteudo-app">
         <Suspense fallback={<Carregando />}>{children}</Suspense>
       </main>

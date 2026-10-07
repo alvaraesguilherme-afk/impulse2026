@@ -3,9 +3,8 @@
 import { useEffect, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useTexto } from '@/lib/i18n'
-import { vibrar } from '@/lib/haptics'
 import { rotuloRelativo, horasDesde } from '@/lib/tempo'
-import { acessaCompras, ehAdmin, ehSupervisor } from '@/lib/permissoes'
+import { ehAdmin, ehSupervisor } from '@/lib/permissoes'
 import { dataLocal, diffDias, hojeLocal, TOTAL_DIAS } from '@/lib/calendario'
 import { executar } from '@/lib/offline'
 import { useMontado, useEstadoServidor } from '@/lib/hooks'
@@ -127,17 +126,6 @@ export function Home({ sessao, inicio, diaFrase, aviso, frase: fraseServidor, de
     })
   }
 
-  const modulos = [
-    { id: 'apoio', nome: tx.apoio, desc: tx.escalasETimes, grad: 'linear-gradient(145deg,rgba(76,29,149,0.55),rgba(124,58,237,0.55))', foto: '/pexels-bulat843-1243575272-37704234.jpg' },
-    { id: 'staff', nome: tx.staff, desc: tx.colaboradores, grad: 'linear-gradient(145deg,rgba(12,74,110,0.55),rgba(14,165,233,0.55))' },
-    { id: 'midia', nome: tx.midia, desc: tx.escalasEEquipe, grad: 'linear-gradient(145deg,rgba(120,53,15,0.55),rgba(245,158,11,0.55))', foto: '/pexels-brunomassao-2095597.jpg' },
-    { id: 'mural', nome: tx.feedImpulse, desc: tx.fotosDoStaff, grad: 'linear-gradient(145deg,rgba(131,24,67,0.55),rgba(236,72,153,0.55))', foto: '/pexels-alejandro-aznar-155337093-16055216.jpg' },
-    { id: 'advertencias', nome: tx.advertencias, desc: tx.registroAdvertencias, grad: 'linear-gradient(145deg,rgba(120,20,20,0.55),rgba(220,38,38,0.55))', foto: '/istockphoto-2170470419-612x612.jpg' },
-    ...(acessaCompras(sessao)
-      ? [{ id: 'compras', nome: tx.listaDeCompras, desc: tx.itensQuantidadesComprar, grad: 'linear-gradient(145deg,rgba(6,78,59,0.55),rgba(16,185,129,0.55))' }]
-      : []),
-  ]
-  const modulosExibidos = modoRestrito ? modulos.filter(m => m.id === 'mural') : modulos
   const avisoRecente = aviso && horasDesde(aviso.created_at) < 24
 
   const cartaoAviso = avisoRecente && (
@@ -206,30 +194,6 @@ export function Home({ sessao, inicio, diaFrase, aviso, frase: fraseServidor, de
           </div>
         )}
 
-        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: 2, textTransform: 'uppercase', padding: '24px 22px 14px' }}>{tx.modulos}</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, padding: '0 22px' }}>
-          {modulosExibidos.map(m => (
-            <Link key={m.id} href={`/${m.id}`} onClick={() => vibrar()} className="card-modulo card-glass"
-              style={{
-                height: 140, borderRadius: 24, padding: 18,
-                display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                textDecoration: 'none', color: 'var(--text)',
-                background: m.foto ? `${m.grad}, url(${m.foto}) center/cover` : m.grad,
-                border: '1px solid rgba(255,255,255,0.25)',
-                borderTop: '1px solid rgba(255,255,255,0.55)',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -12px 20px -10px rgba(0,0,0,0.25)',
-                backdropFilter: 'blur(22px) saturate(200%)',
-                WebkitBackdropFilter: 'blur(22px) saturate(200%)',
-                position: 'relative', overflow: 'hidden'
-              }}
-            >
-              <div>
-                <div style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{m.nome}</div>
-                <div style={{ fontSize: 10, color: 'var(--text-secondary)' }}>{m.desc}</div>
-              </div>
-            </Link>
-          ))}
-        </div>
 
         {!modoRestrito && destaque && (
           <div style={{ margin: '24px 22px 0' }}>

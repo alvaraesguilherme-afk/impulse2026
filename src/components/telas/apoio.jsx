@@ -9,16 +9,25 @@ import { useAbaDirecao, abaAdjacente, useSwipeHandlers } from '@/lib/useAbaDirec
 import { diasDoEvento, idxHoje, hojeLocal, MESES, MESES_C, DIAS_SEMANA, TOTAL_DIAS, diffDias, dataLocal } from '@/lib/calendario'
 import { executar } from '@/lib/offline'
 import { useMontado, useEstadoServidor } from '@/lib/hooks'
-import { BotaoVoltar } from '@/components/botao-voltar'
+import { IconeTurno } from '@/components/icone-turno'
 import { BarraAbas, PainelAba, GradeDias, CartaoHoje, ListaMensagens, CaixaMensagem } from '@/components/abas'
 
 const ORDEM_ABAS = ['times', 'escalas', 'mensagens']
 const TURNO_KEY = { M: 'manha', T: 'tarde', N: 'noite', F: 'folga' }
 const TAREFAS_TURNO = {
-  M: ['servirCafe', 'lavarLoucas', 'limpezaRefeitorio', 'retiradaLixo'],
-  T: ['servirAlmoco', 'lavarLoucas', 'limpezaRefeitorio', 'limpezaTemplo'],
-  N: ['servirJantar', 'lavarLoucas', 'limpezaRefeitorio', 'limpezaTemplo'],
+  M: ['servirCafe', 'lavarLoucas', 'recolherLixo', 'limpezaRefeitorio'],
+  T: ['servirAlmoco', 'lavarLoucas', 'recolherLixo', 'limpezaRefeitorio', 'limpezaTemplo'],
+  N: ['servirJantar', 'lavarLoucas', 'recolherLixo', 'limpezaRefeitorio', 'limpezaTemplo'],
 }
+// Cor da equipe bem fosca, pra identificar o cartão sem gritar: a = opacidade.
+const fosca = (cor, a) => { const n = parseInt(cor.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})` }
+// Cartão tingido com a cor da equipe; a sua equipe ganha a borda mais forte.
+const estiloEquipe = (eq, minha) => ({
+  background: `linear-gradient(135deg, ${fosca(eq.cor, 0.13)}, ${fosca(eq.cor, 0.04)})`,
+  border: `${minha ? 2 : 1}px solid ${fosca(eq.cor, minha ? 0.7 : 0.28)}`,
+})
+const seloSuaEquipe = eq => ({ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, padding: '2px 7px', borderRadius: 999, background: fosca(eq.cor, 0.18), color: eq.cor })
+
 const TURNO_ICON = { M: '🌅', T: '☀️', N: '🌙', F: '😴' }
 const chip = { fontSize: 11, background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 20, padding: '4px 10px', color: 'var(--text-secondary)' }
 
@@ -68,7 +77,6 @@ export function Apoio({ sessao, inicio, minhaEquipe, staff, mensagens: mensagens
   return (
     <div className="tela-enter-apoio" style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
-        <BotaoVoltar />
         <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 18, fontWeight: 700 }}>{tx.escalasDeServico}</h2>
       </div>
       <BarraAbas abas={abasList} ativa={aba} onTrocar={setAba} />
@@ -105,13 +113,14 @@ export function Apoio({ sessao, inicio, minhaEquipe, staff, mensagens: mensagens
             if (!equipe) return null
             const minha = isMinhaEquipe(equipe)
             return (
-              <div key={turnoId} style={{ background: minha ? 'rgba(250,204,21,0.04)' : 'var(--bg-card)', border: minha ? '1.5px solid rgba(250,204,21,0.5)' : '1px solid var(--border)', borderRadius: 20, padding: 18, marginBottom: 12 }}>
+              <div key={turnoId} style={{ ...estiloEquipe(equipe, minha), borderRadius: 20, padding: 18, marginBottom: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 18 }}>{TURNO_ICON[turnoId]}</span>
+                    <IconeTurno id={turnoId} emoji={TURNO_ICON[turnoId]} />
                     <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 15, fontWeight: 700 }}>{tx[TURNO_KEY[turnoId]]}</span>
+                    {minha && <span style={seloSuaEquipe(equipe)}>Sua equipe</span>}
                   </div>
-                  <span style={{ fontSize: 12, color: equipe.cor, fontWeight: 600 }}><img src={equipe.icone} alt="" style={{ width: 20, height: 20, objectFit: 'contain', verticalAlign: -5 }} /> {equipe.nome}</span>
+                  <img src={equipe.icone} alt={equipe.nome} title={equipe.nome} style={{ width: 28, height: 28, objectFit: 'contain' }} />
                 </div>
                 {TAREFAS_TURNO[turnoId].map((tarefa, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, marginBottom: 6 }}>
@@ -124,10 +133,10 @@ export function Apoio({ sessao, inicio, minhaEquipe, staff, mensagens: mensagens
           })}
 
           {EQUIPES.filter(eq => getTurno(eq, diaIdx) === 'F').map(eq => (
-            <div key={eq.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: isMinhaEquipe(eq) ? 'rgba(250,204,21,0.04)' : 'var(--bg-card)', border: isMinhaEquipe(eq) ? '1.5px solid rgba(250,204,21,0.5)' : '1px solid var(--border)', borderRadius: 14, marginBottom: 8 }}>
-              <img src={eq.icone} alt="" style={{ width: 24, height: 24, objectFit: 'contain', verticalAlign: -6 }} />
-              <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{eq.nome}</span>
-              <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-faint)', fontWeight: 600 }}>😴 Folga</span>
+            <div key={eq.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', ...estiloEquipe(eq, isMinhaEquipe(eq)), borderRadius: 14, marginBottom: 8 }}>
+              <img src={eq.icone} alt={eq.nome} title={eq.nome} style={{ width: 28, height: 28, objectFit: 'contain' }} />
+              {isMinhaEquipe(eq) && <span style={seloSuaEquipe(eq)}>Sua equipe</span>}
+              <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-faint)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}><IconeTurno id="F" tamanho={16} /> Folga</span>
             </div>
           ))}
 
