@@ -429,3 +429,14 @@ body.foto-aberta .nav-mobile {
   100% { transform: perspective(200px) rotateX(0); }
 }
 @media (prefers-reduced-motion: reduce) { .placa { animation: none; } }
+
+/* Cartão do contador "flutuando": sem borda, levemente mais claro que o fundo
+   e com sombra embaixo, como se estivesse em relevo. */
+.cartao-relevo {
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+  box-shadow: 0 22px 44px -14px rgba(0,0,0,0.8), 0 6px 14px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.09);
+}
+[data-theme="light"] .cartao-relevo {
+  background: #ffffff;
+  box-shadow: 0 22px 40px -16px rgba(26,22,46,0.35), 0 4px 12px rgba(26,22,46,0.08), inset 0 1px 0 #fff;
+}

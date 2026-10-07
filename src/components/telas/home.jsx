@@ -62,7 +62,7 @@ function ContadorSection({ inicio }) {
   if (!contador) return <div style={{ height: 150 }} />
   if (contador.fase === 'antes') {
     return (
-      <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 20, padding: '18px 16px', textAlign: 'center' }}>
+      <div className="cartao-relevo" style={{ borderRadius: 20, padding: '18px 16px', textAlign: 'center' }}>
         <div style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 14, fontWeight: 700, fontStyle: 'italic', color: 'var(--accent-light)', textAlign: 'center' }}>&quot;{tx.naoAndeisAnsiosos}&quot;</div>
         <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textAlign: 'center', marginBottom: 12 }}>Fp 4:6</div>
         <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-light)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>{tx.faltam}</div>
@@ -72,7 +72,7 @@ function ContadorSection({ inicio }) {
   }
   if (contador.fase === 'durante') {
     return (
-      <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 20, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
+      <div className="cartao-relevo" style={{ borderRadius: 20, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
         <div style={{ width: 7, height: 7, background: '#EF4444', borderRadius: '50%', boxShadow: '0 0 8px #EF4444', animation: 'blink 1.5s infinite', flexShrink: 0 }} />
         <div>
           <div style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 16, fontWeight: 700, color: 'var(--accent-light)' }}>{tx.dia} {contador.diaAtual} {tx.de} {contador.totalDias}</div>
@@ -83,7 +83,7 @@ function ContadorSection({ inicio }) {
   }
   if (contador.fase === 'diversao') {
     return (
-      <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 20, padding: '20px 18px', textAlign: 'center' }}>
+      <div className="cartao-relevo" style={{ borderRadius: 20, padding: '20px 18px', textAlign: 'center' }}>
         <div style={{ fontSize: 32, marginBottom: 10 }}>🎉</div>
         <div style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 17, fontWeight: 700, color: 'var(--accent-light)', lineHeight: 1.4 }}>{tx.diaDeDiversao}</div>
         <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>{tx.aproveiteCadaMomento}</div>
@@ -91,7 +91,7 @@ function ContadorSection({ inicio }) {
     )
   }
   return (
-    <div style={{ background: 'var(--accent-bg)', border: '1px solid var(--accent-border)', borderRadius: 20, padding: '20px 18px', textAlign: 'center' }}>
+    <div className="cartao-relevo" style={{ borderRadius: 20, padding: '20px 18px', textAlign: 'center' }}>
       <div style={{ fontSize: 32, marginBottom: 10 }}>💜</div>
       <div style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 17, fontWeight: 700, color: 'var(--accent-light)', lineHeight: 1.4 }}>{tx.estaFoiNossaEscola}</div>
       <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8, lineHeight: 1.6 }}>{tx.obrigadoServirConosco}<br />{tx.aguardamosEscola2027}</div>
