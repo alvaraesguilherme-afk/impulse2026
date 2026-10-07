@@ -1,6 +1,6 @@
 // Subir a versão quando uma imagem de /public for trocada mantendo o mesmo nome:
 // o cache abaixo é "cache primeiro" e nunca confere se o arquivo mudou.
-const CACHE_ESTATICO = 'escola-next-estatico-v2'
+const CACHE_ESTATICO = 'escola-next-estatico-v3'
 const CACHE_PAGINAS = 'escola-next-paginas-v1'
 const CACHES = [CACHE_ESTATICO, CACHE_PAGINAS]
 
