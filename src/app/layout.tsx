@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Syne } from "next/font/google";
+import { Caveat, Inter, Syne } from "next/font/google";
 import { Preferencias } from "@/components/preferencias";
 import { Splash } from "@/components/splash";
 import "./globals.css";
@@ -7,6 +7,8 @@ import { aplicarCorPersonalizada, CHAVE_COR, ID_PERSONALIZADA } from "@/lib/cor-
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"], weight: ["400", "500", "600"] });
 const syne = Syne({ variable: "--font-syne", subsets: ["latin"], weight: ["400", "600", "700", "800"] });
+// Letra de mão do bilhete da Frase do dia.
+const caveat = Caveat({ variable: "--font-caveat", subsets: ["latin"], weight: ["700"] });
 
 export const metadata: Metadata = {
   title: "Escola Impulse",
@@ -28,7 +30,7 @@ const scriptPreferencias = `try{var d=document.documentElement;d.setAttribute('d
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pt-BR" translate="no" className={`${inter.variable} ${syne.variable}`} suppressHydrationWarning>
+    <html lang="pt-BR" translate="no" className={`${inter.variable} ${syne.variable} ${caveat.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: scriptPreferencias }} />
       </head>

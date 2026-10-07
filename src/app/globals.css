@@ -446,3 +446,21 @@ body.foto-aberta .nav-mobile {
 .versiculo-relevo { text-shadow: 0 2px 0 rgba(0,0,0,0.55), 0 8px 18px rgba(0,0,0,0.55); }
 [data-theme="light"] .versiculo-relevo { text-shadow: 0 2px 0 rgba(26,22,46,0.12), 0 8px 16px rgba(26,22,46,0.22); }
 [data-theme="light"] .placa { box-shadow: 0 3px 0 #0b0a0e, 0 14px 22px rgba(26,22,46,0.35), inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -1px 0 rgba(0,0,0,0.5); }
+
+/* Frase do dia como bilhete colado: papel amarelado, levemente torto, preso
+   por um pedaço de fita na cor de destaque, com a frase em letra de mão. O
+   papel é o mesmo nos dois temas (é "papel"). */
+.bilhete {
+  margin: 28px 32px 0; padding: 26px 20px 20px; border-radius: 3px; position: relative;
+  background: #FFF6D8; color: #2A2238; transform: rotate(-1.6deg);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.15), 0 18px 30px -10px rgba(0,0,0,0.7);
+}
+[data-theme="light"] .bilhete { box-shadow: 0 1px 0 rgba(0,0,0,0.08), 0 18px 30px -12px rgba(26,22,46,0.35); }
+.bilhete::before {
+  content: ""; position: absolute; top: -11px; left: 50%; width: 92px; height: 24px; margin-left: -46px;
+  transform: rotate(2deg); background: var(--accent-light); opacity: 0.55;
+  border-left: 1px dashed rgba(255,255,255,0.5); border-right: 1px dashed rgba(255,255,255,0.5);
+}
+.bilhete-etiqueta { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #8B7FA6; }
+.bilhete-texto { font-family: var(--font-caveat), "Segoe Print", cursive; font-weight: 700; font-size: 27px; line-height: 1.12; margin-top: 6px; overflow-wrap: anywhere; }
+.bilhete-vazio { color: #A79FB8; font-size: 23px; }

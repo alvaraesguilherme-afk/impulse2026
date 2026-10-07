@@ -4,7 +4,7 @@ import { Fragment, useEffect, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useTexto } from '@/lib/i18n'
 import { rotuloRelativo, horasDesde } from '@/lib/tempo'
-import { ehAdmin, ehSupervisor } from '@/lib/permissoes'
+import { ehSupervisor } from '@/lib/permissoes'
 import { dataLocal, diffDias, hojeLocal, TOTAL_DIAS } from '@/lib/calendario'
 import { executar } from '@/lib/offline'
 import { useMontado, useEstadoServidor } from '@/lib/hooks'
@@ -183,28 +183,11 @@ export function Home({ sessao, inicio, diaFrase, aviso, frase: fraseServidor, de
         </div>
 
         {!modoRestrito && (
-          <div onClick={abrirFraseModal} style={{
-            margin: '24px 22px 0', borderRadius: 20, padding: '20px 18px',
-            background: 'var(--accent-bg)', border: '1px solid var(--accent-border)',
-            cursor: fraseClicavel ? 'pointer' : 'default'
-          }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent-light)', opacity: 0.7, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-              {tx.fraseDoDia}
-            </div>
-            {frase?.frase ? (
-              <>
-                <div style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 16, fontWeight: 600, lineHeight: 1.5, color: 'var(--text)' }}>
-                  &quot;{frase.frase}&quot;
-                </div>
-                {ehAdmin(sessao) && frase.autor && (
-                  <div style={{ fontSize: 10, color: 'var(--accent-light)', opacity: 0.6, marginTop: 8, fontWeight: 600 }}>
-                    {tx.por} {frase.autor}
-                  </div>
-                )}
-              </>
-            ) : (
-              <div style={{ fontSize: 13, color: 'var(--text-faint)', fontStyle: 'italic' }}>{tx.toquePraDefinir}</div>
-            )}
+          <div onClick={abrirFraseModal} className="bilhete" style={{ cursor: fraseClicavel ? 'pointer' : 'default' }}>
+            <div className="bilhete-etiqueta">{tx.fraseDoDia}</div>
+            {frase?.frase
+              ? <div className="bilhete-texto">{frase.frase}</div>
+              : <div className="bilhete-texto bilhete-vazio">{tx.toquePraDefinir}</div>}
           </div>
         )}
 
