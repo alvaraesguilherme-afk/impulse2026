@@ -181,14 +181,14 @@ export function Config({ sessao, vapidKey, relatos: relatosServidor }) {
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            {[{ id: 'pt-BR', label: '🇧🇷 Português', short: tx.portugues }, { id: 'en', label: '🇺🇸 English', short: tx.ingles }].map(l => (
+            {[{ id: 'pt-BR', label: 'Português', bandeira: '/icons/bandeira-brasil.png', short: tx.portugues }, { id: 'en', label: 'English', bandeira: '/icons/bandeira-eua.png', short: tx.ingles }].map(l => (
               <button key={l.id} onClick={() => setIdioma(l.id)} style={{
                 flex: 1, padding: '10px', borderRadius: 12, cursor: 'pointer',
                 border: idioma === l.id ? '1px solid var(--accent-border)' : '1px solid var(--border-strong)',
                 background: idioma === l.id ? 'var(--accent-bg)' : 'var(--input-bg)',
                 color: idioma === l.id ? 'var(--accent-light)' : 'var(--text-muted)',
                 fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-inter), sans-serif'
-              }}>{l.label}</button>
+              }}><img src={l.bandeira} alt="" style={{ width: 18, height: 18, objectFit: 'contain', verticalAlign: -4, marginRight: 6 }} />{l.label}</button>
             ))}
           </div>
         </div>
