@@ -79,7 +79,7 @@ export function Apoio({ sessao, inicio, minhaEquipe, staff, mensagens: mensagens
             return (
               <div key={eq.id} style={{ background: isMinhaEquipe(eq) ? 'rgba(250,204,21,0.04)' : 'var(--bg-card)', border: isMinhaEquipe(eq) ? '1.5px solid rgba(250,204,21,0.5)' : '1px solid var(--border)', borderRadius: 20, padding: 18, marginBottom: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><img src={eq.icone} alt="" style={{ width: 44, height: 44, objectFit: 'contain' }} /></div>
+                  <div style={{ width: 44, height: 44, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><img src={eq.icone} alt="" style={{ width: 44, height: 44, objectFit: 'contain', borderRadius: '50%' }} /></div>
                   <div style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 15, fontWeight: 700, color: eq.cor }}>{eq.nome}</div>
                 </div>
                 <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8 }}>{tx.membros}</div>
@@ -111,7 +111,7 @@ export function Apoio({ sessao, inicio, minhaEquipe, staff, mensagens: mensagens
                     <span style={{ fontSize: 18 }}>{TURNO_ICON[turnoId]}</span>
                     <span style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 15, fontWeight: 700 }}>{tx[TURNO_KEY[turnoId]]}</span>
                   </div>
-                  <span style={{ fontSize: 12, color: equipe.cor, fontWeight: 600 }}><img src={equipe.icone} alt="" style={{ width: 15, height: 15, objectFit: 'contain', verticalAlign: -3 }} /> {equipe.nome}</span>
+                  <span style={{ fontSize: 12, color: equipe.cor, fontWeight: 600 }}><img src={equipe.icone} alt="" style={{ width: 15, height: 15, objectFit: 'contain', borderRadius: '50%', verticalAlign: -3 }} /> {equipe.nome}</span>
                 </div>
                 {TAREFAS_TURNO[turnoId].map((tarefa, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, marginBottom: 6 }}>
@@ -125,7 +125,7 @@ export function Apoio({ sessao, inicio, minhaEquipe, staff, mensagens: mensagens
 
           {EQUIPES.filter(eq => getTurno(eq, diaIdx) === 'F').map(eq => (
             <div key={eq.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: isMinhaEquipe(eq) ? 'rgba(250,204,21,0.04)' : 'var(--bg-card)', border: isMinhaEquipe(eq) ? '1.5px solid rgba(250,204,21,0.5)' : '1px solid var(--border)', borderRadius: 14, marginBottom: 8 }}>
-              <img src={eq.icone} alt="" style={{ width: 18, height: 18, objectFit: 'contain', verticalAlign: -4 }} />
+              <img src={eq.icone} alt="" style={{ width: 18, height: 18, objectFit: 'contain', borderRadius: '50%', verticalAlign: -4 }} />
               <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{eq.nome}</span>
               <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-faint)', fontWeight: 600 }}>😴 Folga</span>
             </div>
