@@ -110,7 +110,7 @@ export function Config({ sessao, vapidKey, relatos: relatosServidor }) {
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '16px 18px', marginBottom: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ fontSize: 22 }}>{tema === 'light' ? '☀️' : '🌙'}</div>
+              <img src={tema === 'light' ? '/icons/config-tema-claro.png' : '/icons/config-tema-escuro.png'} alt="" style={{ width: 26, height: 26, objectFit: 'contain' }} />
               <div>
                 <div style={{ fontSize: 14, fontWeight: 600 }}>{tema === 'light' ? tx.temaClaro : tx.temaEscuro}</div>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{tema === 'light' ? tx.modoClaroAtivado : tx.modoEscuroAtivado}</div>
@@ -124,7 +124,7 @@ export function Config({ sessao, vapidKey, relatos: relatosServidor }) {
 
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '16px 18px', marginBottom: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-            <div style={{ fontSize: 22 }}>🎨</div>
+            <img src="/icons/config-cor.png" alt="" style={{ width: 26, height: 26, objectFit: 'contain' }} />
             <div>
               <div style={{ fontSize: 14, fontWeight: 600 }}>{tx.corDestaque}</div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{tx.personalizeVisual}</div>
@@ -150,7 +150,7 @@ export function Config({ sessao, vapidKey, relatos: relatosServidor }) {
 
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '16px 18px', marginBottom: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-            <div style={{ fontSize: 22 }}>🔤</div>
+            <img src="/icons/config-fonte.png" alt="" style={{ width: 26, height: 26, objectFit: 'contain' }} />
             <div>
               <div style={{ fontSize: 14, fontWeight: 600 }}>{tx.tamanhoFonte}</div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{fontSize}%</div>
@@ -175,7 +175,7 @@ export function Config({ sessao, vapidKey, relatos: relatosServidor }) {
 
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '16px 18px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-            <div style={{ fontSize: 22 }}>🌐</div>
+            <img src="/icons/config-idioma.png" alt="" style={{ width: 26, height: 26, objectFit: 'contain' }} />
             <div>
               <div style={{ fontSize: 14, fontWeight: 600 }}>{tx.idioma}</div>
             </div>
@@ -201,7 +201,7 @@ export function Config({ sessao, vapidKey, relatos: relatosServidor }) {
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '16px 18px', marginBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ fontSize: 22 }}>🔔</div>
+                  <img src="/icons/config-notificacoes.png" alt="" style={{ width: 26, height: 26, objectFit: 'contain' }} />
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 600 }}>{tx.notificacoesPush}</div>
                     <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
@@ -230,7 +230,7 @@ export function Config({ sessao, vapidKey, relatos: relatosServidor }) {
 
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '16px 18px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-            <div style={{ fontSize: 22 }}>🔄</div>
+            <img src="/icons/config-cache.png" alt="" style={{ width: 26, height: 26, objectFit: 'contain' }} />
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 600 }}>{tx.limparCache}</div>
               <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{tx.limparCacheDesc}</div>
@@ -248,7 +248,7 @@ export function Config({ sessao, vapidKey, relatos: relatosServidor }) {
 
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '16px 18px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-            <div style={{ fontSize: 22 }}>🐛</div>
+            <img src="/icons/config-bug.png" alt="" style={{ width: 26, height: 26, objectFit: 'contain' }} />
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 600 }}>{tx.relatarProblema}</div>
             </div>

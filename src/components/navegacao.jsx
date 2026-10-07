@@ -5,20 +5,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTexto } from '@/lib/i18n'
 
-const ICONES_PNG = ['home', 'programacao', 'mural', 'apoio', 'midia', 'staff', 'advertencias']
-
 function NavIcon({ id, active, size = 22 }) {
-  const color = active ? 'var(--accent-light)' : 'var(--text-faint)'
-  const s = { width: size, height: size }
-  if (ICONES_PNG.includes(id)) {
-    return <img src={`/icons/${id}.png`} alt="" style={{ ...s, objectFit: 'contain', opacity: active ? 1 : 0.6, transition: 'opacity 0.2s' }} />
-  }
-  const p = { fill: 'none', stroke: color, strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', viewBox: '0 0 24 24' }
-  const icons = {
-    supervisor: <svg {...s} {...p}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
-    config: <svg {...s} {...p}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
-  }
-  return icons[id] || null
+  return <img src={`/icons/${id}.png`} alt="" style={{ width: size, height: size, objectFit: 'contain', opacity: active ? 1 : 0.6, transition: 'opacity 0.2s' }} />
 }
 
 const HREF = { home: '/', programacao: '/programacao', supervisor: '/supervisor', config: '/config', mural: '/mural', apoio: '/apoio', midia: '/midia', staff: '/staff', advertencias: '/advertencias' }
