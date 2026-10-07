@@ -53,7 +53,7 @@ function ConteudoSidebar({ podeSupervisor, onNavegar }) {
             color: active ? 'var(--accent-light)' : 'var(--text-secondary)',
             fontSize: 14, fontWeight: active ? 600 : 400, textDecoration: 'none', userSelect: 'none',
           }}>
-            <NavIcon id={item.id} active={active} size={18} />
+            <NavIcon id={item.id} active={active} size={24} />
             <span>{item.label}</span>
             {item.id === 'supervisor' && (
               <svg style={{ marginLeft: 'auto', opacity: 0.4 }} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
