@@ -11,7 +11,6 @@ import { BotaoVoltar } from '@/components/botao-voltar'
 // cargo, busca e filtros), agrupado por área em vez de rede. Sem abrir perfil.
 // Foto, nome completo, rede e IC vêm do perfil da coordenação (sincronizados
 // por ela na tabela staff); sem foto, mostra as iniciais.
-const LIDERANCA = 'Liderança'
 const ORDEM_NIVEL = { maximo: 0, alto: 1, basico: 2, staff: 3 }
 const ETIQUETA = {
   maximo: { label: 'Coordenação geral', bg: 'linear-gradient(90deg,#EF4444,#F97316)', cor: '#fff', brilho: '0 0 12px rgba(239,68,68,0.4)' },
@@ -93,8 +92,6 @@ export function Staff({ staff }) {
   }, [staff, busca, area, nivel, equipe])
 
   const secoes = useMemo(() => [
-    // Quem tem área aparece só na área dela; Liderança fica com quem não tem.
-    { area: LIDERANCA, pessoas: staff.filter(p => ehLideranca(p) && p.areas.length === 0).sort(comparar) },
     ...AREAS.map(a => ({ area: a, pessoas: staff.filter(p => p.areas.includes(a)).sort(comparar) })),
   ], [staff])
 
@@ -173,7 +170,7 @@ export function Staff({ staff }) {
         ) : secoes.map(s => (
           <section key={s.area} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid var(--border)', paddingBottom: 12 }}>
-              <div style={{ width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, ...(ICONE_AREA[s.area] ? {} : { background: s.area === LIDERANCA ? 'linear-gradient(135deg,#EF4444,#F97316)' : 'var(--accent-bg)', border: '1px solid var(--border-strong)' }) }}>
+              <div style={{ width: 44, height: 44, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, ...(ICONE_AREA[s.area] ? {} : { background: 'var(--accent-bg)', border: '1px solid var(--border-strong)' }) }}>
                 {ICONE_AREA[s.area]
                   ? <img src={ICONE_AREA[s.area]} alt="" style={{ width: 44, height: 44, objectFit: 'contain' }} />
                   : s.area[0]}
