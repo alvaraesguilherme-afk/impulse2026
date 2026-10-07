@@ -308,20 +308,40 @@ export function Mural({ sessao, fase, liberaEm, fotos: fotosServidor }) {
           {raizes.map(({ id, raiz }) => <Raiz key={id} raiz={raiz} nova={chegando.has(id)} />)}
         </svg>
 
-        {fotos.length === 0 && (
-          <div className="mural-bilhete" style={{ top: 70 }}>
-            {fase === 'antes' && !modoTeste ? (
-              <>As fotos serão liberadas em {dataBR(liberaEm)}<small>a partir da chegada na Escola</small></>
-            ) : fase === 'depois' && !modoTeste ? (
-              <>O mural foi fechado<small>obrigado por cada momento ♥</small></>
-            ) : (
-              <>Ainda não tem fotos no mural<small>coloque a primeira!</small></>
-            )}
-            {fase !== 'aberto' && !modoTeste && ehAdmin(sessao) && (
-              <div><button type="button" onClick={() => setModoTeste(true)}>Liberar postagem</button></div>
-            )}
-          </div>
-        )}
+        {fotos.length === 0 && (() => {
+          const conteudo = (
+            <>
+              {fase === 'antes' && !modoTeste ? (
+                <>As fotos serão liberadas em {dataBR(liberaEm)}<small>a partir da chegada na Escola</small></>
+              ) : fase === 'depois' && !modoTeste ? (
+                <>O mural foi fechado<small>obrigado por cada momento ♥</small></>
+              ) : (
+                <>Ainda não tem fotos no mural<small>coloque a primeira!</small></>
+              )}
+              {fase !== 'aberto' && !modoTeste && ehAdmin(sessao) && (
+                <div><button type="button" onClick={() => setModoTeste(true)}>Liberar postagem</button></div>
+              )}
+            </>
+          )
+          // Papelzinho pendurado num barbante que vem de fora da tela, lá de cima:
+          // cai ao abrir o Feed, o barbante segura com um tranco e ele fica
+          // balançando. A sombra é uma cópia escura, desfocada e deslocada, como
+          // se o papel estivesse longe da madeira.
+          return (
+            <div className="pendurado">
+              <div className="pendurado-queda">
+                <div className="pendurado-sombra" aria-hidden="true" inert>
+                  <span className="barbante" />
+                  <div className="mural-bilhete">{conteudo}</div>
+                </div>
+                <div className="pendurado-balanco">
+                  <span className="barbante" />
+                  <div className="mural-bilhete">{conteudo}</div>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
 
         {layout.map((p, k) => {
           const nova = chegando.has(p.foto.id)

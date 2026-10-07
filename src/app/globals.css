@@ -557,3 +557,34 @@ body.foto-aberta .nav-mobile {
   .polaroid.balanca, .polaroid.chegando, .polaroid.chegando .fita, .polaroid.chegando .tacha, .polaroid.chegando .clipe,
   .raiz-nova .raiz-linha, .raiz-nova .raiz-folha, .mural-grande { animation: none; }
 }
+
+/* Bilhete do mural vazio pendurado num barbante que vem de fora da tela (lá de
+   cima, sem prego): cai ao abrir o Feed, o barbante segura com um tranco, ele
+   balança forte, vai perdendo força e fica num balanço leve pra sempre. */
+.pendurado { position: absolute; left: 50%; top: -170px; width: 230px; margin-left: -115px; z-index: 2; pointer-events: none; }
+.pendurado .mural-bilhete { position: relative; left: auto; top: auto; width: 220px; margin: -3px auto 0; transform: rotate(-2deg); pointer-events: auto;
+  box-shadow: 0 2px 3px rgba(0,0,0,0.18); }
+/* ilhós onde o barbante amarra no papel */
+.pendurado .mural-bilhete::before { content: ""; position: absolute; top: 7px; left: 50%; width: 9px; height: 9px; margin-left: -4.5px; border-radius: 50%; background: rgba(0,0,0,0.12); box-shadow: inset 0 0 0 2px #b9996c; }
+.barbante { display: block; width: 3px; height: 240px; margin: 0 auto; border-radius: 2px;
+  background: repeating-linear-gradient(160deg, #d8bf96 0 3px, #a5865c 3px 5px); box-shadow: 1px 0 0 rgba(0,0,0,0.18); }
+.pendurado-queda { animation: penduradoCai 1.15s both; }
+@keyframes penduradoCai {
+  0%   { transform: translateY(-560px); animation-timing-function: cubic-bezier(.55,0,1,.45); }
+  58%  { transform: translateY(16px); animation-timing-function: ease-out; }
+  74%  { transform: translateY(-7px); animation-timing-function: ease-in-out; }
+  88%  { transform: translateY(3px); }
+  100% { transform: translateY(0); }
+}
+.pendurado-balanco, .pendurado-sombra { transform-origin: 50% 0;
+  animation: penduradoBalancoInicio 2.4s 0.7s ease-out both, penduradoBalanco 3.8s 3.1s ease-in-out infinite; }
+@keyframes penduradoBalancoInicio { 0% { transform: rotate(0); } 12% { transform: rotate(-9deg); } 30% { transform: rotate(7deg); } 50% { transform: rotate(-5deg); } 70% { transform: rotate(3.5deg); } 85% { transform: rotate(-2.5deg); } 100% { transform: rotate(2.5deg); } }
+@keyframes penduradoBalanco { 0%, 100% { transform: rotate(2.5deg); } 50% { transform: rotate(-2.5deg); } }
+/* sombra projetada lá atrás: deslocada (o papel está longe da madeira) e desfocada */
+.pendurado-sombra { position: absolute; inset: 0; translate: 20px 30px; filter: blur(7px); opacity: 0.45; pointer-events: none; }
+.pendurado-sombra .barbante { background: #1f1006; box-shadow: none; }
+.pendurado-sombra .mural-bilhete, .pendurado-sombra .mural-bilhete * { background: #1f1006; color: transparent; border-color: transparent; box-shadow: none; text-decoration: none; }
+.pendurado-sombra .mural-bilhete::before { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .pendurado-queda, .pendurado-balanco, .pendurado-sombra { animation: none; }
+}
