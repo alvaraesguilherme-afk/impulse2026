@@ -49,6 +49,8 @@ export function Config({ sessao, vapidKey, relatos: relatosServidor }) {
   const [fontEscolhida, setFontSize] = useState(null)
   const [accentEscolhido, setAccentState] = useState(null)
   const [corEscolhida, setCorEscolhida] = useState(null)
+  // A roleta começa travada: arrastar a página sem querer não muda a cor de tudo
+  const [corLiberada, setCorLiberada] = useState(false)
   const fontSize = fontEscolhida ?? (montado ? parseInt(lerLocal('impulse_fontsize', '100')) || 100 : 100)
   const accent = accentEscolhido ?? (montado ? lerLocal('impulse_accent', 'roxo') : 'roxo')
   // Sem cor própria ainda, a roleta começa na cor pronta que a pessoa tinha.
@@ -163,8 +165,15 @@ export function Config({ sessao, vapidKey, relatos: relatosServidor }) {
             <div>
               <div style={{ fontSize: 14, fontWeight: 600 }}>{tx.corDestaque}</div>
             </div>
+            <button type="button" aria-pressed={corLiberada} aria-label={corLiberada ? tx.corTravar : tx.corDestravar} onClick={() => setCorLiberada(v => !v)}
+              style={{ marginLeft: 'auto', width: 38, height: 38, borderRadius: '50%', border: '1px solid var(--border-strong)', background: corLiberada ? 'var(--accent-bg)' : 'var(--input-bg)', color: corLiberada ? 'var(--accent-light)' : 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d={corLiberada ? 'M7 11V7a5 5 0 0 1 9.9-1' : 'M7 11V7a5 5 0 0 1 10 0v4'}/></svg>
+            </button>
           </div>
-          <RodaDeCores cor={corHex} onMudar={escolherCor} />
+          <div inert={!corLiberada} aria-disabled={!corLiberada} style={{ opacity: corLiberada ? 1 : 0.4, transition: 'opacity 0.2s', touchAction: corLiberada ? 'none' : 'auto' }}>
+            <RodaDeCores cor={corHex} onMudar={escolherCor} />
+          </div>
+          {!corLiberada && <div style={{ fontSize: 11, color: 'var(--text-faint)', textAlign: 'center', marginTop: 10 }}>{tx.corTravadaDica}</div>}
         </div>
 
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '16px 18px', marginBottom: 10 }}>

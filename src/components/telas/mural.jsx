@@ -5,10 +5,9 @@ import { useRouter } from 'next/navigation'
 import { useTexto } from '@/lib/i18n'
 import { thumbUrl, onThumbError } from '@/lib/imageThumb'
 import { ehAdmin, ehSupervisor } from '@/lib/permissoes'
-import { TOTAL_DIAS } from '@/lib/calendario'
 import { executar } from '@/lib/offline'
-import { useEstadoServidor } from '@/lib/hooks'
-import { enviarFoto } from '@/app/actions/mural'
+import { useEstadoServidor, lerLocal } from '@/lib/hooks'
+import { enviarFoto, definirMuralAberto, curtirFoto } from '@/app/actions/mural'
 import { guardarFoto, contarFotos, montarForm, processarFotos } from '@/lib/fotos-offline'
 
 /* eslint-disable @next/next/no-img-element -- fotos do Supabase: miniatura via render do Storage */
@@ -97,6 +96,26 @@ function Raiz({ raiz, nova }) {
   )
 }
 
+// Bilhete do mural vazio, pendurado num barbante que vem de fora da tela.
+// Toda a animação (queda girando, tranco, balanço, rajadas) está no CSS
+// (.pendurado* no globals.css). A sombra é uma cópia escura do conjunto.
+function BilhetePendurado({ children, saindo }) {
+  return (
+    <div className={saindo ? 'pendurado sobe' : 'pendurado'}>
+      <div className="pendurado-queda">
+        <div className="pendurado-sombra" aria-hidden="true" inert>
+          <span className="barbante" /><span className="no-corda" />
+          <div className="mural-bilhete">{children}<span className="ponta esq" /><span className="ponta dir" /></div>
+        </div>
+        <div className="pendurado-balanco">
+          <span className="barbante" /><span className="no-corda" />
+          <div className="mural-bilhete">{children}<span className="ponta esq" /><span className="ponta dir" /></div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function Prendedor({ tipo, cor }) {
   if (tipo === 'tacha') return <span className="tacha" style={{ background: `radial-gradient(circle at 35% 35%, #fff8, ${cor} 45%)` }} />
   if (tipo === 'fita') return <span className="fita" />
@@ -106,12 +125,6 @@ function Prendedor({ tipo, cor }) {
 }
 
 const fmt = (iso, op) => new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', ...op })
-function rotuloDia(dia) {
-  if (dia === 0) return 'Chegada'
-  if (dia <= TOTAL_DIAS) return `Dia ${dia} da Escola`
-  return 'Depois da Escola'
-}
-const dataBR = iso => iso.split('-').reverse().join('/')
 
 function comprimirImagem(file, maxKB = 500) {
   return new Promise((resolve, reject) => {
@@ -143,27 +156,8 @@ function comprimirImagem(file, maxKB = 500) {
   })
 }
 
-// Bilhete do mural vazio, pendurado num barbante que vem de fora da tela.
-// Toda a animação (queda girando, tranco, balanço, rajadas) está no CSS
-// (.pendurado* no globals.css). A sombra é uma cópia escura do conjunto.
-function BilhetePendurado({ children }) {
-  return (
-    <div className="pendurado">
-      <div className="pendurado-queda">
-        <div className="pendurado-sombra" aria-hidden="true" inert>
-          <span className="barbante" /><span className="no-corda" />
-          <div className="mural-bilhete">{children}<span className="ponta esq" /><span className="ponta dir" /></div>
-        </div>
-        <div className="pendurado-balanco">
-          <span className="barbante" /><span className="no-corda" />
-          <div className="mural-bilhete">{children}<span className="ponta esq" /><span className="ponta dir" /></div>
-        </div>
-      </div>
-    </div>
-  )
-}
 
-export function Mural({ sessao, fase, liberaEm, fotos: fotosServidor }) {
+export function Mural({ sessao, aberto: abertoServidor, liberaEm, fotos: fotosServidor }) {
   const tx = useTexto()
   const router = useRouter()
   const [fotos, setFotos] = useEstadoServidor(fotosServidor)
@@ -172,18 +166,46 @@ export function Mural({ sessao, fase, liberaEm, fotos: fotosServidor }) {
   const [confirmarExclusao, setConfirmarExclusao] = useState(false)
   const [chegando, setChegando] = useState(() => new Set())
   const [escolhendo, setEscolhendo] = useState(false)
-  const [modoTeste, setModoTeste] = useState(false)
   const [pendente, setPendente] = useState(null)    // { file, preview }
   const [enviando, setEnviando] = useState(false)
   const [erroEnvio, setErroEnvio] = useState(false)
   const [guardadaOffline, setGuardadaOffline] = useState(false)
   const [naFila, setNaFila] = useState(0)
+  const [aberto, setAberto] = useEstadoServidor(abertoServidor)
+  // Troca de papel: o atual sobe pelo barbante e, em seguida, o novo desce
+  const [exibido, setExibido] = useState(aberto)
+  const [saindo, setSaindo] = useState(false)
+  if (aberto !== exibido && !saindo) setSaindo(true)
+  useEffect(() => {
+    if (!saindo) return
+    const t = setTimeout(() => { setExibido(aberto); setSaindo(false) }, 750)
+    return () => clearTimeout(t)
+  }, [saindo, aberto])
+  const dataBR = iso => iso.split('-').reverse().join('/')
+  const [ajuda, setAjuda] = useState(false)
+  const [erroTrava, setErroTrava] = useState(false)
+  const admin = ehAdmin(sessao)
+  const podePostar = aberto || admin
+  async function alternarPostagens() {
+    const novo = !aberto
+    setAberto(novo)
+    try { await definirMuralAberto(novo); router.refresh() } catch { setAberto(!novo); setErroTrava(true); setTimeout(() => setErroTrava(false), 4000) }
+  }
+  const [curtidas, setCurtidas] = useState(() => { try { return new Set(JSON.parse(lerLocal('mural-curtidas', '[]'))) } catch { return new Set() } })
+  async function curtir(foto) {
+    const jaCurtiu = curtidas.has(foto.id)
+    const delta = jaCurtiu ? -1 : 1
+    const novas = new Set(curtidas)
+    if (jaCurtiu) novas.delete(foto.id); else novas.add(foto.id)
+    setCurtidas(novas)
+    try { localStorage.setItem('mural-curtidas', JSON.stringify([...novas])) } catch {}
+    setFotos(lista => lista.map(f => f.id === foto.id ? { ...f, curtidas: Math.max(0, (f.curtidas || 0) + delta) } : f))
+    try { await curtirFoto(foto.id, delta) } catch {}
+  }
   const quadro = useRef(null)
   const conhecidas = useRef(null)
   const inputGaleria = useRef(null)
   const inputCamera = useRef(null)
-
-  const podePostar = fase === 'aberto' || modoTeste
 
   useLayoutEffect(() => {
     const el = quadro.current?.parentElement
@@ -236,7 +258,7 @@ export function Mural({ sessao, fase, liberaEm, fotos: fotosServidor }) {
     e.target.value = ''
     setEscolhendo(false)
     if (!file) return
-    setPendente({ file, preview: URL.createObjectURL(file) })
+    setPendente({ file, preview: URL.createObjectURL(file), legenda: '' })
   }
 
   function cancelarEnvio() {
@@ -247,6 +269,7 @@ export function Mural({ sessao, fase, liberaEm, fotos: fotosServidor }) {
   async function colarFoto() {
     if (!pendente) return
     const file = pendente.file
+    const legenda = pendente.legenda || ''
     cancelarEnvio()
     setEnviando(true)
     setErroEnvio(false)
@@ -254,7 +277,7 @@ export function Mural({ sessao, fase, liberaEm, fotos: fotosServidor }) {
     const arquivo = `dia0_${Date.now()}.jpg`
     let blob
     try { blob = await comprimirImagem(file) } catch { setErroEnvio(true); setEnviando(false); return }
-    const item = { blob, arquivo, legenda: '' }
+    const item = { blob, arquivo, legenda: legenda.trim() }
 
     for (let tentativa = 0; tentativa < 3; tentativa++) {
       try {
@@ -312,13 +335,13 @@ export function Mural({ sessao, fase, liberaEm, fotos: fotosServidor }) {
       <div className="mural-cab">
         <h2>{tx.feedImpulse}</h2>
         <span>{fotos.length} {fotos.length === 1 ? tx.foto : tx.fotos}</span>
+        {!aberto && <button type="button" className="mural-ajuda-btn" aria-label="Sobre o Feed" aria-expanded={ajuda} onClick={() => setAjuda(true)} />}
       </div>
 
       <div className="mural-avisos">
-        {fase === 'antes' && fotos.length > 0 && !modoTeste && <div className="mural-aviso">📷 As fotos serão liberadas em {dataBR(liberaEm)}</div>}
-        {fase === 'depois' && fotos.length > 0 && !modoTeste && <div className="mural-aviso">O mural foi fechado pra novas fotos</div>}
         {enviando && <div className="mural-aviso"><span style={{ width: 14, height: 14, border: '2px solid #FDEBD3', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />Colando sua foto...</div>}
         {erroEnvio && <div className="mural-aviso erro">Não deu pra enviar a foto. Tente de novo.</div>}
+        {erroTrava && <div className="mural-aviso erro">Não deu pra mudar as postagens. Tente de novo.</div>}
         {guardadaOffline && <div className="mural-aviso atencao">Sinal fraco: sua foto ficou guardada no aparelho e vai pro mural sozinha quando a conexão voltar.</div>}
         {!enviando && naFila > 0 && <div className="mural-aviso atencao">{naFila} foto{naFila > 1 ? 's' : ''} esperando conexão pra ir pro mural</div>}
       </div>
@@ -328,27 +351,13 @@ export function Mural({ sessao, fase, liberaEm, fotos: fotosServidor }) {
           {raizes.map(({ id, raiz }) => <Raiz key={id} raiz={raiz} nova={chegando.has(id)} />)}
         </svg>
 
-        {fotos.length === 0 && (() => {
-          const conteudo = (
-            <>
-              {fase === 'antes' && !modoTeste ? (
-                <>As fotos serão liberadas em {dataBR(liberaEm)}<small>a partir da chegada na Escola</small></>
-              ) : fase === 'depois' && !modoTeste ? (
-                <>O mural foi fechado<small>obrigado por cada momento ♥</small></>
-              ) : (
-                <>Ainda não tem fotos no mural<small>coloque a primeira!</small></>
-              )}
-              {fase !== 'aberto' && !modoTeste && ehAdmin(sessao) && (
-                <div><button type="button" onClick={() => setModoTeste(true)}>Liberar postagem</button></div>
-              )}
-            </>
-          )
-          // Papelzinho pendurado num barbante que vem de fora da tela, lá de cima:
-          // cai ao abrir o Feed, o barbante segura com um tranco e ele fica
-          // balançando. A sombra é uma cópia escura, desfocada e deslocada, como
-          // se o papel estivesse longe da madeira.
-          return <BilhetePendurado>{conteudo}</BilhetePendurado>
-        })()}
+        {fotos.length === 0 && (
+          <BilhetePendurado key={exibido ? 'aberto' : 'fechado'} saindo={saindo}>
+            {exibido
+              ? <>Ainda não tem fotos no mural<small>coloque a primeira!</small></>
+              : <>As fotos serão liberadas em {dataBR(liberaEm)}</>}
+          </BilhetePendurado>
+        )}
 
         {layout.map((p, k) => {
           const nova = chegando.has(p.foto.id)
@@ -375,6 +384,7 @@ export function Mural({ sessao, fase, liberaEm, fotos: fotosServidor }) {
               <button type="button" onClick={() => inputGaleria.current?.click()}>🖼️ Escolher da galeria</button>
             </div>
           )}
+          {admin && <button type="button" className="mural-trava" aria-label={aberto ? 'Travar postagens' : 'Liberar postagens'} onClick={alternarPostagens}>{aberto ? '🔓' : '🔒'}</button>}
           <button type="button" className="mural-fab" aria-label="Colocar foto no mural" aria-expanded={escolhendo} disabled={enviando}
             onClick={() => setEscolhendo(v => !v)}>{escolhendo ? '×' : '+'}</button>
           <input ref={inputGaleria} type="file" accept="image/*" onChange={escolherArquivo} hidden />
@@ -388,6 +398,7 @@ export function Mural({ sessao, fase, liberaEm, fotos: fotosServidor }) {
             <span className="fita" />
             <img src={pendente.preview} alt="Foto que vai pro mural" />
             <div className="autor">vai pro mural com o nome<span>{sessao.nome}</span></div>
+            <input className="legenda-input" type="text" maxLength={200} placeholder="Legenda (opcional)" value={pendente.legenda} onChange={e => setPendente(p => ({ ...p, legenda: e.target.value }))} />
           </div>
           <div className="mural-acoes">
             <button type="button" onClick={cancelarEnvio}>Cancelar</button>
@@ -396,26 +407,43 @@ export function Mural({ sessao, fase, liberaEm, fotos: fotosServidor }) {
         </div>
       )}
 
+      {ajuda && !aberto && (
+        <div className="mural-modal" onClick={e => { if (!e.target.closest('.mural-ajuda')) setAjuda(false) }}>
+          <div className="mural-ajuda" role="dialog" aria-label={tx.feedImpulse}>
+            <h3>{tx.feedImpulse}</h3>
+            <p>{tx.feedAjuda}</p>
+          </div>
+        </div>
+      )}
+
       {fotoAberta && (
-        <div className="mural-modal" onClick={e => { if (e.target === e.currentTarget) setAberta(null) }}>
+        <div className="mural-modal" onClick={e => { if (!e.target.closest('.mural-grande, button')) setAberta(null) }}>
           <div className="mural-grande" key={fotoAberta.id}>
             <span className="fita" />
-            <img src={thumbUrl(fotoAberta.url, { width: 800, height: 800 })} onError={onThumbError(fotoAberta.url)} alt="" decoding="async" />
-            <div className="diaesc">{rotuloDia(fotoAberta.dia)}</div>
-            <div className="dados">
-              <span><b>Hora</b>{fmt(fotoAberta.created_at, { hour: '2-digit', minute: '2-digit' })}</span>
-              <span><b>Dia</b>{fmt(fotoAberta.created_at, { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+            <div className="foto-wrap">
+              <img src={thumbUrl(fotoAberta.url, { width: 800, height: 800 })} onError={onThumbError(fotoAberta.url)} alt="" decoding="async" />
+              <div className="acoes-foto">
+                <div className="curtir-box">
+                  <button type="button" className={'curtir' + (curtidas.has(fotoAberta.id) ? ' ativo' : '')} aria-label={curtidas.has(fotoAberta.id) ? 'Descurtir' : 'Curtir'} aria-pressed={curtidas.has(fotoAberta.id)} onClick={() => curtir(fotoAberta)} />
+                  <span className="curtir-n">{fotoAberta.curtidas || 0}</span>
+                </div>
+                <button type="button" className="baixar" aria-label="Baixar foto" onClick={() => baixarFoto(fotoAberta.url)} />
+              </div>
             </div>
-            {fotoAberta.autor && <div className="autor">postada por<span>{fotoAberta.autor}</span></div>}
+            <div className="dados">
+              <span><i className="icone-hora" role="img" aria-label="Hora" />{fmt(fotoAberta.created_at, { hour: '2-digit', minute: '2-digit' })}</span>
+              <span><i className="icone-data" role="img" aria-label="Data" />{fmt(fotoAberta.created_at, { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+            </div>
+            {fotoAberta.autor && <div className="autor"><span>{fotoAberta.autor}</span></div>}
             {fotoAberta.legenda && <div className="legenda">{fotoAberta.legenda}</div>}
           </div>
+          {fotos.length > 1 && (
+            <div className="mural-acoes">
+              <button type="button" aria-label="Foto anterior" onClick={() => mudarAberta(-1)}>‹</button>
+              <button type="button" aria-label="Próxima foto" onClick={() => mudarAberta(1)}>›</button>
+            </div>
+          )}
           <div className="mural-acoes">
-            {fotos.length > 1 && <button type="button" aria-label="Foto anterior" onClick={() => mudarAberta(-1)}>‹</button>}
-            <button type="button" onClick={() => setAberta(null)}>Fechar</button>
-            {fotos.length > 1 && <button type="button" aria-label="Próxima foto" onClick={() => mudarAberta(1)}>›</button>}
-          </div>
-          <div className="mural-acoes">
-            <button type="button" onClick={() => baixarFoto(fotoAberta.url)}>Baixar</button>
             {podeApagar && (!confirmarExclusao
               ? <button type="button" className="perigo" onClick={() => setConfirmarExclusao(true)}>Excluir</button>
               : <>

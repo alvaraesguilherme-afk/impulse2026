@@ -195,7 +195,7 @@ export function Home({ sessao, inicio, diaFrase, aviso, frase: fraseServidor, de
         {!modoRestrito && destaque && (
           <div style={{ margin: '24px 22px 0' }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(245,158,11,0.6)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-              {tx.fotoDestaque} — {tx.dia} {destaque.dia}
+              {tx.fotoDestaque}
             </div>
             {destaque.autor && (
               <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>📸 {destaque.autor}</div>

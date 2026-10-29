@@ -533,20 +533,19 @@ body.foto-aberta .nav-mobile {
 /* botão de colocar foto */
 .mural-fab { position: fixed; right: 18px; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); z-index: 30; width: 58px; height: 58px; border-radius: 50%; border: none; cursor: pointer; background: var(--gradient); color: #fff; font-size: 30px; line-height: 1; box-shadow: 0 10px 24px rgba(0,0,0,0.55); display: flex; align-items: center; justify-content: center; }
 .mural-fab:disabled { opacity: 0.6; cursor: wait; }
-.mural-escolha { position: fixed; right: 18px; bottom: calc(90px + env(safe-area-inset-bottom, 0px)); z-index: 30; display: flex; flex-direction: column; gap: 8px; }
+.mural-escolha { position: fixed; right: 18px; bottom: calc(138px + env(safe-area-inset-bottom, 0px)); z-index: 30; display: flex; flex-direction: column; gap: 8px; }
 .mural-escolha button { border: 1px solid rgba(255,230,200,0.2); border-radius: 999px; padding: 11px 16px; background: rgba(20,12,6,0.92); color: #fff; font: 600 13px var(--font-inter), sans-serif; cursor: pointer; box-shadow: 0 8px 18px rgba(0,0,0,0.5); text-align: left; }
 
 /* polaroid aberta */
-.mural-modal { position: fixed; inset: 0; z-index: 400; background: rgba(8,5,3,0.86); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 20px 16px; overflow-y: auto; }
-.mural-grande { width: min(340px, 100%); background: #FBF8F1; color: #2A2238; padding: 14px 14px 18px; border-radius: 3px; box-shadow: 0 30px 60px rgba(0,0,0,0.7); transform: rotate(-1.5deg); animation: muralAbre 0.35s cubic-bezier(.2,.9,.3,1.2); position: relative; flex-shrink: 0; }
-@keyframes muralAbre { from { transform: rotate(-8deg) scale(0.7); opacity: 0; } to { transform: rotate(-1.5deg) scale(1); opacity: 1; } }
+.mural-modal { position: fixed; inset: 0; z-index: 400; background: rgba(8,5,3,0.86); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 20px 16px; overflow-y: auto; }
+.mural-grande { width: min(340px, 100%); background: #FBF8F1; color: #2A2238; padding: 14px 14px 18px; border-radius: 3px; box-shadow: 0 30px 60px rgba(0,0,0,0.7); transform: rotate(-1.5deg); animation: muralAbre 0.25s ease-out; position: relative; flex-shrink: 0; }
+@keyframes muralAbre { from { opacity: 0; } to { opacity: 1; } }
 .mural-grande .fita { position: absolute; top: -12px; left: 50%; width: 90px; height: 26px; margin-left: -45px; background: rgba(250,240,210,0.6); border-left: 1px dashed rgba(255,255,255,0.5); border-right: 1px dashed rgba(255,255,255,0.5); }
 .mural-grande img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; background: #ddd5c4; }
-.mural-grande .diaesc { font-family: var(--font-caveat), cursive; font-weight: 700; font-size: 34px; line-height: 1; margin-top: 14px; text-align: center; }
 .mural-grande .dados { display: flex; justify-content: center; gap: 18px; margin-top: 10px; font-family: var(--font-caveat), cursive; font-size: 21px; font-weight: 700; color: #4b4258; }
 .mural-grande .dados b { font: 700 10px var(--font-inter), sans-serif; letter-spacing: 1px; text-transform: uppercase; color: #9a90aa; margin-right: 4px; }
 .mural-grande .autor { text-align: center; margin-top: 8px; font: 600 11px var(--font-inter), sans-serif; color: #9a90aa; }
-.mural-grande .autor span { font-family: var(--font-caveat), cursive; font-size: 21px; font-weight: 700; color: #7C3AED; margin-left: 4px; }
+.mural-grande .autor span { font-family: var(--font-caveat), cursive; font-size: 21px; font-weight: 700; color: #7C3AED;  }
 .mural-grande .legenda { text-align: center; margin-top: 6px; font-size: 12px; color: #5b5168; }
 .mural-acoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 .mural-acoes button { min-width: 42px; height: 42px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.25); background: rgba(20,14,10,0.85); color: #fff; font: 600 13px var(--font-inter), sans-serif; cursor: pointer; }
@@ -716,3 +715,46 @@ body.foto-aberta .nav-mobile {
 @media (prefers-reduced-motion: reduce) {
   .pendurado-queda, .pendurado-queda .barbante, .pendurado-balanco, .pendurado-sombra, .pendurado .mural-bilhete { animation: none; }
 }
+.mural-grande .legenda-input { display: block; width: 100%; margin-top: 10px; padding: 8px 10px; border: 1px solid #d8cfbd; border-radius: 6px; background: #fff; color: #2A2238; font: 400 13px var(--font-inter), sans-serif; text-align: center; }
+.mural-trava { position: fixed; right: 27px; bottom: calc(90px + env(safe-area-inset-bottom, 0px)); z-index: 30; width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,230,200,0.2); background: rgba(20,12,6,0.92); font-size: 18px; line-height: 1; cursor: pointer; box-shadow: 0 8px 18px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
+.mural-grande .foto-wrap { position: relative; }
+.mural-grande .acoes-foto { position: absolute; right: 10px; bottom: 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 22px; }
+.mural-grande .curtir-box { display: flex; align-items: center; gap: 6px; }
+.mural-grande .curtir-n { color: #fff; font: 700 15px var(--font-inter), sans-serif; text-shadow: 0 1px 4px rgba(0,0,0,0.7); min-width: 8px; }
+.mural-grande .curtir { flex-shrink: 0; width: 34px; height: 34px; padding: 0; border: none; cursor: pointer; background-color: #fff; -webkit-mask: url(/heart.png) center / contain no-repeat; mask: url(/heart.png) center / contain no-repeat; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6)); transition: transform 0.15s; }
+.mural-grande .curtir:active { transform: scale(0.85); }
+.mural-grande .curtir.ativo { background-color: #ED4956; -webkit-mask-image: url(/heart-cheio.png); mask-image: url(/heart-cheio.png); animation: curtirPop 0.3s ease-out; }
+@keyframes curtirPop { 0% { transform: scale(0.7); } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
+.mural-grande .dados .icone-hora, .mural-grande .dados .icone-data { display: inline-block; width: 16px; height: 16px; vertical-align: -2px; margin-right: 5px; background-color: #9a90aa; -webkit-mask: url(/clock.png) center / contain no-repeat; mask: url(/clock.png) center / contain no-repeat; }
+.mural-grande .dados .icone-hora { -webkit-mask-image: url(/clock.png); mask-image: url(/clock.png); }
+.mural-grande .dados .icone-data { -webkit-mask-image: url(/calendar.png); mask-image: url(/calendar.png); }
+.mural-grande .baixar { margin-left: 3px; width: 28px; height: 28px; padding: 0; border: none; cursor: pointer; background-color: #fff; -webkit-mask: url(/downloads.png) center / contain no-repeat; mask: url(/downloads.png) center / contain no-repeat; transition: transform 0.15s; }
+.mural-grande .baixar:active { transform: scale(0.85); }
+.pendurado.sobe { animation: penduradoSobe 0.7s cubic-bezier(.5,0,.9,.4) both; }
+@keyframes penduradoSobe { to { transform: translateY(-520px); } }
+@media (prefers-reduced-motion: reduce) { .pendurado.sobe { animation: none; } }
+.mural-cab span { margin-left: auto; }
+.mural-ajuda-btn { flex-shrink: 0; width: 26px; height: 26px; padding: 0; border: none; cursor: pointer; background-color: #fff; -webkit-mask: url(/request.png) center / contain no-repeat; mask: url(/request.png) center / contain no-repeat; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6)); }
+.mural-ajuda { width: min(320px, 100%); background: #FBF8F1; color: #2A2238; padding: 20px 20px 22px; border-radius: 3px; box-shadow: 0 30px 60px rgba(0,0,0,0.7); animation: muralAbre 0.25s ease-out; }
+.mural-ajuda h3 { font-family: var(--font-caveat), cursive; font-size: 30px; font-weight: 700; line-height: 1; margin-bottom: 10px; text-align: center; }
+.mural-ajuda p { font: 400 14px/1.5 var(--font-inter), sans-serif; color: #4b4258; text-align: center; }
+.mural-ajuda-btn { transform-origin: 50% 60%; animation: ajudaChacoalha 3.5s ease-in-out 1.5s infinite; }
+@keyframes ajudaChacoalha {
+  0%, 14%, 100% { transform: rotate(0); }
+  2% { transform: rotate(-16deg); }
+  4% { transform: rotate(14deg); }
+  6% { transform: rotate(-12deg); }
+  8% { transform: rotate(9deg); }
+  10% { transform: rotate(-5deg); }
+  12% { transform: rotate(3deg); }
+}
+@media (prefers-reduced-motion: reduce) { .mural-ajuda-btn { animation: none; } }
+/* realismo do papel: grão de fibra (ruído) por cima do degradê e tinta que "pega" no papel */
+.pendurado-balanco .mural-bilhete {
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.42  0 0 0 0 0.3  0 0 0 0 0.14  0.9 0 0 0 -0.28'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+    linear-gradient(160deg, #FFFBEA, #FFF3CF 60%, #F7E8BE);
+  background-size: 180px 180px, auto;
+  text-shadow: 0 0 0.7px rgba(42,34,56,0.55), 0.3px 0.4px 0 rgba(42,34,56,0.25);
+}
+

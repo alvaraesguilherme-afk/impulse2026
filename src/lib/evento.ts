@@ -26,3 +26,15 @@ export async function getInicioEvento(): Promise<string> {
     return INICIO_PADRAO;
   }
 }
+
+// Postagens do Feed liberadas? (configuracao_escola.mural_aberto). Sem cache:
+// o botão do admin vale na hora. Qualquer falha cai em "aberto".
+export async function getMuralAberto(): Promise<boolean> {
+  try {
+    const conf = await prisma.configuracao_escola.findUnique({ where: { id: 1 }, select: { mural_aberto: true } });
+    return conf?.mural_aberto ?? true;
+  } catch (e) {
+    console.error('getMuralAberto falhou:', e);
+    return true;
+  }
+}

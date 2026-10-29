@@ -69,6 +69,7 @@ model check_in_alunos {
 model configuracao_escola {
   id          Int      @id
   data_inicio DateTime @db.Date
+  mural_aberto Boolean @default(true)
 }
 
 model foto_votacao {
