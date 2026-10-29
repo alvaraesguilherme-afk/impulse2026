@@ -7,9 +7,9 @@ export const NIVEIS_SUPERVISOR: readonly string[] = ["maximo", "alto", "basico"]
 export type Sessao = { nome: string; nivel: string; areas: string[]; equipe: string | null };
 
 export const ABAS_POR_NIVEL: Record<string, string[]> = {
-  maximo: ["avisos", "chamada", "faltas", "senhas", "aprovacoes"],
-  alto: ["avisos", "chamada", "faltas", "aprovacoes"],
-  basico: ["avisos"],
+  maximo: ["chamada", "faltas", "senhas", "aprovacoes"],
+  alto: ["chamada", "faltas", "aprovacoes"],
+  basico: [], // sem aba no Supervisor: o menu nem mostra o link
 };
 
 export const ehSupervisor = (s: Pick<Sessao, "nivel"> | null | undefined) => NIVEIS_SUPERVISOR.includes(s?.nivel ?? "");
@@ -22,8 +22,6 @@ export function coordenaArea(s: Sessao | null | undefined, area: string) {
   return s?.nivel === "basico" && (s?.areas ?? []).includes(area);
 }
 
-// Aba Programação: só coordenação geral e supervisores editam.
-export const editaProgramacao = (s: Pick<Sessao, "nivel"> | null | undefined) => ["maximo", "alto"].includes(s?.nivel ?? "");
 
 
 // Coordenação geral (máximo) entra em quantos aparelhos quiser; supervisor em 2;

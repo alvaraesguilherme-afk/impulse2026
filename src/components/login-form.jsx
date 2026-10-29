@@ -1,10 +1,8 @@
 'use client'
 
-import { useActionState, useState, useTransition } from 'react'
+import { useActionState, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { entrar, verificarAprovacao, cancelarPedido } from '@/app/actions/auth'
-import { AREAS } from '@/lib/areas'
-import { RotuloArea } from '@/components/rotulo-area'
+import { entrar } from '@/app/actions/auth'
 import { useTexto } from '@/lib/i18n'
 
 const inputStyle = {
@@ -41,32 +39,17 @@ export function LoginForm({ nomesDisponiveis }) {
   const [listaAberta, setListaAberta] = useState(false)
   const motivo = useSearchParams().get('motivo')
   const [stateEntrar, acaoEntrar, entrando] = useActionState(entrar, undefined)
-  const [stateVerificar, acaoVerificar, verificando] = useActionState(verificarAprovacao, undefined)
-  const [voltando, startVoltar] = useTransition()
   const [login, setLogin] = useState('')
   const [pin, setPin] = useState('')
-  const [areaSel, setAreaSel] = useState('')
   const [descartado, setDescartado] = useState(null)
   // Lista de nomes que ainda não entraram, filtrada pelo que já foi digitado
   const sugestoes = nomesDisponiveis.filter(n => semAcento(n).includes(semAcento(login)) && n !== login)
 
-  // O estado mais recente entre as duas ações decide a tela
-  const state = (stateVerificar && stateVerificar !== descartado) ? stateVerificar : (stateEntrar !== descartado ? stateEntrar : undefined)
-  const aguardando = state?.tipo === 'aguardando'
-  const precisaArea = state?.tipo === 'precisaArea'
+  const state = stateEntrar !== descartado ? stateEntrar : undefined
   const bloqueado = state?.tipo === 'bloqueado'
   const erro = state?.tipo === 'erro' || bloqueado ? state.erro : ''
 
   function limparEstado() { if (state) setDescartado(state) }
-
-  function voltarDaEspera() {
-    startVoltar(async () => {
-      await cancelarPedido(login, pin)
-      setDescartado(state)
-      setAreaSel('')
-      setPin('')
-    })
-  }
 
   return (
     <div style={{
@@ -94,115 +77,70 @@ export function LoginForm({ nomesDisponiveis }) {
           </div>
         )}
 
-        {aguardando ? (
-          <form action={acaoVerificar} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '32px 24px', textAlign: 'center' }}>
-            <input type="hidden" name="login" value={login} />
-            <input type="hidden" name="pin" value={pin} />
-            <div style={{ fontSize: 40, marginBottom: 14 }}>⏳</div>
-            <div style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 17, fontWeight: 700, marginBottom: 10 }}>{tx.aguardandoAprovacaoTitulo}</div>
-            <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 20 }}>{tx.aguardandoAprovacaoDesc}</div>
-            {state.aindaPendente && (
-              <div style={{ fontSize: 12, color: '#EAB308', marginBottom: 14 }}>{tx.aindaAguardandoAprovacao}</div>
-            )}
-            <button type="submit" disabled={verificando} style={{ ...botaoPrincipal(verificando), fontSize: 14, marginBottom: 10 }}>
-              {verificando ? tx.verificando : tx.jaFuiAprovadoVerificar}
-            </button>
-            <button type="button" onClick={voltarDaEspera} disabled={voltando} style={{
-              width: '100%', padding: 12, borderRadius: 14, border: '1px solid var(--border)',
-              background: 'transparent', color: 'var(--text-muted)', fontSize: 13, fontWeight: 600,
-              cursor: voltando ? 'default' : 'pointer', fontFamily: 'var(--font-inter), sans-serif', opacity: voltando ? 0.6 : 1
-            }}>{tx.voltarLogin}</button>
-          </form>
-        ) : (
-          <form action={acaoEntrar} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '28px 24px' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 20, textAlign: 'center' }}>
-              {tx.identificacao}
-            </div>
+        <form action={acaoEntrar} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '28px 24px' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 20, textAlign: 'center' }}>
+            {tx.identificacao}
+          </div>
 
-            <div style={{ marginBottom: 14, position: 'relative' }}>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>Login</div>
-              <input
-                name="login" value={login} autoComplete="off" autoCapitalize="words"
-                onChange={e => { setLogin(e.target.value); setAreaSel(''); limparEstado(); setListaAberta(true) }}
-                onFocus={() => setListaAberta(true)}
-                onBlur={() => setListaAberta(false)}
-                placeholder={nomesDisponiveis.length ? 'Toque pra escolher seu nome' : 'Nome e sobrenome'}
-                style={inputStyle}
-              />
-              {listaAberta && sugestoes.length > 0 && (
-                <div style={{
-                  position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 6, zIndex: 20,
-                  maxHeight: 240, overflowY: 'auto', borderRadius: 14,
-                  background: 'var(--bg-app)', border: '1px solid var(--border-strong)', boxShadow: '0 12px 30px rgba(0,0,0,0.45)'
-                }}>
-                  {sugestoes.map(nome => (
-                    <button
-                      key={nome} type="button"
-                      // mousedown (antes do blur do campo), senão a lista fecha antes do clique
-                      onMouseDown={e => { e.preventDefault(); setLogin(nome); setAreaSel(''); limparEstado(); setListaAberta(false) }}
-                      style={{
-                        display: 'block', width: '100%', textAlign: 'left', padding: '12px 14px',
-                        background: 'transparent', border: 'none', borderBottom: '1px solid var(--border)',
-                        color: 'var(--text)', fontSize: 14, cursor: 'pointer', fontFamily: 'var(--font-inter), sans-serif'
-                      }}
-                    >{nome}</button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div style={{ marginBottom: precisaArea ? 14 : 20 }}>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>{tx.pinPessoal}</div>
-              <input
-                type="password" name="pin" value={pin} autoComplete="current-password"
-                onChange={e => { setPin(e.target.value.toUpperCase()); limparEstado() }}
-                placeholder="•••••" maxLength={6}
-                style={pinStyle}
-              />
-            </div>
-
-            {precisaArea && (
-              <div style={{ marginBottom: 20 }}>
-                <input type="hidden" name="area" value={areaSel} />
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>{tx.areasDeInteresse}</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {AREAS.map(area => (
-                    <button
-                      key={area}
-                      type="button"
-                      onClick={() => setAreaSel(area)}
-                      style={{
-                        padding: '7px 13px', borderRadius: 20,
-                        border: areaSel === area ? '1px solid var(--accent-border)' : '1px solid var(--border-strong)',
-                        background: areaSel === area ? 'var(--accent-bg)' : 'var(--bg-card)',
-                        color: areaSel === area ? 'var(--accent-light)' : 'var(--text-secondary)',
-                        fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-inter), sans-serif'
-                      }}
-                    ><RotuloArea area={area} /></button>
-                  ))}
-                </div>
-                {!areaSel && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 10, textAlign: 'center' }}>{tx.selecioneAoMenosUmaArea}</div>}
+          <div style={{ marginBottom: 14, position: 'relative' }}>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>Login</div>
+            <input
+              name="login" value={login} autoComplete="off" autoCapitalize="words"
+              onChange={e => { setLogin(e.target.value); limparEstado(); setListaAberta(true) }}
+              onFocus={() => setListaAberta(true)}
+              onBlur={() => setListaAberta(false)}
+              placeholder={nomesDisponiveis.length ? 'Toque pra escolher seu nome' : 'Nome e sobrenome'}
+              style={inputStyle}
+            />
+            {listaAberta && sugestoes.length > 0 && (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 6, zIndex: 20,
+                maxHeight: 240, overflowY: 'auto', borderRadius: 14,
+                background: 'var(--bg-app)', border: '1px solid var(--border-strong)', boxShadow: '0 12px 30px rgba(0,0,0,0.45)'
+              }}>
+                {sugestoes.map(nome => (
+                  <button
+                    key={nome} type="button"
+                    // mousedown (antes do blur do campo), senão a lista fecha antes do clique
+                    onMouseDown={e => { e.preventDefault(); setLogin(nome); limparEstado(); setListaAberta(false) }}
+                    style={{
+                      display: 'block', width: '100%', textAlign: 'left', padding: '12px 14px',
+                      background: 'transparent', border: 'none', borderBottom: '1px solid var(--border)',
+                      color: 'var(--text)', fontSize: 14, cursor: 'pointer', fontFamily: 'var(--font-inter), sans-serif'
+                    }}
+                  >{nome}</button>
+                ))}
               </div>
             )}
+          </div>
 
-            {erro && <div style={{ fontSize: 12, color: '#F87171', textAlign: 'center', marginBottom: 10 }}>{erro}</div>}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6 }}>{tx.pinPessoal}</div>
+            <input
+              type="password" name="pin" value={pin} autoComplete="current-password"
+              onChange={e => { setPin(e.target.value.toUpperCase()); limparEstado() }}
+              placeholder="•••••" maxLength={6}
+              style={pinStyle}
+            />
+          </div>
 
-            {bloqueado && (
-              <button type="submit" name="forcar" value="1" disabled={entrando} style={{
-                width: '100%', padding: 12, borderRadius: 14, marginBottom: 14,
-                border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)',
-                color: '#F87171', fontSize: 13, fontWeight: 700,
-                cursor: entrando ? 'default' : 'pointer', fontFamily: 'var(--font-syne), sans-serif'
-              }}>
-                {entrando ? tx.entrandoAcao : tx.souEuEntrarMesmoAssim}
-              </button>
-            )}
+          {erro && <div style={{ fontSize: 12, color: '#F87171', textAlign: 'center', marginBottom: 10 }}>{erro}</div>}
 
-            <button type="submit" disabled={entrando || (precisaArea && !areaSel)} style={botaoPrincipal(entrando || (precisaArea && !areaSel))}>
-              {entrando ? tx.verificando : tx.entrar}
+          {bloqueado && (
+            <button type="submit" name="forcar" value="1" disabled={entrando} style={{
+              width: '100%', padding: 12, borderRadius: 14, marginBottom: 14,
+              border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.08)',
+              color: '#F87171', fontSize: 13, fontWeight: 700,
+              cursor: entrando ? 'default' : 'pointer', fontFamily: 'var(--font-syne), sans-serif'
+            }}>
+              {entrando ? tx.entrandoAcao : tx.souEuEntrarMesmoAssim}
             </button>
-          </form>
-        )}
+          )}
+
+          <button type="submit" disabled={entrando} style={botaoPrincipal(entrando)}>
+            {entrando ? tx.verificando : tx.entrar}
+          </button>
+        </form>
 
         <div style={{ textAlign: 'center', marginTop: 20, fontSize: 11, color: 'var(--text-faint)' }}>
           {tx.dispositivoReconhecido}

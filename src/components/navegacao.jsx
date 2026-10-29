@@ -9,7 +9,7 @@ function NavIcon({ id, active, size = 22 }) {
   return <img src={`/icons/${id}.png`} alt="" style={{ width: size, height: size, objectFit: 'contain', opacity: active ? 1 : 0.6, transition: 'opacity 0.2s' }} />
 }
 
-const HREF = { home: '/', programacao: '/programacao', supervisor: '/supervisor', config: '/config', mural: '/mural', apoio: '/apoio', midia: '/midia', staff: '/staff', advertencias: '/advertencias' }
+const HREF = { home: '/', supervisor: '/supervisor', config: '/config', mural: '/mural', apoio: '/apoio', midia: '/midia', staff: '/staff', advertencias: '/advertencias' }
 
 function useAtivo() {
   const path = usePathname()
@@ -27,7 +27,6 @@ function ConteudoSidebar({ podeSupervisor, onNavegar }) {
     { id: 'apoio', label: tx.apoio },
     { id: 'midia', label: tx.midia },
     { id: 'staff', label: tx.staff },
-    { id: 'programacao', label: tx.programacao },
     { id: 'advertencias', label: tx.advertencias },
     podeSupervisor ? null : undefined,
     podeSupervisor ? { id: 'supervisor', label: tx.supervisor } : undefined,

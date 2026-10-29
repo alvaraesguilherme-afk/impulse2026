@@ -1,14 +1,14 @@
 import type { ReactNode } from "react";
 import { Suspense } from "react";
 import { getSessao } from "@/lib/dal";
-import { ehSupervisor } from "@/lib/permissoes";
+import { ABAS_POR_NIVEL } from "@/lib/permissoes";
 import { Sidebar, NavMobile } from "@/components/navegacao";
 import { SyncOffline } from "@/components/sync-offline";
 import { RolarProTopo } from "@/components/rolar-topo";
 
 async function NavComSessao() {
   const sessao = await getSessao();
-  const podeSupervisor = ehSupervisor(sessao);
+  const podeSupervisor = (ABAS_POR_NIVEL[sessao.nivel] ?? []).length > 0;
   return (
     <>
       <Sidebar podeSupervisor={podeSupervisor} />

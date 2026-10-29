@@ -24,7 +24,7 @@ export function PainelAba({ id, aba, abaSaindo, direcao, style, children }) {
   )
 }
 
-// Calendário em grade dos 11 dias (Apoio, Mídia, Programação)
+// Calendário em grade dos 11 dias (Apoio, Mídia)
 export function GradeDias({ dias, selecionado, onSelecionar, hoje, mesesC }) {
   const DIAS_C = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
   return (

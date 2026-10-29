@@ -3,38 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { getSessao } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { ABAS_POR_NIVEL, ehSupervisor, podeGerirEquipes } from "@/lib/permissoes";
+import { ABAS_POR_NIVEL, podeGerirEquipes } from "@/lib/permissoes";
 import { AREAS, AREA_APOIO } from "@/lib/areas";
 import { EQUIPES, IDS_EQUIPES } from "@/lib/equipes";
-import { notificarAviso } from "@/lib/push";
 
 async function exigirAba(aba: string) {
   const sessao = await getSessao();
   if (!(ABAS_POR_NIVEL[sessao.nivel] ?? []).includes(aba)) throw new Error("Sem permissão");
   return sessao;
-}
-
-export async function publicarAviso(texto: string) {
-  const sessao = await getSessao();
-  if (!ehSupervisor(sessao)) throw new Error("Sem permissão");
-  const limpo = texto.trim();
-  if (!limpo) return;
-  const agora = new Date();
-  const fmt = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", ...o }).format(agora);
-  await prisma.avisos.create({
-    data: { texto: limpo, data: fmt({ day: "2-digit", month: "2-digit" }), hora: fmt({ hour: "numeric", minute: "2-digit" }) },
-  });
-  notificarAviso(limpo);
-  revalidatePath("/supervisor");
-  revalidatePath("/");
-}
-
-export async function removerAviso(id: number) {
-  const sessao = await getSessao();
-  if (!ehSupervisor(sessao)) throw new Error("Sem permissão");
-  await prisma.avisos.deleteMany({ where: { id: BigInt(id) } });
-  revalidatePath("/supervisor");
-  revalidatePath("/");
 }
 
 // chave = "<diaIdx>_<turno>_<nome>"; status '' desmarca

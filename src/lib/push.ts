@@ -45,17 +45,10 @@ function enviar(alvo: Alvo, payload: Payload) {
 
 const corta = (s: string) => s.slice(0, 120);
 
-export function notificarAviso(texto: string) {
-  enviar({}, { title: "📢 Novo aviso do supervisor", body: corta(texto), tipo: "aviso" });
-}
-
 export function notificarFrase(frase: string) {
   enviar({}, { title: "✨ Frase do dia atualizada", body: corta(frase), tipo: "frase" });
 }
 
-export function notificarProgramacao(titulo: string) {
-  enviar({}, { title: "📅 Programação atualizada", body: corta(titulo), tipo: "programacao" });
-}
 
 export function notificarEquipe(equipeId: string, autor: string, texto: string) {
   enviar({ equipeId }, { title: "💬 Mensagem da sua equipe", body: corta(`${autor}: ${texto}`), tipo: "equipe" });

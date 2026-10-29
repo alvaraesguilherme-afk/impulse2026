@@ -12,9 +12,8 @@ export default async function HomePage() {
   const inicioOntem = new Date(`${somaDiasISO(hoje, -1)}T03:00:00Z`);
   const inicioHoje = new Date(`${hoje}T03:00:00Z`);
 
-  const [aviso, frase, destaque] = await Promise.all([
-    prisma.avisos.findFirst({ orderBy: { created_at: "desc" } }),
-    prisma.frase_do_dia.findFirst({ where: { dia } }),
+  const [frases, destaque] = await Promise.all([
+    prisma.frase_do_dia.findMany({ where: { dia }, orderBy: { id: "asc" }, take: 2 }),
     prisma.mural_fotos.findFirst({ where: { created_at: { gte: inicioOntem, lt: inicioHoje }, curtidas: { gt: 0 } }, orderBy: { curtidas: "desc" } }),
   ]);
 
@@ -23,8 +22,7 @@ export default async function HomePage() {
       sessao={sessao}
       inicio={inicio}
       diaFrase={dia}
-      aviso={aviso && { texto: aviso.texto ?? "", hora: aviso.hora ?? "", created_at: aviso.created_at.toISOString() }}
-      frase={frase && { frase: frase.frase, autor: frase.autor }}
+      frases={frases.map((f) => ({ id: Number(f.id), frase: f.frase, autor: f.autor }))}
       destaque={destaque && { url: destaque.url, autor: destaque.autor, curtidas: destaque.curtidas ?? 0 }}
     />
   );

@@ -1,10 +1,8 @@
 'use client'
 
 import { Fragment, useEffect, useState, useTransition } from 'react'
-import Link from 'next/link'
 import { useTexto } from '@/lib/i18n'
-import { rotuloRelativo, horasDesde } from '@/lib/tempo'
-import { ehSupervisor } from '@/lib/permissoes'
+import { ehAdmin, ehSupervisor } from '@/lib/permissoes'
 import { dataLocal, diffDias, hojeLocal, TOTAL_DIAS } from '@/lib/calendario'
 import { executar } from '@/lib/offline'
 import { useMontado, useEstadoServidor } from '@/lib/hooks'
@@ -98,26 +96,39 @@ function ContadorSection({ inicio }) {
   )
 }
 
-export function Home({ sessao, inicio, diaFrase, aviso, frase: fraseServidor, destaque }) {
+export function Home({ sessao, inicio, diaFrase, frases: frasesServidor, destaque }) {
   const tx = useTexto()
   const montado = useMontado()
-  const [frase, setFrase] = useEstadoServidor(fraseServidor)
-  const [showFraseModal, setShowFraseModal] = useState(false)
+  const [frases, setFrases] = useEstadoServidor(frasesServidor)
+  const [slotFrase, setSlotFrase] = useState(null) // qual bilhete (0 ou 1) está aberto no modal
   const [fraseInput, setFraseInput] = useState('')
   const [fraseErro, setFraseErro] = useState('')
+  const [avisoFrase, setAvisoFrase] = useState(false)
   const [salvandoFrase, startSalvar] = useTransition()
   const posEvento = montado && diffDias(hojeLocal(), dataLocal(inicio)) > TOTAL_DIAS
 
   const nivelSupervisor = ehSupervisor(sessao)
-  const podeEscreverFrase = !frase
-  const podeEditarFrase = !!frase && nivelSupervisor
-  const fraseClicavel = podeEscreverFrase || podeEditarFrase
+  const souAdmin = ehAdmin(sessao)
+  const showFraseModal = slotFrase !== null
+  const fraseAlvo = slotFrase !== null ? frases[slotFrase] ?? null : null
+  const minha = f => f.autor === sessao.nome
+  const jaEscreveu = frases.some(minha)
+  const podeEditarFrase = !!fraseAlvo && souAdmin
+  const podeApagarFrase = !!fraseAlvo && (souAdmin || minha(fraseAlvo))
+  // Bilhete vazio: qualquer um escreve, mas só um por pessoa. Preenchido: o administrador
+  // (nível máximo) troca ou apaga; quem escreveu pode apagar o seu.
+  const clicavel = i => !frases[i] || souAdmin || minha(frases[i])
   const modoRestrito = posEvento && !nivelSupervisor
 
-  function abrirFraseModal() {
-    if (!fraseClicavel) return
-    setShowFraseModal(true)
-    setFraseInput(frase?.frase || '')
+  function abrirFraseModal(i) {
+    if (!clicavel(i)) return
+    if (!frases[i] && jaEscreveu) {
+      setAvisoFrase(true)
+      setTimeout(() => setAvisoFrase(false), 3200)
+      return
+    }
+    setSlotFrase(i)
+    setFraseInput(frases[i]?.frase || '')
     setFraseErro('')
   }
 
@@ -125,34 +136,22 @@ export function Home({ sessao, inicio, diaFrase, aviso, frase: fraseServidor, de
     if (!fraseInput.trim()) { setFraseErro(tx.digiteAFrasePonto); return }
     const texto = fraseInput.trim()
     startSalvar(async () => {
-      await executar('home.salvarFrase', diaFrase, texto)
-      setFrase({ frase: texto, autor: sessao.nome })
-      setShowFraseModal(false)
+      await executar('home.salvarFrase', diaFrase, texto, fraseAlvo?.id ?? null)
+      setFrases(prev => fraseAlvo
+        ? prev.map(f => f.id === fraseAlvo.id ? { ...f, frase: texto, autor: sessao.nome } : f)
+        : [...prev, { id: `tmp_${Date.now()}`, frase: texto, autor: sessao.nome }])
+      setSlotFrase(null)
     })
   }
 
   function excluirFrase() {
     startSalvar(async () => {
-      await executar('home.excluirFrase', diaFrase)
-      setFrase(null)
+      if (typeof fraseAlvo.id === 'number') await executar('home.excluirFrase', fraseAlvo.id)
+      setFrases(prev => prev.filter(f => f.id !== fraseAlvo.id))
       setFraseInput('')
-      setShowFraseModal(false)
+      setSlotFrase(null)
     })
   }
-
-  const avisoRecente = aviso && horasDesde(aviso.created_at) < 24
-
-  const cartaoAviso = avisoRecente && (
-    <div style={{ marginBottom: 24, background: 'rgba(239,68,68,0.14)', border: '2px solid rgba(239,68,68,0.6)', boxShadow: '0 0 16px rgba(239,68,68,0.2)', borderRadius: 16, padding: 14, display: 'flex', alignItems: 'center', gap: 12, color: 'var(--text)' }}>
-      <div style={{ fontSize: 20 }}>📢</div>
-      <div style={{ flex: 1 }}>
-        <p style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.4 }}>{aviso.texto}</p>
-        <span style={{ fontSize: 10, fontWeight: 800, color: '#F87171' }}>{rotuloRelativo(aviso.created_at)}</span>
-        <span style={{ fontSize: 10, color: 'var(--text-muted)' }}> · {aviso.hora}</span>
-      </div>
-      <div style={{ fontSize: 18, color: 'var(--text-faint)' }}>›</div>
-    </div>
-  )
 
   return (
     <div className="tela-enter" style={{ minHeight: '100vh', background: 'var(--bg-app)', position: 'relative', overflow: 'hidden' }}>
@@ -173,22 +172,19 @@ export function Home({ sessao, inicio, diaFrase, aviso, frase: fraseServidor, de
           </div>
           <div style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 500, marginBottom: 24 }}>{tx.datasEventoLocal}</div>
 
-          {!modoRestrito && cartaoAviso && (
-            nivelSupervisor
-              ? <Link href="/supervisor" style={{ textDecoration: 'none' }}>{cartaoAviso}</Link>
-              : cartaoAviso
-          )}
-
           <ContadorSection inicio={inicio} />
         </div>
 
         {!modoRestrito && (
-          <div onClick={abrirFraseModal} className="bilhete" style={{ cursor: fraseClicavel ? 'pointer' : 'default' }}>
-            <div className="bilhete-etiqueta">{tx.fraseDoDia}</div>
-            {frase?.frase
-              ? <div className="bilhete-texto">{frase.frase}</div>
-              : <div className="bilhete-texto bilhete-vazio">{tx.toquePraDefinir}</div>}
-          </div>
+          [0, 1].map(i => (
+            <div key={i} onClick={() => abrirFraseModal(i)} className="bilhete" style={{ cursor: clicavel(i) ? 'pointer' : 'default' }}>
+              <div className="bilhete-etiqueta">{tx.fraseDoDia}</div>
+              {frases[i]?.frase
+                ? <div className="bilhete-texto">{frases[i].frase}</div>
+                : <div className="bilhete-texto bilhete-vazio">{tx.toquePraDefinir}</div>}
+              {souAdmin && frases[i]?.autor && <div className="bilhete-autor">{tx.por} {frases[i].autor}</div>}
+            </div>
+          ))
         )}
 
 
@@ -213,27 +209,35 @@ export function Home({ sessao, inicio, diaFrase, aviso, frase: fraseServidor, de
         <div style={{ height: 100 }} />
       </div>
 
+      {avisoFrase && (
+        <div role="status" style={{ position: 'fixed', left: 16, right: 16, bottom: 90, zIndex: 210, maxWidth: 360, margin: '0 auto', padding: '12px 16px', borderRadius: 14, background: '#1d2030', border: '1px solid var(--border-strong)', boxShadow: '0 14px 30px rgba(0,0,0,0.5)', fontSize: 13, fontWeight: 600, textAlign: 'center' }}>{tx.jaEscreveuFrase}</div>
+      )}
+
       {showFraseModal && (
         <div className="overlay-bg" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.85)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div className="overlay-enter" style={{ background: '#1a1a2e', border: '1px solid var(--border-strong)', borderRadius: 24, padding: '28px 24px', width: '90%', maxWidth: 340, textAlign: 'center' }}>
             <div style={{ fontSize: 32, marginBottom: 12 }}>✦</div>
             <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>
-              {podeEditarFrase ? tx.editarFrase : tx.fraseDoDiaTitulo}
+              {podeEditarFrase ? tx.editarFrase : podeApagarFrase ? tx.suaFrase : tx.fraseDoDiaTitulo}
             </h2>
             <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
-              {podeEditarFrase ? `${tx.editandoComo} ${sessao.nome}` : `${tx.definindoComo} ${sessao.nome}`}
+              {podeEditarFrase ? `${tx.editandoComo} ${sessao.nome}` : podeApagarFrase ? fraseAlvo.frase : `${tx.definindoComo} ${sessao.nome}`}
             </p>
-            <textarea
-              value={fraseInput} onChange={e => setFraseInput(e.target.value)}
-              placeholder={tx.digiteFrase} rows={3}
-              style={{ width: '100%', padding: '12px 14px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 14, color: 'var(--text)', outline: 'none', marginBottom: 12, fontFamily: 'var(--font-inter), sans-serif', resize: 'none' }}
-            />
-            {fraseErro && <p style={{ fontSize: 12, color: '#F87171', marginBottom: 10 }}>{fraseErro}</p>}
-            <button onClick={salvarFrase} disabled={salvandoFrase} style={{ width: '100%', padding: 14, background: 'var(--gradient)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: salvandoFrase ? 'not-allowed' : 'pointer', opacity: salvandoFrase ? 0.6 : 1, color: 'var(--text)', marginBottom: 10, fontFamily: 'var(--font-syne), sans-serif' }}>{salvandoFrase ? tx.salvando : tx.salvar}</button>
-            {podeEditarFrase && (
+            {(!fraseAlvo || podeEditarFrase) && (
+              <>
+                <textarea
+                  value={fraseInput} onChange={e => setFraseInput(e.target.value)}
+                  placeholder={tx.digiteFrase} rows={3}
+                  style={{ width: '100%', padding: '12px 14px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 14, color: 'var(--text)', outline: 'none', marginBottom: 12, fontFamily: 'var(--font-inter), sans-serif', resize: 'none' }}
+                />
+                {fraseErro && <p style={{ fontSize: 12, color: '#F87171', marginBottom: 10 }}>{fraseErro}</p>}
+                <button onClick={salvarFrase} disabled={salvandoFrase} style={{ width: '100%', padding: 14, background: 'var(--gradient)', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: salvandoFrase ? 'not-allowed' : 'pointer', opacity: salvandoFrase ? 0.6 : 1, color: 'var(--text)', marginBottom: 10, fontFamily: 'var(--font-syne), sans-serif' }}>{salvandoFrase ? tx.salvando : tx.salvar}</button>
+              </>
+            )}
+            {podeApagarFrase && (
               <button onClick={excluirFrase} disabled={salvandoFrase} style={{ width: '100%', padding: 14, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: salvandoFrase ? 'not-allowed' : 'pointer', opacity: salvandoFrase ? 0.6 : 1, color: '#F87171', marginBottom: 10, fontFamily: 'var(--font-syne), sans-serif' }}>{tx.excluirFrase}</button>
             )}
-            <button onClick={() => setShowFraseModal(false)} disabled={salvandoFrase} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: salvandoFrase ? 'not-allowed' : 'pointer' }}>{tx.cancelar}</button>
+            <button onClick={() => setSlotFrase(null)} disabled={salvandoFrase} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', fontSize: 13, cursor: salvandoFrase ? 'not-allowed' : 'pointer' }}>{tx.cancelar}</button>
           </div>
         </div>
       )}

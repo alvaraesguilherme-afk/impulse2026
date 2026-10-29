@@ -9,6 +9,7 @@ import { diasDoEvento, idxHoje, MESES, DIAS_SEMANA } from '@/lib/calendario'
 import { executar } from '@/lib/offline'
 import { useMontado, useEstadoServidor } from '@/lib/hooks'
 import { IconeTurno } from '@/components/icone-turno'
+import { AvatarPessoa } from '@/components/fluxo-sem-funcao'
 import { CaixaMensagem } from '@/components/abas'
 
 /* eslint-disable @next/next/no-img-element -- ícones locais em /public/icons */
@@ -214,10 +215,18 @@ export function Apoio({ sessao, inicio, minhaEquipe, staff, mensagens: mensagens
                   <div style={{ fontFamily: 'var(--font-syne), sans-serif', fontWeight: 700, fontSize: 15, color: eq.cor }}>{eq.nome}</div>
                   {eq.id === minhaEquipe && <span style={{ ...seloSua, marginLeft: 'auto' }}>Sua equipe</span>}
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {membros.length === 0 && <span style={{ fontSize: 12, color: 'var(--text-faint)', fontStyle: 'italic' }}>Ninguém ainda</span>}
-                  {membros.map(m => <span key={m.nome} style={{ fontSize: 12, padding: '5px 10px', borderRadius: 999, background: 'var(--input-bg)', color: 'var(--text-secondary)' }}>{m.nome}</span>)}
-                </div>
+                {membros.length === 0 ? (
+                  <span style={{ fontSize: 12, color: 'var(--text-faint)', fontStyle: 'italic' }}>Ninguém ainda</span>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    {membros.map((m, k) => (
+                      <div key={m.nome} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderTop: k ? '1px solid rgba(255,255,255,0.07)' : 'none' }}>
+                        <AvatarPessoa nome={m.nome} url={m.avatar} tamanho={44} />
+                        <span style={{ fontSize: 13, fontWeight: 600, minWidth: 0 }}>{m.nome}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )
           })}

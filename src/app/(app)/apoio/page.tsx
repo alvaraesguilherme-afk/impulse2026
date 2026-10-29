@@ -10,7 +10,7 @@ export default async function ApoioPage() {
   const veTodas = podeGerirEquipes(sessao);
 
   const [staff, mensagens] = await Promise.all([
-    prisma.staff.findMany({ where: { equipe_atribuida: { not: null } }, select: { nome: true, equipe_atribuida: true }, orderBy: { nome: "asc" } }),
+    prisma.staff.findMany({ where: { equipe_atribuida: { not: null } }, select: { nome: true, equipe_atribuida: true, avatar_url: true }, orderBy: { nome: "asc" } }),
     veTodas || minhaEquipe
       ? prisma.mensagens_equipe.findMany({
           where: veTodas ? { equipe_id: { not: "midia" } } : { equipe_id: { in: [minhaEquipe!, "todas"] } },
@@ -25,7 +25,7 @@ export default async function ApoioPage() {
       sessao={sessao}
       inicio={inicio}
       minhaEquipe={minhaEquipe}
-      staff={staff.map((s) => ({ nome: s.nome, equipe: s.equipe_atribuida }))}
+      staff={staff.map((s) => ({ nome: s.nome, equipe: s.equipe_atribuida, avatar: s.avatar_url }))}
       mensagens={mensagens.map((m) => ({ id: Number(m.id), equipe_id: m.equipe_id, autor: m.autor, texto: m.texto, created_at: m.created_at.toISOString() }))}
     />
   );

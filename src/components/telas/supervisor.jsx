@@ -1,20 +1,18 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useMemo, useState } from 'react'
 import { useTexto } from '@/lib/i18n'
-import { AREAS, AREA_APOIO } from '@/lib/areas'
+import { ICONE_AREA } from '@/lib/areas'
 import { EQUIPES, getTurno } from '@/lib/equipes'
-import { rotuloRelativo } from '@/lib/tempo'
 import { useAbaDirecao, abaAdjacente, useSwipeHandlers } from '@/lib/useAbaDirecao'
 import { diasDoEvento, DIAS_C, MESES } from '@/lib/calendario'
 import { executar } from '@/lib/offline'
 import { useEstadoServidor } from '@/lib/hooks'
-import { equipeComMenosGente } from '@/app/actions/supervisor'
 import { BarraAbas, PainelAba } from '@/components/abas'
-import { RotuloArea } from '@/components/rotulo-area'
+import { FluxoSemFuncao, AvatarPessoa } from '@/components/fluxo-sem-funcao'
 
 const TURNO_LABEL = { M: 'Manhã', T: 'Tarde', N: 'Noite', F: 'Folga' }
-const ABA_LABELS = { avisos: '📢 Avisos', chamada: <><img src="/icons/chamada.png" alt="" style={{ width: 13, height: 13, verticalAlign: -2 }} /> Chamada</>, faltas: '❌ Faltas', senhas: '🔐 Senhas', aprovacoes: <><img src="/icons/equipes.png" alt="" style={{ width: 13, height: 13, verticalAlign: -2 }} /> Equipes</> }
+const ABA_LABELS = { chamada: <><img src="/icons/chamada.png" alt="" style={{ width: 13, height: 13, verticalAlign: -2 }} /> Chamada</>, faltas: '❌ Faltas', senhas: '🔐 Senhas', aprovacoes: <><img src="/icons/equipes.png" alt="" style={{ width: 13, height: 13, verticalAlign: -2 }} /> Equipes</> }
 const NIVEL_COR = {
   maximo: { bg: 'rgba(124,58,237,0.18)', border: 'rgba(124,58,237,0.4)', text: '#A78BFA', label: 'Máximo' },
   alto: { bg: 'rgba(59,130,246,0.15)', border: 'rgba(59,130,246,0.35)', text: '#60A5FA', label: 'Alto' },
@@ -22,7 +20,7 @@ const NIVEL_COR = {
   staff: { bg: 'var(--bg-card)', border: 'var(--border)', text: 'var(--text-secondary)', label: 'Staff' },
 }
 const ORDEM_NIVEL = ['maximo', 'alto', 'basico', 'staff']
-const ORDEM_ABAS = ['avisos', 'chamada', 'faltas', 'senhas', 'aprovacoes']
+const ORDEM_ABAS = ['chamada', 'faltas', 'senhas', 'aprovacoes']
 const selectStyle = { flex: 1, padding: '12px', background: 'var(--input-bg)', border: '1px solid var(--border-strong)', borderRadius: 14, fontSize: 13, color: 'var(--text)', outline: 'none' }
 const erroBox = { background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 14, padding: '12px 16px', marginBottom: 16, fontSize: 12, color: '#F87171' }
 
@@ -30,47 +28,26 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 }
 
-export function Supervisor({ nome, abas, inicio, avisos: avisosServidor, chamada: chamadaServidor, membrosEquipes, senhas, gestao: gestaoServidor }) {
+// Staff comum que entrou no app mas ainda não recebeu nenhuma função
+const semFuncao = c => c.nivel === 'staff' && !c.areas_aprovadas?.length
+
+export function Supervisor({ nome, abas, inicio, chamada: chamadaServidor, membrosEquipes, senhas, gestao: gestaoServidor }) {
   const tx = useTexto()
-  const [aba, setAba, direcaoAba, abaSaindo] = useAbaDirecao(abas[0] || 'avisos', ORDEM_ABAS)
+  const [aba, setAba, direcaoAba, abaSaindo] = useAbaDirecao(abas[0] || 'chamada', ORDEM_ABAS)
   const swipeHandlers = useSwipeHandlers(
     () => { const p = abaAdjacente(abas, aba, 1); if (p) setAba(p) },
     () => { const p = abaAdjacente(abas, aba, -1); if (p) setAba(p) }
   )
   const dias = useMemo(() => diasDoEvento(inicio), [inicio])
-  const [avisos, setAvisos] = useEstadoServidor(avisosServidor)
-  const [avisoTexto, setAvisoTexto] = useState('')
-  const [publicando, startPublicar] = useTransition()
-  const [erroAviso, setErroAviso] = useState(false)
   const [diaSel, setDiaSel] = useState('')
   const [turnoSel, setTurnoSel] = useState('')
   const [chamada, setChamada] = useEstadoServidor(chamadaServidor, lista => Object.fromEntries(lista.map(c => [c.chave, c])))
   const [pendenteSalvar, setPendenteSalvar] = useState(false)
   const [staffGestao, setStaffGestao] = useEstadoServidor(gestaoServidor)
-  const [rascunhos, setRascunhos] = useState({})
-  const [confirmando, setConfirmando] = useState(null)
-  const [erroGestao, setErroGestao] = useState(false)
+  const [fluxoSemFuncao, setFluxoSemFuncao] = useState(null) // { pessoas, edicao } enquanto o fluxo está aberto
 
 
   const membrosDe = eqId => membrosEquipes.filter(m => m.equipe === eqId).map(m => m.nome)
-
-  // ---- Avisos
-  function publicarAviso() {
-    if (!avisoTexto.trim() || publicando) return
-    setErroAviso(false)
-    const texto = avisoTexto.trim()
-    startPublicar(async () => {
-      const r = await executar('supervisor.publicarAviso', texto)
-      if (r.ok || r.pendente) setAvisoTexto('')
-      if (r.erro) setErroAviso(true)
-      if (r.pendente) setAvisos(prev => [{ id: `tmp_${Date.now()}`, texto, hora: '', created_at: new Date().toISOString() }, ...prev])
-    })
-  }
-
-  function deletarAviso(id) {
-    setAvisos(prev => prev.filter(a => a.id !== id))
-    if (typeof id === 'number') executar('supervisor.removerAviso', id)
-  }
 
   // ---- Chamada
   async function salvarChamada(chave, status, obs) {
@@ -115,46 +92,17 @@ export function Supervisor({ nome, abas, inicio, avisos: avisosServidor, chamada
     setTimeout(() => { win.focus(); win.print() }, 300)
   }
 
-  // ---- Equipes (aprovação de áreas)
-  function getDraft(nomeStaff) {
-    if (rascunhos[nomeStaff]) return rascunhos[nomeStaff]
-    const base = staffGestao.find(c => c.nome === nomeStaff)
-    // Área pedida no login já vem pré-selecionada: o supervisor só confirma ou corrige
-    const areasIniciais = base?.areas_aprovadas?.length ? base.areas_aprovadas : (base?.area_pendente ? [base.area_pendente] : [])
-    return { areas_aprovadas: areasIniciais, equipe_atribuida: base?.equipe_atribuida ?? null }
-  }
-  const setDraft = (nomeStaff, patch) => setRascunhos(prev => ({ ...prev, [nomeStaff]: { ...getDraft(nomeStaff), ...patch } }))
-
-  function toggleArea(nomeStaff, area) {
-    const d = getDraft(nomeStaff)
-    setDraft(nomeStaff, { areas_aprovadas: d.areas_aprovadas.includes(area) ? d.areas_aprovadas.filter(a => a !== area) : [...d.areas_aprovadas, area] })
-  }
-
-  async function definirApoio(nomeStaff, equipeId) {
-    const d = getDraft(nomeStaff)
-    const naApoio = d.areas_aprovadas.includes(AREA_APOIO)
-    const atual = naApoio ? d.equipe_atribuida : null
-    const alvo = equipeId === 'aleatorio' ? await equipeComMenosGente() : equipeId
-    const jaSelecionado = atual === alvo
-    setDraft(nomeStaff, {
-      areas_aprovadas: jaSelecionado ? d.areas_aprovadas.filter(a => a !== AREA_APOIO) : (naApoio ? d.areas_aprovadas : [...d.areas_aprovadas, AREA_APOIO]),
-      equipe_atribuida: jaSelecionado ? null : alvo,
-    })
-  }
-
-  async function confirmarGestao(nomeStaff) {
-    const d = rascunhos[nomeStaff]
-    if (!d) return
-    setConfirmando(nomeStaff)
-    const r = await executar('supervisor.salvarGestao', nomeStaff, d.areas_aprovadas, d.equipe_atribuida)
-    setConfirmando(null)
-    if (r.erro) { setErroGestao(true); return }
-    setStaffGestao(prev => prev.map(c => c.nome === nomeStaff ? { ...c, ...d, area_pendente: null } : c))
-    setRascunhos(prev => { const cp = { ...prev }; delete cp[nomeStaff]; return cp })
+  // ---- Equipes: a função de cada pessoa é dada pelo FluxoSemFuncao (tela cheia)
+  async function salvarDoFluxo(nomeStaff, areas, equipe) {
+    const r = await executar('supervisor.salvarGestao', nomeStaff, areas, equipe)
+    if (r.erro) return false
+    setStaffGestao(prev => prev.map(c => c.nome === nomeStaff ? { ...c, areas_aprovadas: areas, equipe_atribuida: equipe, area_pendente: null } : c))
+    return true
   }
 
   return (
     <div className="tela-enter" style={{ background: 'var(--bg-tela)', minHeight: '100vh' }}>
+      {fluxoSemFuncao && <FluxoSemFuncao key={fluxoSemFuncao.pessoas.join('|')} pessoas={fluxoSemFuncao.pessoas} edicao={fluxoSemFuncao.edicao} inicial={n => staffGestao.find(c => c.nome === n)} onSalvar={salvarDoFluxo} onFechar={() => setFluxoSemFuncao(null)} />}
       <div style={{ padding: '14px 22px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
         <div>
           <h2 style={{ fontFamily: 'var(--font-syne), sans-serif', fontSize: 18, fontWeight: 700 }}>Supervisor</h2>
@@ -165,27 +113,6 @@ export function Supervisor({ nome, abas, inicio, avisos: avisosServidor, chamada
       <BarraAbas abas={abas.map(a => ({ id: a, label: ABA_LABELS[a] }))} ativa={aba} onTrocar={setAba} />
 
       <div style={{ padding: '16px 22px 100px', position: 'relative', overflow: 'hidden' }} {...swipeHandlers}>
-        <PainelAba id="avisos" aba={aba} abaSaindo={abaSaindo} direcao={direcaoAba.current}>
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: 18, marginBottom: 16 }}>
-            <textarea value={avisoTexto} onChange={e => setAvisoTexto(e.target.value)} placeholder="Digite o aviso para todos verem..." style={{ width: '100%', padding: 12, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14, fontSize: 14, resize: 'none', outline: 'none', color: 'var(--text)', fontFamily: 'var(--font-inter), sans-serif', minHeight: 100 }} />
-            {erroAviso && <div style={{ ...erroBox, marginTop: 10, marginBottom: 0 }}>⚠️ Não foi possível publicar agora. Tente de novo.</div>}
-            <button onClick={publicarAviso} disabled={publicando} style={{ width: '100%', marginTop: 12, padding: 14, background: publicando ? 'var(--input-bg)' : 'var(--gradient)', border: 'none', borderRadius: 14, fontSize: 14, fontWeight: 700, cursor: publicando ? 'default' : 'pointer', color: publicando ? 'var(--text-faint)' : 'var(--text)', fontFamily: 'var(--font-syne), sans-serif' }}>
-              {publicando ? 'Publicando...' : '📢 Publicar aviso'}
-            </button>
-          </div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Publicados</div>
-          {avisos.length === 0 && <div style={{ textAlign: 'center', color: 'var(--text-faint)', fontSize: 13, padding: 30 }}>Nenhum aviso ainda</div>}
-          {avisos.map((a, i) => (
-            <div key={a.id} className="tela-enter" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: 18, marginBottom: 10, animationDelay: `${Math.min(i, 8) * 0.04}s` }}>
-              <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 10, lineHeight: 1.5 }}>{a.texto}</div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 11, color: 'var(--text-faint)' }}><strong style={{ color: '#F87171' }}>{rotuloRelativo(a.created_at)}</strong>{a.hora && ` · ${a.hora}`}</span>
-                <button onClick={() => deletarAviso(a.id)} style={{ padding: '6px 14px', background: 'rgba(239,68,68,0.2)', color: '#F87171', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>🗑 Remover</button>
-              </div>
-            </div>
-          ))}
-        </PainelAba>
-
         <PainelAba id="chamada" aba={aba} abaSaindo={abaSaindo} direcao={direcaoAba.current}>
           {pendenteSalvar && <div style={erroBox}>⚠️ Sem conexão — as marcações ficaram guardadas no aparelho e serão enviadas quando o sinal voltar.</div>}
           <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
@@ -290,54 +217,36 @@ export function Supervisor({ nome, abas, inicio, avisos: avisosServidor, chamada
         </PainelAba>
 
         <PainelAba id="aprovacoes" aba={aba} abaSaindo={abaSaindo} direcao={direcaoAba.current}>
-          {erroGestao && <div style={erroBox}>⚠️ Não foi possível salvar agora. Verifique sua internet e tente de novo.</div>}
           {staffGestao.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--text-faint)', fontSize: 13, padding: 40 }}>
               <div style={{ fontSize: 36, marginBottom: 12 }}>📭</div>
               Nenhum staff cadastrado ainda
             </div>
-          ) : [...staffGestao].sort((a, b) => (b.area_pendente ? 1 : 0) - (a.area_pendente ? 1 : 0)).map(c => {
-            const d = getDraft(c.nome)
-            const temRascunho = !!rascunhos[c.nome]
-            return (
-              <div key={c.nome} style={{ background: temRascunho ? 'rgba(234,179,8,0.05)' : 'var(--bg-card)', border: temRascunho ? '1px solid rgba(234,179,8,0.4)' : '1px solid var(--border)', borderRadius: 20, padding: 16, marginBottom: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700 }}>{c.nome}</div>
-                  {temRascunho ? (
-                    <span style={{ fontSize: 11, fontWeight: 700, color: '#EAB308', background: 'rgba(234,179,8,0.15)', padding: '3px 10px', borderRadius: 20 }}>Não salvo</span>
-                  ) : c.area_pendente && (
-                    <span style={{ fontSize: 11, fontWeight: 700, color: '#A78BFA', background: 'rgba(167,139,250,0.15)', padding: '3px 10px', borderRadius: 20 }}>⏳ Pediu: {c.area_pendente}</span>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[...staffGestao].sort((a, b) => (semFuncao(b) ? 1 : 0) - (semFuncao(a) ? 1 : 0)).map(c => (
+                <button key={c.nome} onClick={() => setFluxoSemFuncao({ pessoas: [c.nome], edicao: true })} style={{
+                  display: 'flex', alignItems: 'center', gap: 12, width: '100%', minHeight: 72, padding: '10px 12px', borderRadius: 16, textAlign: 'left', cursor: 'pointer',
+                  background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text)', fontFamily: 'var(--font-inter), sans-serif',
+                }}>
+                  <AvatarPessoa nome={c.nome} url={c.avatar} tamanho={56} />
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 600, color: semFuncao(c) ? '#F87171' : 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.nome}</span>
+                  {semFuncao(c) ? null : (
+                    <span style={{ flex: 'none', display: 'flex', gap: 4, alignItems: 'center' }}>
+                      {c.areas_aprovadas.slice(0, 2).map(area => (
+                        <span key={area} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 9px 4px 5px', borderRadius: 20, background: 'var(--bg-card-hover)', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', maxWidth: 110, whiteSpace: 'nowrap' }}>
+                          {ICONE_AREA[area] && <img src={ICONE_AREA[area]} alt="" style={{ width: 18, height: 18, objectFit: 'contain', flex: 'none' }} />}
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{area === 'Apoio' && c.equipe_atribuida && c.equipe_atribuida !== 'sem_escala' ? `Apoio · ${EQUIPES.find(e => e.id === c.equipe_atribuida)?.nome.replace('Equipe ', '') ?? ''}` : area}</span>
+                        </span>
+                      ))}
+                      {c.areas_aprovadas.length > 2 && <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>+{c.areas_aprovadas.length - 2}</span>}
+                    </span>
                   )}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {AREAS.map(area => {
-                    if (area === AREA_APOIO) {
-                      const equipeAtual = d.areas_aprovadas.includes(area) ? d.equipe_atribuida : null
-                      return (
-                        <div key={area}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-faint)', marginBottom: 6 }}><RotuloArea area={area} /></div>
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                            {EQUIPES.map(eq => (
-                              <button key={eq.id} onClick={() => definirApoio(c.nome, eq.id)} style={{ padding: '6px 12px', borderRadius: 20, cursor: 'pointer', fontSize: 11, fontWeight: 700, border: equipeAtual === eq.id ? `1px solid ${eq.cor}` : '1px solid var(--border-strong)', background: equipeAtual === eq.id ? `${eq.cor}26` : 'var(--input-bg)', color: equipeAtual === eq.id ? eq.cor : 'var(--text-muted)' }}><img src={eq.icone} alt="" style={{ width: 18, height: 18, objectFit: 'contain', verticalAlign: -5 }} /> {eq.nome.replace('Equipe ', '')}</button>
-                            ))}
-                            <button onClick={() => definirApoio(c.nome, 'sem_escala')} style={{ padding: '6px 12px', borderRadius: 20, cursor: 'pointer', fontSize: 11, fontWeight: 700, border: equipeAtual === 'sem_escala' ? '1px solid var(--text-faint)' : '1px solid var(--border-strong)', background: equipeAtual === 'sem_escala' ? 'var(--bg-card)' : 'var(--input-bg)', color: equipeAtual === 'sem_escala' ? 'var(--text-secondary)' : 'var(--text-muted)' }}>🚫 Sem escala</button>
-                            <button onClick={() => definirApoio(c.nome, 'aleatorio')} style={{ padding: '6px 12px', borderRadius: 20, cursor: 'pointer', fontSize: 11, fontWeight: 700, border: '1px solid rgba(167,139,250,0.5)', background: 'rgba(167,139,250,0.15)', color: '#C4B5FD' }}>🎲 Aleatório</button>
-                          </div>
-                        </div>
-                      )
-                    }
-                    const naArea = d.areas_aprovadas.includes(area)
-                    return (
-                      <button key={area} onClick={() => toggleArea(c.nome, area)} style={{ alignSelf: 'flex-start', padding: '7px 13px', borderRadius: 20, cursor: 'pointer', fontSize: 12, fontWeight: 700, border: naArea ? '1px solid rgba(16,185,129,0.4)' : '1px solid var(--border-strong)', background: naArea ? 'rgba(16,185,129,0.15)' : 'var(--input-bg)', color: naArea ? '#6EE7B7' : 'var(--text-muted)' }}>{naArea ? '✓ ' : ''}<RotuloArea area={area} /></button>
-                    )
-                  })}
-                  {temRascunho && (
-                    <button onClick={() => confirmarGestao(c.nome)} disabled={confirmando === c.nome} style={{ marginTop: 4, padding: '12px', borderRadius: 14, border: 'none', background: confirmando === c.nome ? 'var(--input-bg)' : 'var(--gradient)', color: confirmando === c.nome ? 'var(--text-faint)' : 'white', fontSize: 13, fontWeight: 700, cursor: confirmando === c.nome ? 'default' : 'pointer', fontFamily: 'var(--font-syne), sans-serif' }}>{confirmando === c.nome ? 'Salvando...' : '💾 Salvar'}</button>
-                  )}
-                </div>
-              </div>
-            )
-          })}
+                  <span style={{ flex: 'none', color: 'var(--text-faint)' }}>›</span>
+                </button>
+              ))}
+            </div>
+          )}
         </PainelAba>
       </div>
     </div>

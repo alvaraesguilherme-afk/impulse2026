@@ -5,7 +5,6 @@ import { getSessao } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { coordenaArea } from "@/lib/permissoes";
 import { AREA_MIDIA } from "@/lib/areas";
-import { notificarEquipe } from "@/lib/push";
 
 const FUNCOES_PADRAO = ["Stories", "Fotografia", "Gravação de vídeo"];
 
@@ -34,20 +33,5 @@ export async function adicionarFuncao(dia: number, turno: string, funcao: string
 export async function removerFuncao(id: number) {
   await exigirCoordenador();
   await prisma.midia_escalas.deleteMany({ where: { id: BigInt(id) } });
-  revalidatePath("/midia");
-}
-
-export async function enviarMensagemMidia(texto: string) {
-  const sessao = await exigirCoordenador();
-  const limpo = texto.trim();
-  if (!limpo) return;
-  await prisma.mensagens_equipe.create({ data: { equipe_id: "midia", autor: sessao.nome, texto: limpo } });
-  notificarEquipe("midia", sessao.nome, limpo);
-  revalidatePath("/midia");
-}
-
-export async function excluirMensagemMidia(id: number) {
-  await exigirCoordenador();
-  await prisma.mensagens_equipe.deleteMany({ where: { id: BigInt(id), equipe_id: "midia" } });
   revalidatePath("/midia");
 }

@@ -461,8 +461,11 @@ body.foto-aberta .nav-mobile {
   transform: rotate(2deg); background: var(--accent-light); opacity: 0.55;
   border-left: 1px dashed rgba(255,255,255,0.5); border-right: 1px dashed rgba(255,255,255,0.5);
 }
+/* segundo bilhete do dia: tomba pro outro lado e deixa espaço pra fita do primeiro */
+.bilhete + .bilhete { margin-top: 48px; transform: rotate(1.4deg); }
 .bilhete-etiqueta { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #8B7FA6; }
 .bilhete-texto { font-family: var(--font-caveat), "Segoe Print", cursive; font-weight: 700; font-size: 27px; line-height: 1.12; margin-top: 6px; overflow-wrap: anywhere; }
+.bilhete-autor { margin-top: 10px; font-size: 11px; font-weight: 600; color: #8B7FA6; text-align: right; }
 .bilhete-vazio { color: #A79FB8; font-size: 23px; }
 
 /* ===================== Mural (Feed) =====================

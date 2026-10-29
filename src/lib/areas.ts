@@ -1,6 +1,4 @@
-// Funções de quem serve na Escola. Programação e Preletores NÃO são função:
-// Programação é uma aba (editada pela coordenação geral e supervisores, ver
-// editaProgramacao em permissoes.ts) e Preletores é conteúdo dessa aba.
+// Funções de quem serve na Escola.
 export const AREAS = [
   "Apoio",
   "Mídia",
@@ -9,6 +7,7 @@ export const AREAS = [
   "Secretário",
   "Iluminação",
   "Logística",
+  "Mesa dos preletores",
 ] as const;
 
 export const AREA_APOIO = "Apoio";
@@ -23,4 +22,5 @@ export const ICONE_AREA: Record<string, string> = {
   Secretário: "/icons/secretario.png",
   Iluminação: "/icons/iluminacao.png",
   Logística: "/icons/logistica.png",
+  "Mesa dos preletores": "/icons/mesa-preletores.png",
 };
